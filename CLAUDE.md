@@ -44,6 +44,10 @@ npm run format:check    # prettier --check .
 
 Any per-app script (see each app's CLAUDE.md) can be run the same way: `npm run <script> --workspace=<web|api>`.
 
+## Keeping documentation in sync
+
+When a change alters the project's architecture — new workspace/app, new shared config, a module/service restructuring, a changed port or entry point, a new database or external dependency — update the relevant `CLAUDE.md` (root and/or the affected app's) in the same change. Don't leave documentation describing a prior structure once the code no longer matches it.
+
 ## Git hooks
 
 Husky + lint-staged run on pre-commit (`.husky/pre-commit` → `npx lint-staged`). The `lint-staged` config lives in the root `package.json`: it runs each app's ESLint (with its own `--config`) against its own staged files, and Prettier against all staged web/api files plus repo-level JSON/Markdown/YAML/CSS. Don't bypass this with `--no-verify` to "fix" a failing commit — fix the lint/format issue instead.
