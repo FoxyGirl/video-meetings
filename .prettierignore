@@ -1,0 +1,6 @@
+node_modules
+apps/web/.next
+apps/web/next-env.d.ts
+apps/api/dist
+apps/api/coverage
+package-lock.json
