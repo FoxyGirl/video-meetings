@@ -46,12 +46,14 @@ Any per-app script (see each app's CLAUDE.md) can be run the same way: `npm run 
 
 ## Local database
 
-A root-level `docker-compose.yml` runs a Postgres 16 instance for local development (service `db`, port `5432` by default). Configure it via a root `.env` file (see `.env.example`); it's not consumed by either app yet.
+A root-level `docker-compose.yml` runs a Postgres 16 instance for local development (service `db`, port `5432` by default). Configure it via a root `.env` file (see `.env.example`).
 
 ```bash
 docker compose up -d db      # start Postgres in the background
 docker compose down          # stop it (add -v to also drop the data volume)
 ```
+
+`apps/api` connects to it via Prisma — see `apps/api/CLAUDE.md`'s "Database (Prisma)" section. The container also hosts a second database, `video_meetings_test`, used exclusively by `apps/api`'s e2e tests (created automatically on a fresh volume via `docker/postgres-initdb/`).
 
 ## Keeping documentation in sync
 
