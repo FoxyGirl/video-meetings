@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { RegisterHandler } from './commands/handlers/register.handler';
 import { LoginHandler } from './queries/handlers/login.handler';
 import { UserRegisteredHandler } from './events/handlers/user-registered.handler';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 const CommandHandlers = [RegisterHandler];
 const QueryHandlers = [LoginHandler];
@@ -21,6 +22,12 @@ const EventHandlers = [UserRegisteredHandler];
     }),
   ],
   controllers: [AuthController],
-  providers: [...CommandHandlers, ...QueryHandlers, ...EventHandlers],
+  providers: [
+    ...CommandHandlers,
+    ...QueryHandlers,
+    ...EventHandlers,
+    JwtAuthGuard,
+  ],
+  exports: [JwtModule, JwtAuthGuard],
 })
 export class AuthModule {}
