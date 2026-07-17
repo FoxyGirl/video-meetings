@@ -44,6 +44,17 @@ npm run format:check    # prettier --check .
 
 Any per-app script (see each app's CLAUDE.md) can be run the same way: `npm run <script> --workspace=<web|api>`.
 
+## Local database
+
+A root-level `docker-compose.yml` runs a Postgres 16 instance for local development (service `db`, port `5432` by default). Configure it via a root `.env` file (see `.env.example`).
+
+```bash
+docker compose up -d db      # start Postgres in the background
+docker compose down          # stop it (add -v to also drop the data volume)
+```
+
+`apps/api` connects to it via Prisma — see `apps/api/CLAUDE.md`'s "Database (Prisma)" section. The container also hosts a second database, `video_meetings_test`, used exclusively by `apps/api`'s e2e tests (created automatically on a fresh volume via `docker/postgres-initdb/`).
+
 ## Keeping documentation in sync
 
 When a change alters the project's architecture — new workspace/app, new shared config, a module/service restructuring, a changed port or entry point, a new database or external dependency — update the relevant `CLAUDE.md` (root and/or the affected app's) in the same change. Don't leave documentation describing a prior structure once the code no longer matches it.

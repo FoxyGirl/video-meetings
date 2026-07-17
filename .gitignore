@@ -12,6 +12,7 @@ node_modules/
 apps/web/.next/
 apps/web/out/
 apps/api/dist/
+apps/api/prisma/generated/
 build/
 
 # testing / coverage
