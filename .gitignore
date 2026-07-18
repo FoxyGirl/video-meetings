@@ -39,6 +39,9 @@ next-env.d.ts
 # vercel
 .vercel
 
+# playwright mcp
+.playwright-mcp/
+
 # IDE
 .vscode/*
 !.vscode/extensions.json
