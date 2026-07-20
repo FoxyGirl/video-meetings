@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Alert,
   Button,
@@ -14,15 +16,29 @@ import {
 } from '@heroui/react';
 import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError, registerUser } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 const MIN_PASSWORD_LENGTH = 8;
+const REDIRECT_DELAY_MS = 1500;
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+
+  useEffect(() => {
+    if (!isRegistered) {
+      return;
+    }
+    const timeout = setTimeout(() => {
+      router.push('/');
+    }, REDIRECT_DELAY_MS);
+    return () => clearTimeout(timeout);
+  }, [isRegistered, router]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,7 +50,11 @@ export default function RegisterPage() {
 
     setIsPending(true);
     try {
-      await registerUser({ email, password: passwordValue });
+      const { accessToken } = await registerUser({
+        email,
+        password: passwordValue,
+      });
+      login({ accessToken, email });
       setIsRegistered(true);
     } catch (error) {
       setSubmitError(
@@ -68,8 +88,8 @@ export default function RegisterPage() {
               <Alert.Content>
                 <Alert.Title>Account created</Alert.Title>
                 <Alert.Description>
-                  Your account has been created successfully. You can now sign
-                  in.
+                  Your account has been created successfully. Redirecting you to
+                  your meetings…
                 </Alert.Description>
               </Alert.Content>
             </Alert>
@@ -123,6 +143,16 @@ export default function RegisterPage() {
                 {isPending ? <Spinner color="current" size="sm" /> : null}
                 {isPending ? 'Creating account…' : 'Create account'}
               </Button>
+
+              <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+                Already have an account?{' '}
+                <Link
+                  className="font-medium text-foreground underline underline-offset-2"
+                  href="/login"
+                >
+                  Sign in
+                </Link>
+              </p>
             </Form>
           )}
         </Card.Content>
