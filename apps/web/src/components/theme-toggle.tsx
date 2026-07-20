@@ -31,11 +31,15 @@ export function ThemeToggle() {
     <Button
       isIconOnly
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="fixed top-4 right-4"
+      className="fixed top-4 right-4 dark:hover:bg-zinc-700"
       variant="secondary"
       onPress={() => setTheme(isDark ? 'light' : 'dark')}
     >
-      {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      {isDark ? (
+        <Sun className="text-amber-400" size={20} />
+      ) : (
+        <Moon className="text-amber-400" size={20} />
+      )}
     </Button>
   );
 }
