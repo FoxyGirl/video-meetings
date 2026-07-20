@@ -18,16 +18,16 @@ npm run start:prod             # node dist/main (run after build)
 npm run lint                   # eslint over {src,apps,libs,test} with --fix
 npm run typecheck              # tsc --noEmit
 
-npm run test                   # jest (unit tests, *.spec.ts, rootDir: src)
+npm run test                   # jest (unit tests, *.spec.ts, rootDir: src) - none currently exist; passWithNoTests keeps this green
 npm run test:watch
 npm run test:cov               # coverage output to ../coverage (i.e. apps/api/coverage)
 npm run test:e2e               # jest -c test/jest-e2e.json (test/*.e2e-spec.ts)
 npm run test:debug             # jest --runInBand under the node inspector
 
-# run a single test file
-npx jest app.controller.spec.ts
+# run a single e2e file
+npx jest -c test/jest-e2e.json auth.e2e-spec.ts
 # run a single test by name
-npx jest -t "should return"
+npx jest -c test/jest-e2e.json -t "creates a user and returns a JWT"
 ```
 
 The API listens on `process.env.PORT ?? 3001` (`src/main.ts`) — deliberately not Nest's default 3000, since that port is used by the `web` app when both run together via the root `npm run dev`.
@@ -79,7 +79,7 @@ Data access goes through Prisma ORM 7, talking to the Postgres container from th
 
 ## Architecture
 
-- Standard Nest module/controller/service triad in `src/`: `app.module.ts` is the root module, importing `PrismaModule`, `AuthModule`, and `MeetingsModule`; `app.controller.ts` / `app.service.ts` are the default (unrelated) controller and service left over from scaffolding. `main.ts` bootstraps via `NestFactory.create(AppModule)`, after `import 'dotenv/config'` (must be the first import, so env vars are set before anything else in the module graph loads). Add further features as their own Nest modules under `src/` and import them into `AppModule`.
+- `app.module.ts` is the root module, importing `PrismaModule`, `AuthModule`, and `MeetingsModule` (no root-level controller/service — the default scaffolded `AppController`/`AppService` `GET /` "Hello World!" endpoint was unused by the `web` app and has been removed). `main.ts` bootstraps via `NestFactory.create(AppModule)`, after `import 'dotenv/config'` (must be the first import, so env vars are set before anything else in the module graph loads). Add further features as their own Nest modules under `src/` and import them into `AppModule`.
 - `tsconfig.json` extends the repo's `../../tsconfig.base.json`. Note this app intentionally does **not** use TypeScript's master `strict: true` — it sets individual flags (`strictNullChecks`, `noImplicitAny`, `strictBindCallApply`, plus `forceConsistentCasingInFileNames` from the base) because Nest's decorator-heavy DI patterns don't pair well with the full strict set (e.g. `strictPropertyInitialization`). Don't casually turn on full `strict` mode without checking DI-injected class properties still compile.
 - `tsconfig.build.json` extends `tsconfig.json` and excludes `test/**` and `*spec.ts` — this is what `nest build` actually uses (see `nest-cli.json`'s implicit build config), so `npm run build` won't pull in test files even though `tsconfig.json` itself has no `include`/`exclude`.
 - `eslint.config.mjs` is a flat config built on `typescript-eslint`'s `recommendedTypeChecked` (type-aware linting via `parserOptions.projectService`) plus `eslint-plugin-prettier/recommended`. `@typescript-eslint/no-explicit-any` is turned off and `no-floating-promises`/`no-unsafe-argument` are downgraded to warnings — expect `any` to be allowed and floating promises to warn rather than error. There is no local `.prettierrc`; Prettier formatting comes from the repo root config.
