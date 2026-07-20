@@ -15,13 +15,12 @@ import {
   toast,
 } from '@heroui/react';
 import { PasswordConfirmField } from '@/components/password-confirm-field';
-import { ApiError, registerUser } from '@/lib/api';
+import { ApiError, loginUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-const MIN_PASSWORD_LENGTH = 8;
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [password, setPassword] = useState('');
@@ -36,12 +35,12 @@ export default function RegisterPage() {
 
     setIsPending(true);
     try {
-      const { accessToken } = await registerUser({
+      const { accessToken } = await loginUser({
         email,
         password: passwordValue,
       });
       login({ accessToken, email });
-      toast.success('Account created', {
+      toast.success('Signed in', {
         description: 'Redirecting you to your meetings…',
       });
       router.push('/');
@@ -64,9 +63,9 @@ export default function RegisterPage() {
 
       <Card className="w-full max-w-md">
         <Card.Header>
-          <Card.Title>Create your account</Card.Title>
+          <Card.Title>Sign in</Card.Title>
           <Card.Description>
-            Sign up to start scheduling and joining meetings.
+            Enter your credentials to access your meetings.
           </Card.Description>
         </Card.Header>
 
@@ -92,11 +91,9 @@ export default function RegisterPage() {
             </TextField>
 
             <PasswordConfirmField
-              description={`Must be at least ${MIN_PASSWORD_LENGTH} characters.`}
+              withConfirmField={false}
               onValidate={(value) =>
-                value.length < MIN_PASSWORD_LENGTH
-                  ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
-                  : null
+                value.length === 0 ? 'Enter your password.' : null
               }
               value={password}
               onChangeValue={setPassword}
@@ -109,16 +106,16 @@ export default function RegisterPage() {
               type="submit"
             >
               {isPending ? <Spinner color="current" size="sm" /> : null}
-              {isPending ? 'Creating account…' : 'Create account'}
+              {isPending ? 'Signing in…' : 'Sign in'}
             </Button>
 
             <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-              Already have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 className="font-medium text-foreground underline underline-offset-2"
-                href="/login"
+                href="/register"
               >
-                Sign in
+                Create one
               </Link>
             </p>
           </Form>
