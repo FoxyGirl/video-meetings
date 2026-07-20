@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Alert,
   Button,
   Card,
   FieldError,
@@ -13,6 +12,7 @@ import {
   Label,
   Spinner,
   TextField,
+  toast,
 } from '@heroui/react';
 import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError, loginUser } from '@/lib/api';
@@ -25,11 +25,9 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitError(null);
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email')?.toString() ?? '';
@@ -42,9 +40,12 @@ export default function LoginPage() {
         password: passwordValue,
       });
       login({ accessToken, email });
+      toast.success('Signed in', {
+        description: 'Redirecting you to your meetings…',
+      });
       router.push('/');
     } catch (error) {
-      setSubmitError(
+      toast.danger(
         error instanceof ApiError
           ? error.message
           : 'Something went wrong. Please try again.',
@@ -70,15 +71,6 @@ export default function LoginPage() {
 
         <Card.Content>
           <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            {submitError ? (
-              <Alert status="danger">
-                <Alert.Indicator />
-                <Alert.Content>
-                  <Alert.Title>{submitError}</Alert.Title>
-                </Alert.Content>
-              </Alert>
-            ) : null}
-
             <TextField
               isRequired
               name="email"
