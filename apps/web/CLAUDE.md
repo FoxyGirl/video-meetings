@@ -24,3 +24,12 @@ There is no test script/framework configured for this app yet.
 - `tsconfig.json` extends the repo's `../../tsconfig.base.json` and adds Next-specific compiler options (`bundler` module resolution, `jsx: react-jsx`, the `next` TS plugin, and the `.next/types` includes) — don't remove the `extends` when regenerating this file.
 - `eslint.config.mjs` composes `eslint-config-next/core-web-vitals` + `eslint-config-next/typescript`, then `eslint-config-prettier` to disable any rules that conflict with the repo's shared Prettier config (`../../.prettierrc`). There is no local `.prettierrc` — formatting is controlled entirely from the repo root.
 - Styling is Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`); there's no `tailwind.config.*` file since v4 configures via CSS (`globals.css`) rather than a JS config.
+
+## UI changes must be visually tested
+
+Any change that affects the UI (component markup, styling, layout, theming, interactive behavior) must be visually verified before the task is considered complete:
+
+1. Run the app and view the change in a browser (e.g. via Playwright) rather than relying on type checking or lint alone.
+2. Verify the change with the `ui-ux-pro-max` skill.
+
+Do not mark a UI task done until both steps have been performed.
