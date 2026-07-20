@@ -13,6 +13,7 @@ import {
   Spinner,
   TextField,
 } from '@heroui/react';
+import { Eye, EyeOff } from 'lucide-react';
 import { ApiError, registerUser } from '@/lib/api';
 
 const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -22,6 +23,9 @@ export default function RegisterPage() {
   const [isPending, setIsPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,7 +98,11 @@ export default function RegisterPage() {
                 }
               >
                 <Label>Email</Label>
-                <Input placeholder="you@example.com" variant="secondary" />
+                <Input
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  variant="secondary"
+                />
                 <FieldError />
               </TextField>
 
@@ -102,7 +110,7 @@ export default function RegisterPage() {
                 isRequired
                 minLength={8}
                 name="password"
-                type="password"
+                type={isPasswordVisible ? 'text' : 'password'}
                 value={password}
                 onChange={setPassword}
                 validate={(value) =>
@@ -112,7 +120,30 @@ export default function RegisterPage() {
                 }
               >
                 <Label>Password</Label>
-                <Input placeholder="••••••••" variant="secondary" />
+                <div className="relative">
+                  <Input
+                    autoComplete="new-password"
+                    className="pr-10"
+                    fullWidth
+                    placeholder="••••••••"
+                    variant="secondary"
+                  />
+                  <Button
+                    isIconOnly
+                    aria-label={
+                      isPasswordVisible ? 'Hide password' : 'Show password'
+                    }
+                    className="absolute top-0 right-0 text-zinc-500 hover:text-foreground"
+                    variant="ghost"
+                    onPress={() => setIsPasswordVisible((visible) => !visible)}
+                  >
+                    {isPasswordVisible ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </Button>
+                </div>
                 <Description>Must be at least 8 characters.</Description>
                 <FieldError />
               </TextField>
@@ -120,13 +151,40 @@ export default function RegisterPage() {
               <TextField
                 isRequired
                 name="confirmPassword"
-                type="password"
+                type={isConfirmPasswordVisible ? 'text' : 'password'}
                 validate={(value) =>
                   value !== password ? 'Passwords do not match.' : null
                 }
               >
                 <Label>Confirm password</Label>
-                <Input placeholder="••••••••" variant="secondary" />
+                <div className="relative">
+                  <Input
+                    autoComplete="new-password"
+                    className="pr-10"
+                    fullWidth
+                    placeholder="••••••••"
+                    variant="secondary"
+                  />
+                  <Button
+                    isIconOnly
+                    aria-label={
+                      isConfirmPasswordVisible
+                        ? 'Hide password'
+                        : 'Show password'
+                    }
+                    className="absolute top-0 right-0 text-zinc-500 hover:text-foreground"
+                    variant="ghost"
+                    onPress={() =>
+                      setIsConfirmPasswordVisible((visible) => !visible)
+                    }
+                  >
+                    {isConfirmPasswordVisible ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </Button>
+                </div>
                 <FieldError />
               </TextField>
 
