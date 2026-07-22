@@ -61,4 +61,9 @@ When a change alters the project's architecture — new workspace/app, new share
 
 ## Git hooks
 
-Husky + lint-staged run on pre-commit (`.husky/pre-commit` → `npx lint-staged`). The `lint-staged` config lives in the root `package.json`: it runs each app's ESLint (with its own `--config`) against its own staged files, and Prettier against all staged web/api files plus repo-level JSON/Markdown/YAML/CSS. Don't bypass this with `--no-verify` to "fix" a failing commit — fix the lint/format issue instead.
+Husky runs checks at two stages:
+
+- **pre-commit** (`.husky/pre-commit` → `npx lint-staged`): fast, staged-files-only. The `lint-staged` config lives in the root `package.json`: it runs each app's ESLint (with its own `--config`) against its own staged files, and Prettier against all staged web/api files plus repo-level JSON/Markdown/YAML/CSS.
+- **pre-push** (`.husky/pre-push` → `npm run lint`, then `npm run test`): slower, whole-repo checks, since a push affects more than just what changed locally. `npm run lint` runs each workspace's full ESLint (not scoped to staged files). `npm run test` runs each workspace's unit test script — currently just `apps/api`'s Jest unit suite (`web` has no `test` script, so `--if-present` skips it); this is unit tests only, not `test:e2e` (that needs the Postgres container up and is meant for local/CI runs, not every push).
+
+Don't bypass either with `--no-verify` to "fix" a failing commit/push — fix the lint/format/test issue instead.

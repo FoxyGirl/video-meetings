@@ -1,20 +1,24 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { IQueryHandler, QueryBus, QueryHandler } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { FindUserByEmailQuery } from '../../../user/queries/find-user-by-email.query';
+import { UserWithCredentials } from '../../../user/interfaces/user-record.interface';
 import { AuthResult } from '../../interfaces/auth-result.interface';
 import { LoginQuery } from '../login.query';
 
 @QueryHandler(LoginQuery)
 export class LoginHandler implements IQueryHandler<LoginQuery> {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly queryBus: QueryBus,
     private readonly jwtService: JwtService,
   ) {}
 
   async execute({ email, password }: LoginQuery): Promise<AuthResult> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.queryBus.execute<
+      FindUserByEmailQuery,
+      UserWithCredentials | null
+    >(new FindUserByEmailQuery(email));
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
