@@ -5,11 +5,12 @@
 
 ## Purpose
 
-A meeting organizer needs to attach a recording file to one of their meetings so it is stored on the server and can later be reviewed or downloaded, with a clear interface on the meeting page to upload, see, and retrieve that file. Any authenticated user — not only the organizer — can view a meeting's file metadata and download the file itself.
+A meeting organizer needs to attach a recording file to one of their meetings so it is stored on the server and can later be reviewed or downloaded, with a clear interface on the meeting page to upload, see, and retrieve that file. Any authenticated user — not only the organizer — can view the meeting's detail page itself, its file metadata, and download the file, all on the same page the organizer sees; only upload, replace, and delete stay restricted to the organizer.
 
 ## User Scenarios
 
 - Organizer opens a meeting they own that has no recording yet -> sees an upload control on the meeting detail page.
+- Any authenticated user who does not organize a given meeting opens that meeting's detail page directly by URL -> sees the same meeting details (title, date, participants) and file section (metadata/download, or "no recording yet") that the organizer sees, with no upload or delete controls shown.
 - Organizer selects a valid audio/video file and uploads it -> the file is validated, stored on the API server, and its metadata (name, size, upload date) is associated with the meeting.
 - Organizer reopens a meeting that already has a stored recording -> sees the file's metadata and a download action, instead of the upload control.
 - Organizer selects a file with an invalid type or that exceeds the size limit -> upload is rejected with a clear error message, and no file is stored.
@@ -21,6 +22,7 @@ A meeting organizer needs to attach a recording file to one of their meetings so
 
 ## In scope
 
+- Opening the existing meeting detail read endpoint (`GET /meetings/:id`, currently scoped to the organizer only) so any authenticated user can fetch a meeting's details by id — required so the meeting detail page itself, not only its file section, can be shown to any authenticated user rather than needing a separate access path.
 - API endpoint to upload a single recording file (audio/video) to a specific meeting, protected by the existing `JwtAuthGuard` and scoped to the meeting's organizer (only the organizer may upload).
 - Server-side validation of uploaded files: allowed audio/video MIME types/extensions (see "Accepted file types" below) and a maximum file size.
 - Persisting uploaded files on local disk on the API server, with file metadata (original file name, stored path, MIME type, size, uploaded date) recorded against the meeting (requires a Prisma schema change).
@@ -66,12 +68,13 @@ Validation checks both the file extension and the declared MIME type — a misma
 - No file storage integration exists in this repo today (no `multer`, S3, or equivalent configured anywhere in `apps/api`); this iteration assumes local disk storage on the API server, which does not scale across multiple API instances and is lost if the server's disk isn't persisted (relevant for containerized/ephemeral deployments).
 - The `Meeting` Prisma model (`apps/api/prisma/schema.prisma`) has no file-related fields; a migration is required to persist file metadata.
 - The API has no configured maximum request/body size for file uploads; NestJS/Express defaults are far smaller than a typical recording file and must be raised deliberately.
-- The existing `GetMeetingHandler` scopes meeting reads strictly by `organizerId`, so a non-organizer can't fetch the meeting's own details today even though this PRD opens its file's metadata/download to any authenticated user — the file endpoints must look the meeting up unscoped (by id only) rather than reusing that organizer-scoped query, and the web UI needs a way for a non-organizer to reach a meeting's file (e.g. a direct link) since the meeting detail page itself isn't opened up by this PRD.
+- The existing `GetMeetingHandler` scopes meeting reads strictly by `organizerId`. This PRD changes that: `GetMeetingQuery`/`GetMeetingHandler` and `GET /meetings/:id` must look the meeting up by id only (unscoped by organizer) so any authenticated user can fetch a meeting's details, not just its organizer. The response must still carry `organizerId` so the web UI can determine whether the current viewer is the organizer and show/hide the upload and delete controls accordingly. The file metadata/download endpoints reuse this same unscoped lookup. The meeting detail page is a single shared page for all authenticated users — there is no separate access path for non-organizers.
 - There is no participant authentication in the system, so "any authenticated user" means any registered user, not specifically the meeting's invited participants.
 - No virus/malware scanning capability exists anywhere in the current stack.
 
 ## Acceptance Criteria
 
+- [ ] An authenticated user who does not organize a given meeting can open that meeting's detail page directly by URL and see the same title, date, participants, and file section (metadata/download, or "no recording yet") the organizer sees, with no upload or delete controls.
 - [ ] An authenticated organizer can upload an audio/video recording file to one of their own meetings from the meeting detail page.
 - [ ] Uploading a file that fails type or size validation is rejected with a clear, specific error message, and no file is stored.
 - [ ] After a successful upload, the file's metadata (name, size, upload date) is persisted and visible on the meeting detail page across page reloads.
@@ -81,6 +84,7 @@ Validation checks both the file extension and the declared MIME type — a misma
 - [ ] Any authenticated user (organizer or not) can fetch a meeting's file metadata and download its file.
 - [ ] A user who does not organize a given meeting cannot upload a new file, replace the existing one, or delete it (verified at the API level).
 - [ ] An unauthenticated request cannot view metadata, download, upload, or delete a meeting's file.
+- [ ] e2e test: an authenticated user who does not organize a meeting can fetch its details via `GET /meetings/:id` (no longer 404s for non-organizers).
 - [ ] e2e test: organizer uploads a valid accepted-type file to their meeting and receives its persisted metadata.
 - [ ] e2e test: uploading a file of a disallowed type (extension, MIME type, or a mismatch between the two) is rejected and no file is persisted.
 - [ ] e2e test: uploading a file exceeding the maximum size is rejected and no file is persisted.
