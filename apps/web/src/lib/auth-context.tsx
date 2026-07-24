@@ -4,12 +4,14 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import {
   getAuthSnapshot,
   getServerAuthSnapshot,
+  getUserId,
   setAuthState,
   subscribeAuth,
   type AuthState,
@@ -17,6 +19,7 @@ import {
 
 interface AuthContextValue {
   auth: AuthState | null;
+  userId: string | null;
   isLoading: boolean;
   login: (auth: AuthState) => void;
   logout: () => void;
@@ -42,9 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((next: AuthState) => setAuthState(next), []);
   const logout = useCallback(() => setAuthState(null), []);
+  const userId = useMemo(
+    () => (auth ? getUserId(auth.accessToken) : null),
+    [auth],
+  );
 
   return (
-    <AuthContext.Provider value={{ auth, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ auth, userId, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
