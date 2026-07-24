@@ -16,7 +16,15 @@ npm run lint            # eslint (flat config, no path args — lints the whole 
 npm run typecheck       # tsc --noEmit
 ```
 
-There is no test script/framework configured for this app yet.
+```bash
+npm run test:e2e        # playwright test — e2e/*.spec.ts against the real dev stack
+```
+
+There is no unit test script/framework configured for this app yet.
+
+## E2E tests (Playwright)
+
+`e2e/*.spec.ts` (config: `playwright.config.ts`, `baseURL` defaults to `http://localhost:3000`) exercise the app through a real browser against the real dev stack — no mocks. Like `apps/api`'s e2e suite, these expect the stack to already be running: `npm run dev` (web + api, from the repo root) and the Postgres container (`docker compose up -d db`, see `../../CLAUDE.md`). Tests provision their own data over HTTP directly against the API (`API_URL`, defaults to `http://localhost:3001`) — e.g. `meeting-detail.spec.ts` registers/logs in the shared local test user (`qa-test@video-meetings.local`, see `../../CLAUDE.md`'s "Local test user" section) and creates a uniquely-titled meeting per run via `POST /meetings`, rather than depending on hand-seeded state, so the suite is safe to re-run. `npx playwright install chromium` is needed once after installing dependencies to fetch the browser binary (not committed, not an npm dependency).
 
 ## Architecture
 
