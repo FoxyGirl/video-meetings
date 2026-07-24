@@ -7,9 +7,9 @@ import { GetMeetingQuery } from '../get-meeting.query';
 export class GetMeetingHandler implements IQueryHandler<GetMeetingQuery> {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute({ id, organizerId }: GetMeetingQuery) {
-    const meeting = await this.prisma.meeting.findFirst({
-      where: { id, organizerId },
+  async execute({ id }: GetMeetingQuery) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id },
     });
 
     if (!meeting) {

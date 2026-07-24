@@ -1,6 +1,3 @@
 export class GetMeetingQuery {
-  constructor(
-    public readonly id: string,
-    public readonly organizerId: string,
-  ) {}
+  constructor(public readonly id: string) {}
 }
