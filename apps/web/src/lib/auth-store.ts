@@ -5,16 +5,6 @@ export interface AuthState {
   email: string;
 }
 
-export function getUserId(accessToken: string): string | null {
-  try {
-    const [, payload] = accessToken.split('.');
-    const decoded = JSON.parse(atob(payload)) as { sub?: string };
-    return decoded.sub ?? null;
-  } catch {
-    return null;
-  }
-}
-
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
