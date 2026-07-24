@@ -67,3 +67,8 @@ Husky runs checks at two stages:
 - **pre-push** (`.husky/pre-push` → `npm run lint`, then `npm run test`): slower, whole-repo checks, since a push affects more than just what changed locally. `npm run lint` runs each workspace's full ESLint (not scoped to staged files). `npm run test` runs each workspace's unit test script — currently just `apps/api`'s Jest unit suite (`web` has no `test` script, so `--if-present` skips it); this is unit tests only, not `test:e2e` (that needs the Postgres container up and is meant for local/CI runs, not every push).
 
 Don't bypass either with `--no-verify` to "fix" a failing commit/push — fix the lint/format/test issue instead.
+
+## Pull requests
+
+- Start the PR title with a fitting [Gitmoji](https://gitmoji.dev/) (e.g. `✨ feat(web): ...`, `🐛 fix(api): ...`).
+- NEVER merge an open pull request. Merging is a decision for the developers to make in the remote repo.

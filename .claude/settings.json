@@ -13,5 +13,13 @@
       }
     ]
   },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "permissions": {
+    "deny": ["Bash(git merge *)", "Bash(gh pr merge *)"]
+  },
   "enabledMcpjsonServers": ["playwright"]
 }
