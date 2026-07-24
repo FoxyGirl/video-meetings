@@ -87,3 +87,24 @@ export async function getMeetings(accessToken: string): Promise<Meeting[]> {
 
   return res.json() as Promise<Meeting[]>;
 }
+
+export async function getMeeting(
+  id: string,
+  accessToken: string,
+): Promise<Meeting> {
+  const res = await fetch(`${API_URL}/meetings/${id}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!res.ok) {
+    const message =
+      res.status === 404
+        ? 'This meeting doesn’t exist or has been deleted.'
+        : res.status === 401
+          ? 'Your session has expired. Please sign in again.'
+          : 'Something went wrong. Please try again.';
+    throw new ApiError(message, res.status);
+  }
+
+  return res.json() as Promise<Meeting>;
+}
