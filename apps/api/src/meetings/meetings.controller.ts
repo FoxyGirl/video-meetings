@@ -44,7 +44,7 @@ export class MeetingsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.queryBus.execute(new GetMeetingQuery(id, request.user.userId));
+  findOne(@Param('id') id: string) {
+    return this.queryBus.execute(new GetMeetingQuery(id));
   }
 }

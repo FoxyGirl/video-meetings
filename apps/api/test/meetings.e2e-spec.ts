@@ -244,20 +244,22 @@ describe('Meetings (e2e)', () => {
       expectMeetingShape(response.body as MeetingResponseBody, body);
     });
 
-    it('returns 404 for a meeting that belongs to another user', async () => {
+    it('returns the meeting for any authenticated user, not just its owner', async () => {
       const owner = await registerUser();
-      const intruder = await registerUser();
+      const otherUser = await registerUser();
 
-      const { response: createResponse } = await createMeeting(
+      const { body, response: createResponse } = await createMeeting(
         owner.accessToken,
       );
       const created = createResponse.body as MeetingResponseBody;
 
-      await authedRequest(
+      const response = await authedRequest(
         'get',
         `/meetings/${created.id}`,
-        intruder.accessToken,
-      ).expect(404);
+        otherUser.accessToken,
+      ).expect(200);
+
+      expectMeetingShape(response.body as MeetingResponseBody, body);
     });
   });
 });
