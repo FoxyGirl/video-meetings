@@ -25,6 +25,10 @@ There is no test script/framework configured for this app yet.
 - `eslint.config.mjs` composes `eslint-config-next/core-web-vitals` + `eslint-config-next/typescript`, then `eslint-config-prettier` to disable any rules that conflict with the repo's shared Prettier config (`../../.prettierrc`). There is no local `.prettierrc` — formatting is controlled entirely from the repo root.
 - Styling is Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`); there's no `tailwind.config.*` file since v4 configures via CSS (`globals.css`) rather than a JS config.
 
+## In-progress: meeting recording file upload (frontend)
+
+Implementing the meeting detail page and its upload/download/delete UI (`../../docs/plan-meeting-file-upload-storage-and-display.md` Phases 2, 5, 6)? Read `../../docs/research-meeting-file-upload-storage-and-display.md` first — its "Phase 5–6 (frontend)" section covers the decided Axios-with-request-interceptor client setup (replacing per-call `fetch`/`accessToken` plumbing), upload progress via `onUploadProgress`, and the blob + object-URL pattern for authenticated downloads. Remove this note once the feature ships.
+
 ## UI changes must be visually tested
 
 Any change that affects the UI (component markup, styling, layout, theming, interactive behavior) must be visually verified before the task is considered complete:

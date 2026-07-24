@@ -77,6 +77,10 @@ Data access goes through Prisma ORM 7, talking to the Postgres container from th
 - Request bodies are validated by `CreateMeetingDto` (`src/meetings/dto/`): `title` required non-empty string, `date` an ISO-8601 string (stored as Prisma `DateTime`), `participants` an array of valid emails (an empty array is allowed — inviting no one is valid).
 - `Meeting` (`prisma/schema.prisma`) has an `organizerId` FK to `User` with `onDelete: Cascade`, so deleting a user cleans up their meetings automatically.
 
+### In-progress: meeting recording file upload (backend)
+
+Implementing the upload/metadata/download/delete endpoints (`docs/plan-meeting-file-upload-storage-and-display.md` Phases 1, 3, 4)? Read `../../docs/research-meeting-file-upload-storage-and-display.md` first — its "Phase 3–4 (backend)" section covers `FileInterceptor`/`diskStorage` config, the two-layer extension/MIME validation strategy, crash-safe replace ordering, `StreamableFile` for downloads, and multipart e2e testing with `supertest`, all grounded in this module's existing CQRS conventions. Remove this note once the feature ships.
+
 ## Architecture
 
 - `app.module.ts` is the root module, importing `PrismaModule`, `AuthModule`, and `MeetingsModule` (no root-level controller/service — the default scaffolded `AppController`/`AppService` `GET /` "Hello World!" endpoint was unused by the `web` app and has been removed). `main.ts` bootstraps via `NestFactory.create(AppModule)`, after `import 'dotenv/config'` (must be the first import, so env vars are set before anything else in the module graph loads). Add further features as their own Nest modules under `src/` and import them into `AppModule`.
