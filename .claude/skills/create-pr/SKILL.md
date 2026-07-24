@@ -41,8 +41,8 @@ Keep the description under 10 bullet points.
 
 Describe how the changes were verified, if applicable.
 
-[ ] Unit tests
-[ ] Manual testing
+[ ] ...
+[ ] ...
 
 ## Guidelines
 
