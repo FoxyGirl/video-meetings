@@ -55,6 +55,15 @@ docker compose down          # stop it (add -v to also drop the data volume)
 
 `apps/api` connects to it via Prisma — see `apps/api/CLAUDE.md`'s "Database (Prisma)" section. The container also hosts a second database, `video_meetings_test`, used exclusively by `apps/api`'s e2e tests (created automatically on a fresh volume via `docker/postgres-initdb/`).
 
+## Local test user
+
+For manually exercising auth-gated features (e.g. the shared meeting detail page) against the local dev stack, a seeded test user exists in the local Postgres `db` container:
+
+- Email: `qa-test@video-meetings.local`
+- Password: `TestPassword123!`
+
+It owns one seeded meeting ("QA Test Meeting") to check the detail page's organizer view. This user only exists in the local dev database (created via `POST /auth/register`) — re-create it the same way after a `docker compose down -v` wipes the volume.
+
 ## Keeping documentation in sync
 
 When a change alters the project's architecture — new workspace/app, new shared config, a module/service restructuring, a changed port or entry point, a new database or external dependency — update the relevant `CLAUDE.md` (root and/or the affected app's) in the same change. Don't leave documentation describing a prior structure once the code no longer matches it.

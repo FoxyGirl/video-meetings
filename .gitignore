@@ -17,6 +17,10 @@ build/
 
 # testing / coverage
 coverage/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/
+apps/web/playwright/.cache/
 
 # env files (opt-in for committing if needed)
 .env
