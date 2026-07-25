@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -21,6 +22,7 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
+import { DeleteMeetingFileCommand } from './commands/delete-meeting-file.command';
 import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import {
@@ -111,6 +113,13 @@ export class MeetingsController {
 
     return new StreamableFile(
       createReadStream(join(getUploadDir(), meeting.filePath)),
+    );
+  }
+
+  @Delete(':id/file')
+  deleteFile(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.commandBus.execute(
+      new DeleteMeetingFileCommand(id, request.user.userId),
     );
   }
 }
