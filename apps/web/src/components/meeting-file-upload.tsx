@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Alert, Button, Card, Spinner } from '@heroui/react';
+import { Alert, Button, Card, ProgressBar, Spinner } from '@heroui/react';
 import { Upload } from 'lucide-react';
 import {
   ApiError,
@@ -25,6 +25,7 @@ export function MeetingFileUpload({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0] ?? null;
@@ -40,8 +41,9 @@ export function MeetingFileUpload({
 
     setIsUploading(true);
     setUploadError(null);
+    setProgress(0);
     try {
-      const metadata = await uploadMeetingFile(meetingId, file);
+      const metadata = await uploadMeetingFile(meetingId, file, setProgress);
       onUploaded(metadata);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -91,6 +93,15 @@ export function MeetingFileUpload({
               <Alert.Title>{uploadError}</Alert.Title>
             </Alert.Content>
           </Alert>
+        ) : null}
+
+        {isUploading ? (
+          <ProgressBar aria-label="Upload progress" value={progress}>
+            <ProgressBar.Output />
+            <ProgressBar.Track>
+              <ProgressBar.Fill />
+            </ProgressBar.Track>
+          </ProgressBar>
         ) : null}
 
         <Button

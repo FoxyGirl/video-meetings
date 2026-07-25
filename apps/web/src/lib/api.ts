@@ -140,6 +140,7 @@ export async function getMeetingFile(
 export async function uploadMeetingFile(
   id: string,
   file: File,
+  onProgress?: (percent: number) => void,
 ): Promise<MeetingFileMetadata> {
   const form = new FormData();
   // Field name must match the server's FileInterceptor('file', ...).
@@ -149,6 +150,15 @@ export async function uploadMeetingFile(
     const res = await http.post<MeetingFileMetadata>(
       `/meetings/${id}/file`,
       form,
+      {
+        onUploadProgress: (event) => {
+          // event.total can be undefined if content length can't be
+          // computed — same guard raw XHR's lengthComputable would need.
+          if (event.total) {
+            onProgress?.(Math.round((event.loaded / event.total) * 100));
+          }
+        },
+      },
     );
     return res.data;
   } catch (error) {
