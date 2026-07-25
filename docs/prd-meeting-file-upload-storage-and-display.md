@@ -52,6 +52,8 @@ Only common recording formats are accepted; anything else is rejected by server-
 
 Validation checks both the file extension and the declared MIME type — a mismatch (e.g. a `.mp4` extension with a non-video MIME type) is rejected.
 
+**Maximum file size:** 500 MB. A file exceeding this limit is rejected with a clear error message, per the acceptance criteria above. Configurable per environment via the `MAX_UPLOAD_FILE_SIZE_BYTES` env var (`apps/api/src/meetings/upload/file-upload.constants.ts`).
+
 ## Out of scope
 
 - Automated processing of the uploaded file: transcription, summarization, AI analysis, waveform/thumbnail generation.
