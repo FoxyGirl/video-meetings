@@ -15,6 +15,7 @@
     "start": "concurrently -n web,api -c blue,green \"npm run start --workspace=web\" \"npm run start:prod --workspace=api\"",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "pretest:e2e": "bash scripts/check-postgres.sh",
     "test:e2e": "npm run test:e2e --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",
