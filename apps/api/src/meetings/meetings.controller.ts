@@ -18,6 +18,10 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
 import { CreateMeetingCommand } from './commands/create-meeting.command';
 import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import {
+  GetMeetingFileQuery,
+  MeetingFileRecord,
+} from './queries/get-meeting-file.query';
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
 import { meetingFileUploadOptions } from './upload/multer.config';
@@ -64,5 +68,20 @@ export class MeetingsController {
     return this.commandBus.execute(
       new UploadMeetingFileCommand(id, request.user.userId, file),
     );
+  }
+
+  @Get(':id/file')
+  async getFileMetadata(@Param('id') id: string) {
+    const meeting = await this.queryBus.execute<
+      GetMeetingFileQuery,
+      MeetingFileRecord
+    >(new GetMeetingFileQuery(id));
+
+    return {
+      fileOriginalName: meeting.fileOriginalName,
+      fileMimeType: meeting.fileMimeType,
+      fileSize: meeting.fileSize,
+      fileUploadedAt: meeting.fileUploadedAt,
+    };
   }
 }
