@@ -8,6 +8,7 @@ import {
   uploadMeetingFile,
   type MeetingFileMetadata,
 } from '@/lib/api';
+import { ACCEPTED_FILE_TYPES, validateFile } from '@/lib/file-types';
 
 interface MeetingFileUploadProps {
   meetingId: string;
@@ -21,6 +22,7 @@ export function MeetingFileUpload({
   onSessionExpired,
 }: MeetingFileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -28,10 +30,11 @@ export function MeetingFileUpload({
     const selected = e.target.files?.[0] ?? null;
     setFile(selected);
     setUploadError(null);
+    setValidationError(selected ? validateFile(selected) : null);
   };
 
   const handleUpload = async () => {
-    if (!file) {
+    if (!file || validationError) {
       return;
     }
 
@@ -65,11 +68,21 @@ export function MeetingFileUpload({
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
         <input
+          accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
           className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
           disabled={isUploading}
           type="file"
           onChange={handleFileChange}
         />
+
+        {validationError ? (
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>{validationError}</Alert.Title>
+            </Alert.Content>
+          </Alert>
+        ) : null}
 
         {uploadError ? (
           <Alert status="danger">
@@ -82,7 +95,7 @@ export function MeetingFileUpload({
 
         <Button
           fullWidth
-          isDisabled={!file}
+          isDisabled={!file || !!validationError}
           isPending={isUploading}
           onPress={handleUpload}
         >
