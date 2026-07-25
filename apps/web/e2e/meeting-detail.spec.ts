@@ -3,6 +3,7 @@ import {
   API_URL,
   TEST_PASSWORD,
   TEST_USER_EMAIL,
+  deleteMeetingById,
   deleteUserByEmail,
   loginUserViaApi,
   registerUserViaApi,
@@ -34,6 +35,10 @@ test.describe('shared meeting detail page', () => {
       );
     }
     ({ id: meetingId } = (await res.json()) as { id: string });
+  });
+
+  test.afterAll(async () => {
+    await deleteMeetingById(meetingId);
   });
 
   test.afterEach(async () => {
