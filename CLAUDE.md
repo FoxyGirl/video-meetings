@@ -35,8 +35,10 @@ npm run lint --workspace=api
 
 npm run typecheck                           # tsc --noEmit in both apps
 
-npm run test                                # run tests in both apps (api only has tests currently)
+npm run test                                # run unit tests in both apps (api only has unit tests currently)
 npm run test --workspace=api -- --watch     # forward flags to an app's own script
+
+npm run test:e2e                            # run e2e tests in both apps (needs the Postgres container up, see below)
 
 npm run format          # prettier --write . across the whole repo
 npm run format:check    # prettier --check .
@@ -55,6 +57,15 @@ docker compose down          # stop it (add -v to also drop the data volume)
 
 `apps/api` connects to it via Prisma — see `apps/api/CLAUDE.md`'s "Database (Prisma)" section. The container also hosts a second database, `video_meetings_test`, used exclusively by `apps/api`'s e2e tests (created automatically on a fresh volume via `docker/postgres-initdb/`).
 
+## Local test user
+
+For manually exercising auth-gated features (e.g. the shared meeting detail page) against the local dev stack, a seeded test user exists in the local Postgres `db` container:
+
+- Email: `qa-test@video-meetings.local`
+- Password: `TestPassword123!`
+
+It owns one seeded meeting ("QA Test Meeting") to check the detail page's organizer view. This user only exists in the local dev database (created via `POST /auth/register`) — re-create it the same way after a `docker compose down -v` wipes the volume.
+
 ## Keeping documentation in sync
 
 When a change alters the project's architecture — new workspace/app, new shared config, a module/service restructuring, a changed port or entry point, a new database or external dependency — update the relevant `CLAUDE.md` (root and/or the affected app's) in the same change. Don't leave documentation describing a prior structure once the code no longer matches it.
@@ -64,6 +75,11 @@ When a change alters the project's architecture — new workspace/app, new share
 Husky runs checks at two stages:
 
 - **pre-commit** (`.husky/pre-commit` → `npx lint-staged`): fast, staged-files-only. The `lint-staged` config lives in the root `package.json`: it runs each app's ESLint (with its own `--config`) against its own staged files, and Prettier against all staged web/api files plus repo-level JSON/Markdown/YAML/CSS.
-- **pre-push** (`.husky/pre-push` → `npm run lint`, then `npm run test`): slower, whole-repo checks, since a push affects more than just what changed locally. `npm run lint` runs each workspace's full ESLint (not scoped to staged files). `npm run test` runs each workspace's unit test script — currently just `apps/api`'s Jest unit suite (`web` has no `test` script, so `--if-present` skips it); this is unit tests only, not `test:e2e` (that needs the Postgres container up and is meant for local/CI runs, not every push).
+- **pre-push** (`.husky/pre-push` → `npm run lint`, then `npm run test`, then `npm run test:e2e`): slower, whole-repo checks, since a push affects more than just what changed locally. `npm run lint` runs each workspace's full ESLint (not scoped to staged files). `npm run test` runs each workspace's unit test script — currently just `apps/api`'s Jest unit suite (`web` has no `test` script, so `--if-present` skips it). `npm run test:e2e` runs both apps' e2e suites: `apps/api`'s Jest e2e suite (boots the real app in-process against the `video_meetings_test` Postgres database, no separate server needed) and `apps/web`'s Playwright suite (`apps/web/CLAUDE.md`'s "E2E tests" section) — Playwright auto-starts both the `web` and `api` dev servers via its `webServer` config if they aren't already running (and tears them down after), reusing them if you already have `npm run dev` up. **The Postgres container (`docker compose up -d db`, see "Local database" above) must already be running for a push to succeed.** A `pretest:e2e` script (`scripts/check-postgres.sh`, runs automatically before `test:e2e` via npm's `pre<script>` convention) checks this upfront with `docker compose exec db pg_isready` and fails fast with a clear "start it with `docker compose up -d db`" message instead of letting the failure surface later as an opaque Playwright `webServer` timeout.
 
 Don't bypass either with `--no-verify` to "fix" a failing commit/push — fix the lint/format/test issue instead.
+
+## Pull requests
+
+- Start the PR title with a fitting [Gitmoji](https://gitmoji.dev/) (e.g. `✨ feat(web): ...`, `🐛 fix(api): ...`).
+- NEVER merge an open pull request. Merging is a decision for the developers to make in the remote repo.

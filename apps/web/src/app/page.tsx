@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
 import { ApiError, getMeetings, type Meeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -142,20 +143,25 @@ export default function HomePage() {
 
 function MeetingCard({ meeting }: { meeting: Meeting }) {
   return (
-    <Card>
-      <Card.Header>
-        <Card.Title>{meeting.title}</Card.Title>
-        <Card.Description>
-          {new Date(meeting.date).toLocaleString()}
-        </Card.Description>
-      </Card.Header>
-      {meeting.participants.length > 0 ? (
-        <Card.Content>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Participants: {meeting.participants.join(', ')}
-          </p>
-        </Card.Content>
-      ) : null}
-    </Card>
+    <Link
+      className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+      href={`/meetings/${meeting.id}`}
+    >
+      <Card className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+        <Card.Header>
+          <Card.Title>{meeting.title}</Card.Title>
+          <Card.Description>
+            {new Date(meeting.date).toLocaleString()}
+          </Card.Description>
+        </Card.Header>
+        {meeting.participants.length > 0 ? (
+          <Card.Content>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Participants: {meeting.participants.join(', ')}
+            </p>
+          </Card.Content>
+        ) : null}
+      </Card>
+    </Link>
   );
 }

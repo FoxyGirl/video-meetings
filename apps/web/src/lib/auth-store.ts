@@ -5,6 +5,19 @@ export interface AuthState {
   email: string;
 }
 
+export function getUserId(accessToken: string): string | null {
+  try {
+    const [, payload] = accessToken.split('.');
+    // JWT payloads are base64url-encoded (`-`/`_`, no padding); atob only
+    // accepts standard base64 (`+`//`), so convert before decoding.
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = JSON.parse(atob(base64)) as { sub?: string };
+    return decoded.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
