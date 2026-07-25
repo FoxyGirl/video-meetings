@@ -55,3 +55,15 @@ export async function deleteUserByEmail(email: string) {
     await client.end();
   }
 }
+
+// Same rationale as deleteUserByEmail — used for meetings seeded under the
+// persistent shared test user, which itself is never deleted.
+export async function deleteMeetingById(id: string) {
+  const client = new Client({ connectionString: DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('DELETE FROM "Meeting" WHERE id = $1', [id]);
+  } finally {
+    await client.end();
+  }
+}
