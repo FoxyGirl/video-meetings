@@ -212,5 +212,49 @@ describe('Meeting file upload (e2e)', () => {
       const secondStoredPath = join(UPLOAD_DIR, secondBody.filePath as string);
       expect(existsSync(secondStoredPath)).toBe(true);
     });
+
+    it('serializes concurrent re-uploads to the same meeting without orphaning a file', async () => {
+      const { accessToken } = await registerUser();
+      const meetingId = await createMeeting(accessToken);
+
+      const [first, second] = await Promise.all([
+        uploadRequest(meetingId, accessToken).attach(
+          'file',
+          Buffer.from('version A'),
+          { filename: 'a.mp4', contentType: 'video/mp4' },
+        ),
+        uploadRequest(meetingId, accessToken).attach(
+          'file',
+          Buffer.from('version B, a bit longer'),
+          { filename: 'b.webm', contentType: 'video/webm' },
+        ),
+      ]);
+
+      expect(first.status).toBe(201);
+      expect(second.status).toBe(201);
+
+      const firstBody = first.body as MeetingResponseBody;
+      const secondBody = second.body as MeetingResponseBody;
+      expect(firstBody.filePath).not.toBe(secondBody.filePath);
+
+      const finalResponse = await request(app.getHttpServer())
+        .get(`/meetings/${meetingId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      const finalFilePath = (finalResponse.body as MeetingResponseBody)
+        .filePath as string;
+
+      const candidatePaths = [firstBody.filePath, secondBody.filePath];
+      expect(candidatePaths).toContain(finalFilePath);
+      const losingFilePath = candidatePaths.find(
+        (path) => path !== finalFilePath,
+      ) as string;
+
+      // The row that lost the race must have had its file cleaned up by
+      // whichever request committed second (per the row lock in
+      // UploadMeetingFileHandler) — no orphaned file left on disk.
+      expect(existsSync(join(UPLOAD_DIR, finalFilePath))).toBe(true);
+      expect(existsSync(join(UPLOAD_DIR, losingFilePath))).toBe(false);
+    });
   });
 });
