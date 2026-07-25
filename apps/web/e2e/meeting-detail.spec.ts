@@ -1,43 +1,23 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3001';
-
-// Local dev test user — seeded once via POST /auth/register and documented
-// in the repo root CLAUDE.md. Re-registering is a no-op (409, ignored).
-const TEST_USER_EMAIL = 'qa-test@video-meetings.local';
-const TEST_USER_PASSWORD = 'TestPassword123!';
-
-async function ensureTestUserExists(request: APIRequestContext) {
-  const res = await request.post(`${API_URL}/auth/register`, {
-    data: { email: TEST_USER_EMAIL, password: TEST_USER_PASSWORD },
-  });
-  if (!res.ok() && res.status() !== 409) {
-    throw new Error(
-      `Failed to provision test user: ${res.status()} ${await res.text()}`,
-    );
-  }
-}
-
-async function loginTestUser(request: APIRequestContext): Promise<string> {
-  const res = await request.post(`${API_URL}/auth/login`, {
-    data: { email: TEST_USER_EMAIL, password: TEST_USER_PASSWORD },
-  });
-  if (!res.ok()) {
-    throw new Error(
-      `Failed to log in test user: ${res.status()} ${await res.text()}`,
-    );
-  }
-  const { accessToken } = (await res.json()) as { accessToken: string };
-  return accessToken;
-}
+import { test, expect } from '@playwright/test';
+import {
+  API_URL,
+  TEST_PASSWORD,
+  TEST_USER_EMAIL,
+  deleteUserByEmail,
+  loginUserViaApi,
+  registerUserViaApi,
+} from './api-helpers';
 
 test.describe('shared meeting detail page', () => {
   let meetingId: string;
   let meetingTitle: string;
+  const createdEmails: string[] = [];
 
   test.beforeAll(async ({ request }) => {
-    await ensureTestUserExists(request);
-    const accessToken = await loginTestUser(request);
+    await registerUserViaApi(request, TEST_USER_EMAIL, {
+      ignoreConflict: true,
+    });
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
 
     meetingTitle = `E2E Meeting ${Date.now()}`;
     const res = await request.post(`${API_URL}/meetings`, {
@@ -56,14 +36,16 @@ test.describe('shared meeting detail page', () => {
     ({ id: meetingId } = (await res.json()) as { id: string });
   });
 
+  test.afterEach(async () => {
+    await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
+  });
+
   test('organizer can sign in and view their meeting details', async ({
     page,
   }) => {
     await page.goto('/login');
     await page.getByRole('textbox', { name: 'Email*' }).fill(TEST_USER_EMAIL);
-    await page
-      .getByRole('textbox', { name: 'Password*' })
-      .fill(TEST_USER_PASSWORD);
+    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page).toHaveURL('/');
@@ -78,6 +60,46 @@ test.describe('shared meeting detail page', () => {
     ).toBeVisible();
     await expect(
       page.getByText('alice@example.com, bob@example.com'),
+    ).toBeVisible();
+  });
+
+  test('does not show the organizer badge to a non-organizer', async ({
+    page,
+    request,
+  }) => {
+    const viewerEmail = `e2e-viewer-${Date.now()}@video-meetings.local`;
+    createdEmails.push(viewerEmail);
+    await registerUserViaApi(request, viewerEmail);
+
+    await page.goto('/login');
+    await page.getByRole('textbox', { name: 'Email*' }).fill(viewerEmail);
+    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+    await expect(page).toHaveURL('/');
+    await page.goto(`/meetings/${meetingId}`);
+
+    await expect(
+      page.getByRole('heading', { name: meetingTitle }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('You are the organizer of this meeting.'),
+    ).not.toBeVisible();
+  });
+
+  test('shows a friendly error for an invalid or deleted meeting id', async ({
+    page,
+  }) => {
+    await page.goto('/login');
+    await page.getByRole('textbox', { name: 'Email*' }).fill(TEST_USER_EMAIL);
+    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+    await expect(page).toHaveURL('/');
+    await page.goto(`/meetings/nonexistent-${Date.now()}`);
+
+    await expect(
+      page.getByText('This meeting doesn’t exist or has been deleted.'),
     ).toBeVisible();
   });
 
