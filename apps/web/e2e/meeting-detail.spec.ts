@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 import {
   API_URL,
-  TEST_PASSWORD,
   TEST_USER_EMAIL,
   deleteMeetingById,
   deleteUserByEmail,
   loginUserViaApi,
   registerUserViaApi,
 } from './api-helpers';
+import { loginViaUi } from './ui-helpers';
 
 test.describe('shared meeting detail page', () => {
   let meetingId: string;
@@ -48,12 +48,7 @@ test.describe('shared meeting detail page', () => {
   test('organizer can sign in and view their meeting details', async ({
     page,
   }) => {
-    await page.goto('/login');
-    await page.getByRole('textbox', { name: 'Email*' }).fill(TEST_USER_EMAIL);
-    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-
-    await expect(page).toHaveURL('/');
+    await loginViaUi(page, TEST_USER_EMAIL);
     await page.locator(`a[href="/meetings/${meetingId}"]`).first().click();
 
     await expect(page).toHaveURL(`/meetings/${meetingId}`);
@@ -76,12 +71,7 @@ test.describe('shared meeting detail page', () => {
     createdEmails.push(viewerEmail);
     await registerUserViaApi(request, viewerEmail);
 
-    await page.goto('/login');
-    await page.getByRole('textbox', { name: 'Email*' }).fill(viewerEmail);
-    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-
-    await expect(page).toHaveURL('/');
+    await loginViaUi(page, viewerEmail);
     await page.goto(`/meetings/${meetingId}`);
 
     await expect(
@@ -95,12 +85,7 @@ test.describe('shared meeting detail page', () => {
   test('shows a friendly error for an invalid or deleted meeting id', async ({
     page,
   }) => {
-    await page.goto('/login');
-    await page.getByRole('textbox', { name: 'Email*' }).fill(TEST_USER_EMAIL);
-    await page.getByRole('textbox', { name: 'Password*' }).fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-
-    await expect(page).toHaveURL('/');
+    await loginViaUi(page, TEST_USER_EMAIL);
     await page.goto(`/meetings/nonexistent-${Date.now()}`);
 
     await expect(
