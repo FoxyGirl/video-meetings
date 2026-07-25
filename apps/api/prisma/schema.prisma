@@ -17,11 +17,16 @@ model User {
 }
 
 model Meeting {
-  id           String   @id @default(uuid())
-  title        String
-  date         DateTime
-  participants String[]
-  organizerId  String
-  organizer    User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
+  id               String    @id @default(uuid())
+  title            String
+  date             DateTime
+  participants     String[]
+  organizerId      String
+  organizer        User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  fileOriginalName String?
+  filePath         String?
+  fileMimeType     String?
+  fileSize         Int?
+  fileUploadedAt   DateTime?
 }

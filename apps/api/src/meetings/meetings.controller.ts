@@ -7,15 +7,20 @@ import {
   Param,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
+import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
+import { meetingFileUploadOptions } from './upload/multer.config';
 
 @Controller('meetings')
 @UseGuards(JwtAuthGuard)
@@ -46,5 +51,18 @@ export class MeetingsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.queryBus.execute(new GetMeetingQuery(id));
+  }
+
+  @Post(':id/file')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file', meetingFileUploadOptions))
+  uploadFile(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commandBus.execute(
+      new UploadMeetingFileCommand(id, request.user.userId, file),
+    );
   }
 }
