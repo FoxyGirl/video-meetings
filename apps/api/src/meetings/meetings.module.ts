@@ -7,7 +7,7 @@ import { CreateMeetingHandler } from './commands/handlers/create-meeting.handler
 import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-file.handler';
 import { GetMeetingsHandler } from './queries/handlers/get-meetings.handler';
 import { GetMeetingHandler } from './queries/handlers/get-meeting.handler';
-import { UPLOAD_DIR } from './upload/file-upload.constants';
+import { getUploadDir } from './upload/file-upload.constants';
 
 const CommandHandlers = [CreateMeetingHandler, UploadMeetingFileHandler];
 const QueryHandlers = [GetMeetingsHandler, GetMeetingHandler];
@@ -20,6 +20,6 @@ const QueryHandlers = [GetMeetingsHandler, GetMeetingHandler];
 export class MeetingsModule implements OnModuleInit {
   onModuleInit() {
     // multer's diskStorage does not create missing directories itself.
-    mkdirSync(UPLOAD_DIR, { recursive: true });
+    mkdirSync(getUploadDir(), { recursive: true });
   }
 }

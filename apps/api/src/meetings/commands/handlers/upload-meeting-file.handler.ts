@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { UPLOAD_DIR } from '../../upload/file-upload.constants';
+import { getUploadDir } from '../../upload/file-upload.constants';
 import { validateFileType } from '../../upload/validate-file-type';
 import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
 
@@ -63,7 +63,7 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
       );
 
       if (oldFilePath) {
-        await unlink(join(UPLOAD_DIR, oldFilePath)).catch(() => undefined);
+        await unlink(join(getUploadDir(), oldFilePath)).catch(() => undefined);
       }
 
       return updated;

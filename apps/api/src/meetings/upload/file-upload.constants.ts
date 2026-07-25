@@ -1,8 +1,23 @@
 import { join } from 'node:path';
 
-export const UPLOAD_DIR =
-  process.env.UPLOAD_DIR ?? join(process.cwd(), 'uploads');
+// A function, not a top-level const: every consumer calls this at the point
+// it actually needs the path (module init, per-request, per-upload) rather
+// than baking in whatever process.env looked like when this file happened
+// to be require()'d. Same footgun apps/api/CLAUDE.md documents for
+// JWT_SECRET, solved there via JwtModule.registerAsync's deferred read.
+export function getUploadDir(): string {
+  return process.env.UPLOAD_DIR ?? join(process.cwd(), 'uploads');
+}
 
+// Unlike UPLOAD_DIR, this can't be made lazy the same way: multer's
+// `limits.fileSize` must be a static value at Multer-instance construction
+// time (busboy reads it once, inside FileInterceptor's decorator — i.e. at
+// meetings.controller.ts's module-load time), with no supported way to
+// defer it to request time short of a custom interceptor. In practice this
+// is safe today: main.ts's `import 'dotenv/config'` is the first line
+// (so it runs before AppModule's require graph reaches this file), and in
+// e2e tests jest-e2e.setup.ts's setupFiles loads .env.test before any test
+// file — and therefore any module in this import graph — is required.
 export const MAX_UPLOAD_FILE_SIZE_BYTES =
   Number(process.env.MAX_UPLOAD_FILE_SIZE_BYTES) || 500 * 1024 * 1024;
 

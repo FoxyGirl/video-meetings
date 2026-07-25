@@ -4,13 +4,15 @@ import { diskStorage } from 'multer';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import {
   MAX_UPLOAD_FILE_SIZE_BYTES,
-  UPLOAD_DIR,
+  getUploadDir,
 } from './file-upload.constants';
 import { validateFileType } from './validate-file-type';
 
 export const meetingFileUploadOptions: MulterOptions = {
   storage: diskStorage({
-    destination: UPLOAD_DIR,
+    // A function, not a static path, so the directory is resolved per
+    // upload rather than once when this module is first required.
+    destination: (_req, _file, callback) => callback(null, getUploadDir()),
     // Never trust the client's original name for the on-disk name (path
     // traversal defense); the original name is kept separately as metadata.
     filename: (_req, file, callback) =>

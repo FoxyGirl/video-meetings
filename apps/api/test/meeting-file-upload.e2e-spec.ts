@@ -7,7 +7,11 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
-import { UPLOAD_DIR } from '../src/meetings/upload/file-upload.constants';
+import { getUploadDir } from '../src/meetings/upload/file-upload.constants';
+
+// Jest's setupFiles (jest-e2e.setup.ts) load .env.test before this file is
+// required, so it's safe to resolve this once for the whole suite.
+const UPLOAD_DIR = getUploadDir();
 
 interface AuthResponseBody {
   accessToken: string;
