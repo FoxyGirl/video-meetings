@@ -253,5 +253,64 @@ describe('Meeting file metadata, download, and delete (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
+
+    it('serializes a concurrent delete and re-upload without orphaning a file', async () => {
+      const { accessToken } = await registerUser();
+      const meetingId = await createMeeting(accessToken);
+
+      const initial = await uploadFile(meetingId, accessToken, {
+        buffer: Buffer.from('initial version'),
+        filename: 'initial.mp4',
+        contentType: 'video/mp4',
+      });
+      const initialStoredPath = `${UPLOAD_DIR}/${initial.filePath}`;
+      expect(existsSync(initialStoredPath)).toBe(true);
+
+      const [deleteResponse, uploadResponse] = await Promise.all([
+        request(app.getHttpServer())
+          .delete(`/meetings/${meetingId}/file`)
+          .set('Authorization', `Bearer ${accessToken}`),
+        request(app.getHttpServer())
+          .post(`/meetings/${meetingId}/file`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .attach('file', Buffer.from('replacement version'), {
+            filename: 'replacement.mp4',
+            contentType: 'video/mp4',
+          }),
+      ]);
+
+      // Whichever of the two committed first, the row lock in
+      // DeleteMeetingFileHandler/UploadMeetingFileHandler means the delete
+      // always finds *some* file present (the initial one, or the
+      // just-committed replacement) — it never races against a stale read.
+      expect(deleteResponse.status).toBe(200);
+      expect(uploadResponse.status).toBe(201);
+
+      // The initial file must be gone from disk by now regardless of
+      // ordering: either the delete removed it directly, or the reupload's
+      // own replace-on-reupload cleanup did.
+      expect(existsSync(initialStoredPath)).toBe(false);
+
+      const finalMeeting = (
+        await request(app.getHttpServer())
+          .get(`/meetings/${meetingId}`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+      ).body as MeetingResponseBody;
+      const replacementPath = (uploadResponse.body as MeetingResponseBody)
+        .filePath as string;
+
+      if (finalMeeting.filePath) {
+        // The reupload committed last: its file must be the one left
+        // referenced and present on disk.
+        expect(finalMeeting.filePath).toBe(replacementPath);
+        expect(existsSync(`${UPLOAD_DIR}/${finalMeeting.filePath}`)).toBe(true);
+      } else {
+        // The delete committed last: no file should remain anywhere on
+        // disk, including the replacement the reupload wrote — this is
+        // exactly the orphan a missing row lock would produce.
+        expect(existsSync(`${UPLOAD_DIR}/${replacementPath}`)).toBe(false);
+      }
+    });
   });
 });
