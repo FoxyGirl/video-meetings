@@ -15,6 +15,9 @@ apps/api/dist/
 apps/api/prisma/generated/
 build/
 
+# uploaded files (local disk storage, see apps/api/CLAUDE.md)
+apps/api/uploads/
+
 # testing / coverage
 coverage/
 test-results/
