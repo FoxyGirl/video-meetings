@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Alert, Button, Card, ProgressBar, Spinner } from '@heroui/react';
+import {
+  Alert,
+  Button,
+  Card,
+  ProgressBar,
+  Spinner,
+  toast,
+} from '@heroui/react';
 import { Upload } from 'lucide-react';
 import {
   ApiError,
@@ -45,6 +52,7 @@ export function MeetingFileUpload({
     try {
       const metadata = await uploadMeetingFile(meetingId, file, setProgress);
       onUploaded(metadata);
+      toast.success('Recording uploaded', { description: file.name });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         onSessionExpired();
