@@ -1,3 +1,5 @@
+import { createReadStream } from 'node:fs';
+import { join } from 'node:path';
 import {
   Body,
   Controller,
@@ -7,12 +9,15 @@ import {
   Param,
   Post,
   Req,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
@@ -24,6 +29,8 @@ import {
 } from './queries/get-meeting-file.query';
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
+import { buildAttachmentContentDisposition } from './upload/content-disposition';
+import { getUploadDir } from './upload/file-upload.constants';
 import { meetingFileUploadOptions } from './upload/multer.config';
 
 @Controller('meetings')
@@ -83,5 +90,27 @@ export class MeetingsController {
       fileSize: meeting.fileSize,
       fileUploadedAt: meeting.fileUploadedAt,
     };
+  }
+
+  @Get(':id/file/download')
+  async downloadFile(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const meeting = await this.queryBus.execute<
+      GetMeetingFileQuery,
+      MeetingFileRecord
+    >(new GetMeetingFileQuery(id));
+
+    res.set({
+      'Content-Type': meeting.fileMimeType,
+      'Content-Disposition': buildAttachmentContentDisposition(
+        meeting.fileOriginalName,
+      ),
+    });
+
+    return new StreamableFile(
+      createReadStream(join(getUploadDir(), meeting.filePath)),
+    );
   }
 }
