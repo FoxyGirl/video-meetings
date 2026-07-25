@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
-import { ApiError, getMeeting, type Meeting } from '@/lib/api';
+import { MeetingFileUpload } from '@/components/meeting-file-upload';
+import {
+  ApiError,
+  getMeeting,
+  getMeetingFile,
+  type Meeting,
+  type MeetingFileMetadata,
+} from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function MeetingDetailPage() {
@@ -13,7 +20,16 @@ export default function MeetingDetailPage() {
   const { auth, userId, isLoading, logout } = useAuth();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [meetingError, setMeetingError] = useState<string | null>(null);
+  const [meetingFile, setMeetingFile] = useState<MeetingFileMetadata | null>(
+    null,
+  );
+  const [isMeetingFileLoading, setIsMeetingFileLoading] = useState(true);
   const isMeetingLoading = meeting === null && meetingError === null;
+
+  const handleSessionExpired = useCallback(() => {
+    logout();
+    router.replace('/login');
+  }, [logout, router]);
 
   useEffect(() => {
     if (!isLoading && !auth) {
@@ -34,7 +50,7 @@ export default function MeetingDetailPage() {
 
     let cancelled = false;
 
-    getMeeting(id, auth.accessToken)
+    getMeeting(id)
       .then((data) => {
         if (!cancelled) {
           setMeeting(data);
@@ -45,8 +61,7 @@ export default function MeetingDetailPage() {
           return;
         }
         if (error instanceof ApiError && error.status === 401) {
-          logout();
-          router.replace('/login');
+          handleSessionExpired();
           return;
         }
         setMeetingError(
@@ -59,7 +74,39 @@ export default function MeetingDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, auth, logout, router]);
+  }, [id, auth, handleSessionExpired]);
+
+  useEffect(() => {
+    if (!auth || !meeting) {
+      return;
+    }
+
+    let cancelled = false;
+
+    getMeetingFile(meeting.id)
+      .then((data) => {
+        if (!cancelled) {
+          setMeetingFile(data);
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && error.status === 401) {
+          handleSessionExpired();
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsMeetingFileLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [meeting, auth, handleSessionExpired]);
 
   if (isLoading || !auth) {
     return (
@@ -129,6 +176,14 @@ export default function MeetingDetailPage() {
             )
           )}
         </div>
+
+        {meeting && isOrganizer && !isMeetingFileLoading && !meetingFile ? (
+          <MeetingFileUpload
+            meetingId={meeting.id}
+            onSessionExpired={handleSessionExpired}
+            onUploaded={setMeetingFile}
+          />
+        ) : null}
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import axios from 'axios';
+import { http } from './http';
+
+export { API_URL } from './http';
 
 export class ApiError extends Error {
   constructor(
@@ -9,6 +11,35 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+function extractServerMessage(data: unknown): string | undefined {
+  if (data && typeof data === 'object' && 'message' in data) {
+    const message = (data as { message?: unknown }).message;
+    return typeof message === 'string' ? message : undefined;
+  }
+  return undefined;
+}
+
+// Axios rejects on non-2xx (unlike fetch, which only exposes res.ok), so
+// every call site funnels its catch through here to normalize onto the
+// existing ApiError shape. statusMessages lets a call site override the
+// server's raw message with a friendlier one for specific statuses; when no
+// override matches, the server's own message is used (e.g. upload
+// validation errors, which are already specific per-case strings).
+function toApiError(
+  error: unknown,
+  statusMessages: Record<number, string> = {},
+): ApiError {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status ?? 0;
+    const message =
+      statusMessages[status] ??
+      extractServerMessage(error.response?.data) ??
+      'Something went wrong. Please try again.';
+    return new ApiError(message, status);
+  }
+  return new ApiError('Something went wrong. Please try again.', 0);
 }
 
 export interface RegisterPayload {
@@ -23,21 +54,14 @@ export interface AuthResult {
 export async function registerUser(
   payload: RegisterPayload,
 ): Promise<AuthResult> {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const message =
-      res.status === 409
-        ? 'An account with this email already exists.'
-        : 'Something went wrong. Please try again.';
-    throw new ApiError(message, res.status);
+  try {
+    const res = await http.post<AuthResult>('/auth/register', payload);
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      409: 'An account with this email already exists.',
+    });
   }
-
-  return res.json() as Promise<AuthResult>;
 }
 
 export interface LoginPayload {
@@ -46,21 +70,12 @@ export interface LoginPayload {
 }
 
 export async function loginUser(payload: LoginPayload): Promise<AuthResult> {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const message =
-      res.status === 401
-        ? 'Invalid email or password.'
-        : 'Something went wrong. Please try again.';
-    throw new ApiError(message, res.status);
+  try {
+    const res = await http.post<AuthResult>('/auth/login', payload);
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, { 401: 'Invalid email or password.' });
   }
-
-  return res.json() as Promise<AuthResult>;
 }
 
 export interface Meeting {
@@ -72,39 +87,74 @@ export interface Meeting {
   createdAt: string;
 }
 
-export async function getMeetings(accessToken: string): Promise<Meeting[]> {
-  const res = await fetch(`${API_URL}/meetings`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!res.ok) {
-    const message =
-      res.status === 401
-        ? 'Your session has expired. Please sign in again.'
-        : 'Something went wrong. Please try again.';
-    throw new ApiError(message, res.status);
+export async function getMeetings(): Promise<Meeting[]> {
+  try {
+    const res = await http.get<Meeting[]>('/meetings');
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+    });
   }
-
-  return res.json() as Promise<Meeting[]>;
 }
 
-export async function getMeeting(
-  id: string,
-  accessToken: string,
-): Promise<Meeting> {
-  const res = await fetch(`${API_URL}/meetings/${id}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!res.ok) {
-    const message =
-      res.status === 404
-        ? 'This meeting doesn’t exist or has been deleted.'
-        : res.status === 401
-          ? 'Your session has expired. Please sign in again.'
-          : 'Something went wrong. Please try again.';
-    throw new ApiError(message, res.status);
+export async function getMeeting(id: string): Promise<Meeting> {
+  try {
+    const res = await http.get<Meeting>(`/meetings/${id}`);
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      404: 'This meeting doesn’t exist or has been deleted.',
+      401: 'Your session has expired. Please sign in again.',
+    });
   }
+}
 
-  return res.json() as Promise<Meeting>;
+export interface MeetingFileMetadata {
+  fileOriginalName: string;
+  fileMimeType: string;
+  fileSize: number;
+  fileUploadedAt: string;
+}
+
+// Resolves to null when the meeting has no stored file (404) rather than
+// throwing — callers only need to distinguish "no file yet" from a real
+// error, and by the time this is called the meeting's own existence has
+// already been confirmed via getMeeting.
+export async function getMeetingFile(
+  id: string,
+): Promise<MeetingFileMetadata | null> {
+  try {
+    const res = await http.get<MeetingFileMetadata>(`/meetings/${id}/file`);
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+    });
+  }
+}
+
+export async function uploadMeetingFile(
+  id: string,
+  file: File,
+): Promise<MeetingFileMetadata> {
+  const form = new FormData();
+  // Field name must match the server's FileInterceptor('file', ...).
+  form.append('file', file);
+
+  try {
+    const res = await http.post<MeetingFileMetadata>(
+      `/meetings/${id}/file`,
+      form,
+    );
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer exists or you are not its organizer.',
+    });
+  }
 }

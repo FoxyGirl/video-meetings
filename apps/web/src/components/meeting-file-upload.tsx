@@ -1,0 +1,99 @@
+'use client';
+
+import { useState } from 'react';
+import { Alert, Button, Card, Spinner } from '@heroui/react';
+import { Upload } from 'lucide-react';
+import {
+  ApiError,
+  uploadMeetingFile,
+  type MeetingFileMetadata,
+} from '@/lib/api';
+
+interface MeetingFileUploadProps {
+  meetingId: string;
+  onUploaded: (metadata: MeetingFileMetadata) => void;
+  onSessionExpired: () => void;
+}
+
+export function MeetingFileUpload({
+  meetingId,
+  onUploaded,
+  onSessionExpired,
+}: MeetingFileUploadProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    setFile(selected);
+    setUploadError(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const metadata = await uploadMeetingFile(meetingId, file);
+      onUploaded(metadata);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      setUploadError(
+        error instanceof ApiError
+          ? error.message
+          : 'Upload failed. Please try again.',
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <Card.Header>
+        <Card.Title>Upload a recording</Card.Title>
+        <Card.Description>
+          This meeting doesn’t have a stored recording yet.
+        </Card.Description>
+      </Card.Header>
+      <Card.Content className="flex flex-col gap-4">
+        <input
+          className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
+          disabled={isUploading}
+          type="file"
+          onChange={handleFileChange}
+        />
+
+        {uploadError ? (
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>{uploadError}</Alert.Title>
+            </Alert.Content>
+          </Alert>
+        ) : null}
+
+        <Button
+          fullWidth
+          isDisabled={!file}
+          isPending={isUploading}
+          onPress={handleUpload}
+        >
+          {isUploading ? (
+            <Spinner color="current" size="sm" />
+          ) : (
+            <Upload size={16} />
+          )}
+          {isUploading ? 'Uploading…' : 'Upload'}
+        </Button>
+      </Card.Content>
+    </Card>
+  );
+}
