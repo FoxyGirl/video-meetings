@@ -164,7 +164,7 @@ describe('Meeting file upload (e2e)', () => {
           filename: 'recording.mp4',
           contentType: 'video/mp4',
         })
-        .expect(400);
+        .expect(413);
 
       const after = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
       expect(after).toEqual(before);
