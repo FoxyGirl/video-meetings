@@ -1,36 +1,9 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
-import { Client } from 'pg';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3001';
-const DATABASE_URL =
-  process.env.DATABASE_URL ??
-  'postgresql://postgres:postgres@localhost:5432/video_meetings';
-const TEST_PASSWORD = 'TestPassword123!';
-
-async function registerUserViaApi(request: APIRequestContext, email: string) {
-  const res = await request.post(`${API_URL}/auth/register`, {
-    data: { email, password: TEST_PASSWORD },
-  });
-  if (!res.ok()) {
-    throw new Error(
-      `Failed to provision user via API: ${res.status()} ${await res.text()}`,
-    );
-  }
-}
-
-// Deletes a user created for a test directly from Postgres — there is no
-// delete-user API endpoint, and these are throwaway accounts scoped to a
-// single test run, so talking to the dev database directly (same approach
-// apps/api's own e2e suite uses for cleanup) is simpler than adding one.
-async function deleteUserByEmail(email: string) {
-  const client = new Client({ connectionString: DATABASE_URL });
-  await client.connect();
-  try {
-    await client.query('DELETE FROM "User" WHERE email = $1', [email]);
-  } finally {
-    await client.end();
-  }
-}
+import { test, expect } from '@playwright/test';
+import {
+  TEST_PASSWORD,
+  deleteUserByEmail,
+  registerUserViaApi,
+} from './api-helpers';
 
 test.describe('register page', () => {
   const createdEmails: string[] = [];
