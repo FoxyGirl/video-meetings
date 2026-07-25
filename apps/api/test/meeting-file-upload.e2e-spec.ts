@@ -111,12 +111,17 @@ describe('Meeting file upload (e2e)', () => {
       const meetingId = await createMeeting(accessToken);
       const before = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
 
-      await uploadRequest(meetingId, accessToken)
+      const response = await uploadRequest(meetingId, accessToken)
         .attach('file', Buffer.from('not a video'), {
           filename: 'malware.exe',
           contentType: 'application/octet-stream',
         })
         .expect(400);
+
+      // Confirms the "bad extension" branch fired, not some other 400.
+      expect((response.body as { message: string }).message).toContain(
+        'extension ".exe" is not supported',
+      );
 
       const after = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
       expect(after).toEqual(before);
@@ -127,12 +132,17 @@ describe('Meeting file upload (e2e)', () => {
       const meetingId = await createMeeting(accessToken);
       const before = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
 
-      await uploadRequest(meetingId, accessToken)
+      const response = await uploadRequest(meetingId, accessToken)
         .attach('file', Buffer.from('fake mp4 bytes'), {
           filename: 'recording.mp4',
           contentType: 'application/octet-stream',
         })
         .expect(400);
+
+      // Confirms the "bad MIME type" branch fired, not the mismatch branch.
+      expect((response.body as { message: string }).message).toContain(
+        'MIME type "application/octet-stream" is not supported',
+      );
 
       const after = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
       expect(after).toEqual(before);
@@ -143,12 +153,20 @@ describe('Meeting file upload (e2e)', () => {
       const meetingId = await createMeeting(accessToken);
       const before = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
 
-      await uploadRequest(meetingId, accessToken)
+      const response = await uploadRequest(meetingId, accessToken)
         .attach('file', Buffer.from('fake audio bytes'), {
           filename: 'recording.mp4',
           contentType: 'audio/mpeg',
         })
         .expect(400);
+
+      // Confirms the mismatch branch fired: both the extension (.mp4) and
+      // the MIME type (audio/mpeg, valid for .mp3) are individually
+      // accepted, only their pairing isn't — a different code path than
+      // either of the two tests above.
+      expect((response.body as { message: string }).message).toContain(
+        'extension ".mp4" does not match declared MIME type "audio/mpeg"',
+      );
 
       const after = existsSync(UPLOAD_DIR) ? await readdir(UPLOAD_DIR) : [];
       expect(after).toEqual(before);
