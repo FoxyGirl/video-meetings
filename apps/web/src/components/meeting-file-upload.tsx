@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -33,12 +33,70 @@ export function MeetingFileUpload({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isDragActive, setIsDragActive] = useState(false);
+  // dragenter/dragleave fire for every child element the pointer crosses,
+  // not just the drop zone's own boundary — a counter (rather than a plain
+  // boolean) avoids the highlight flickering off while dragging over the
+  // input or hint text nested inside the zone.
+  const dragCounter = useRef(0);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] ?? null;
+  const applySelectedFile = (selected: File | null) => {
     setFile(selected);
     setUploadError(null);
     setValidationError(selected ? validateFile(selected) : null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applySelectedFile(e.target.files?.[0] ?? null);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isUploading) {
+      return;
+    }
+    dragCounter.current += 1;
+    setIsDragActive(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    // Required even though dragenter already fired — without it the
+    // browser rejects the drop and treats it as a navigation attempt.
+    e.preventDefault();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isUploading) {
+      return;
+    }
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDragActive(false);
+    if (isUploading) {
+      return;
+    }
+
+    const { files } = e.dataTransfer;
+    if (files.length !== 1) {
+      setFile(null);
+      setUploadError(null);
+      setValidationError(
+        files.length === 0
+          ? 'No file detected in the drop. Please drop a single file.'
+          : 'Please drop a single file.',
+      );
+      return;
+    }
+    applySelectedFile(files[0]);
   };
 
   const handleUpload = async () => {
@@ -77,13 +135,31 @@ export function MeetingFileUpload({
         </Card.Description>
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
-        <input
-          accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
-          className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
-          disabled={isUploading}
-          type="file"
-          onChange={handleFileChange}
-        />
+        <div
+          className={`flex flex-col items-center gap-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+            isUploading
+              ? 'cursor-not-allowed border-zinc-200 opacity-50 dark:border-zinc-800'
+              : isDragActive
+                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40'
+                : 'border-zinc-200 dark:border-zinc-800'
+          }`}
+          data-testid="upload-drop-zone"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <input
+            accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
+            className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
+            disabled={isUploading}
+            type="file"
+            onChange={handleFileChange}
+          />
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            or drag and drop a file here
+          </p>
+        </div>
 
         {validationError ? (
           <Alert status="danger">
