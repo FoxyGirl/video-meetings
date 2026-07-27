@@ -137,9 +137,11 @@ export function MeetingFileUpload({
       <Card.Content className="flex flex-col gap-4">
         <div
           className={`flex flex-col items-center gap-2 rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
-            isDragActive
-              ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40'
-              : 'border-zinc-200 dark:border-zinc-800'
+            isUploading
+              ? 'cursor-not-allowed border-zinc-200 opacity-50 dark:border-zinc-800'
+              : isDragActive
+                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40'
+                : 'border-zinc-200 dark:border-zinc-800'
           }`}
           data-testid="upload-drop-zone"
           onDragEnter={handleDragEnter}
