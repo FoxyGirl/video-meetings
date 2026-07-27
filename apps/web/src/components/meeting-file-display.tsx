@@ -135,7 +135,7 @@ export function MeetingFileDisplay({
               <AlertDialog.Backdrop>
                 <AlertDialog.Container>
                   <AlertDialog.Dialog className="sm:max-w-[400px]">
-                    <AlertDialog.CloseTrigger />
+                    <AlertDialog.CloseTrigger isDisabled={isDeleting} />
                     <AlertDialog.Header>
                       <AlertDialog.Icon status="danger" />
                       <AlertDialog.Heading>
