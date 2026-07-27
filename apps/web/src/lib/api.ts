@@ -15,9 +15,17 @@ export class ApiError extends Error {
 }
 
 function extractServerMessage(data: unknown): string | undefined {
-  if (data && typeof data === 'object' && 'message' in data) {
-    const message = (data as { message?: unknown }).message;
-    return typeof message === 'string' ? message : undefined;
+  if (!data || typeof data !== 'object' || !('message' in data)) {
+    return undefined;
+  }
+  const message = (data as { message?: unknown }).message;
+  if (typeof message === 'string') {
+    return message;
+  }
+  // class-validator DTO failures come back as a string[] (one entry per
+  // failed rule) via Nest's default ValidationPipe, not a single string.
+  if (Array.isArray(message) && message.every((m) => typeof m === 'string')) {
+    return (message as string[]).join(' ');
   }
   return undefined;
 }

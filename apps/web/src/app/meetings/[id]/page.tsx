@@ -69,6 +69,9 @@ export default function MeetingDetailPage() {
             ? error.message
             : 'Failed to load this meeting. Please try again.',
         );
+        // There will never be a meeting to fetch a file for, so this
+        // otherwise never resolves out of its initial loading state.
+        setIsMeetingFileLoading(false);
       });
 
     return () => {
