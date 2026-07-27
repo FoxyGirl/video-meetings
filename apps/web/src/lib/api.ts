@@ -146,6 +146,42 @@ export async function getMeetingFile(
   }
 }
 
+// Downloads via a Bearer-authenticated GET rather than a plain <a href> —
+// browsers don't attach custom headers to normal navigations, so the bytes
+// are fetched as a blob and saved through a short-lived object URL instead.
+export async function downloadMeetingFile(
+  id: string,
+  fileName: string,
+): Promise<void> {
+  try {
+    const res = await http.get<Blob>(`/meetings/${id}/file/download`, {
+      responseType: 'blob',
+    });
+    const url = URL.createObjectURL(res.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer has a stored recording.',
+    });
+  }
+}
+
+export async function deleteMeetingFile(id: string): Promise<void> {
+  try {
+    await http.delete(`/meetings/${id}/file`);
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer exists, has no recording, or you are not its organizer.',
+    });
+  }
+}
+
 export async function uploadMeetingFile(
   id: string,
   file: File,

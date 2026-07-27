@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
+import { FileQuestion } from 'lucide-react';
+import { MeetingFileDisplay } from '@/components/meeting-file-display';
 import { MeetingFileUpload } from '@/components/meeting-file-upload';
 import {
   ApiError,
@@ -180,12 +182,34 @@ export default function MeetingDetailPage() {
           )}
         </div>
 
-        {meeting && isOrganizer && !isMeetingFileLoading && !meetingFile ? (
-          <MeetingFileUpload
-            meetingId={meeting.id}
-            onSessionExpired={handleSessionExpired}
-            onUploaded={setMeetingFile}
-          />
+        {meeting && !isMeetingFileLoading ? (
+          meetingFile ? (
+            <MeetingFileDisplay
+              file={meetingFile}
+              isOrganizer={isOrganizer}
+              meetingId={meeting.id}
+              onDeleted={() => setMeetingFile(null)}
+              onSessionExpired={handleSessionExpired}
+            />
+          ) : isOrganizer ? (
+            <MeetingFileUpload
+              meetingId={meeting.id}
+              onSessionExpired={handleSessionExpired}
+              onUploaded={setMeetingFile}
+            />
+          ) : (
+            <Card>
+              <Card.Content className="flex flex-col items-center gap-2 py-8 text-center">
+                <FileQuestion
+                  className="text-zinc-400 dark:text-zinc-600"
+                  size={32}
+                />
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  No recording yet.
+                </p>
+              </Card.Content>
+            </Card>
+          )
         ) : null}
       </div>
     </div>
