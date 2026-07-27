@@ -27,7 +27,7 @@ export default function HomePage() {
 
     let cancelled = false;
 
-    getMeetings(auth.accessToken)
+    getMeetings()
       .then((data) => {
         if (!cancelled) {
           setMeetings(data);
