@@ -52,6 +52,16 @@ export function MeetingFileDisplay({
     }
   };
 
+  const handleDeleteOpenChange = (open: boolean) => {
+    setIsDeleteOpen(open);
+    if (open) {
+      // Clear any error from a previous attempt so reopening the dialog
+      // (e.g. after Cancel) doesn't look like the new attempt already
+      // failed before the user has done anything.
+      setDeleteError(null);
+    }
+  };
+
   const handleDelete = async () => {
     setIsDeleting(true);
     setDeleteError(null);
@@ -114,7 +124,10 @@ export function MeetingFileDisplay({
           </Button>
 
           {isOrganizer ? (
-            <AlertDialog isOpen={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+            <AlertDialog
+              isOpen={isDeleteOpen}
+              onOpenChange={handleDeleteOpenChange}
+            >
               <Button variant="danger">
                 <Trash2 size={16} />
                 Delete
