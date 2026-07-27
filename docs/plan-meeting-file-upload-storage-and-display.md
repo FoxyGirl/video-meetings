@@ -108,6 +108,22 @@
 
 **When ready:** Visually verified with Playwright: organizer sees metadata + download + delete after upload and can delete to revert the page; a second authenticated user (non-organizer) viewing the same meeting by URL sees metadata + download only, can download successfully, and never sees upload/delete controls.
 
+### Phase 7: UI/UX improvements — drag-and-drop file upload zone
+
+**Goal:** On the meeting detail page, the organizer can drag a file directly onto the upload area (in addition to the existing click-to-browse picker from Phase 5) to upload it, with clear visual feedback while dragging.
+
+**Affects:** frontend
+
+**Tasks:**
+
+- [ ] Turn the existing upload control (Phase 5) into a drop zone that listens for `dragenter`/`dragover`/`dragleave`/`drop` events, calling `preventDefault()` so the browser doesn't navigate away when a file is dropped
+- [ ] Show an "active" highlighted state (border/background change) on the zone while a file is dragged over it, clearing it on drag-leave or drop
+- [ ] On drop, read the file from the drop event's `DataTransfer` and run it through the same client-side validation and upload flow already used for the click-to-browse picker (Phase 5) — no separate validation/upload path
+- [ ] Reject drops of multiple files or non-file drag data with the same error feedback pattern as an invalid file type
+- [ ] Keep the existing click-to-browse file input working unchanged alongside the new drop zone
+
+**When ready:** Visually verified with Playwright: organizer drags a valid file onto the zone and sees the same progress/success flow as the click-to-browse picker; dragging an invalid file (bad type/oversized) shows the same rejection message as the click flow; the zone visibly highlights on drag-over and un-highlights on drag-leave/drop; non-organizers still never see the control.
+
 ## Phasing Rules
 
 - Each phase produces a workable, independently stoppable result.
