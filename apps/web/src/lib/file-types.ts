@@ -21,6 +21,24 @@ export function formatBytes(bytes: number): string {
   return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
 
+// Adaptive-unit formatter for displaying an arbitrary stored file's actual
+// size (e.g. a small test recording) — unlike formatBytes above, which only
+// ever formats large, MB-scale thresholds (max size, "too large" messages)
+// and would misleadingly show "0 MB" for anything under 500 KB.
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+  return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unitIndex]}`;
+}
+
 function getExtension(fileName: string): string | null {
   const dotIndex = fileName.lastIndexOf('.');
   return dotIndex === -1 ? null : fileName.slice(dotIndex).toLowerCase();
