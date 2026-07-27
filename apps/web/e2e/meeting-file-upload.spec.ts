@@ -42,6 +42,7 @@ async function createMeeting(
 
 test.describe('meeting file upload control', () => {
   const meetingIds: string[] = [];
+  const createdEmails: string[] = [];
 
   test.beforeAll(async ({ request }) => {
     await registerUserViaApi(request, TEST_USER_EMAIL, {
@@ -51,6 +52,7 @@ test.describe('meeting file upload control', () => {
 
   test.afterEach(async () => {
     await Promise.all(meetingIds.splice(0).map(deleteMeetingById));
+    await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
   });
 
   test('organizer uploads a valid recording and sees success', async ({
@@ -100,6 +102,7 @@ test.describe('meeting file upload control', () => {
     meetingIds.push(id);
 
     const viewerEmail = `e2e-upload-viewer-${Date.now()}@video-meetings.local`;
+    createdEmails.push(viewerEmail);
     await registerUserViaApi(request, viewerEmail);
 
     await loginViaUi(page, viewerEmail);
@@ -108,7 +111,5 @@ test.describe('meeting file upload control', () => {
     await expect(
       page.getByRole('heading', { name: 'Upload a recording' }),
     ).not.toBeVisible();
-
-    await deleteUserByEmail(viewerEmail);
   });
 });
