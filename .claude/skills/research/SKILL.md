@@ -65,3 +65,29 @@ List components, hooks, services, utilities or modules that should be reused.
 ## References
 
 Relevant files and directories.
+
+## Link the research into the plan
+
+Once the research file is saved, wire it up in two places:
+
+1. In the implementation plan file (**$ARGUMENTS**), add a `**Research:**` line immediately
+   after its existing `**PRD:**` line, pointing to the research file just saved — e.g.:
+
+   ```
+   **PRD:** @docs/prd-<feature>.md
+
+   **Research:** @docs/research-<feature>.md
+   ```
+
+2. In the repo-root `CLAUDE.md` (not `apps/web/CLAUDE.md` or `apps/api/CLAUDE.md`), add or
+   update an `## Active feature plans` section (create it, just above
+   `## Keeping documentation in sync`, if it doesn't exist yet) with one line per active
+   plan:
+
+   ```
+   - `docs/plan-<feature>.md` (PRD: `docs/prd-<feature>.md`; research: `docs/research-<feature>.md`) — <one-line description>.
+   ```
+
+   This section tracks only plans that are still being implemented. If the plan this
+   research is for has already fully shipped, or another entry in the section refers to a
+   plan that has, remove that entry rather than letting the list grow indefinitely.

@@ -2,6 +2,8 @@
 
 **PRD:** @docs/prd-user-profile-and-edit-page.md
 
+**Research:** @docs/research-plan-user-profile-and-edit-page.md.md
+
 **Date:** 2026-07-29
 
 ## Technical decisions made in this plan (not specified in the PRD)
