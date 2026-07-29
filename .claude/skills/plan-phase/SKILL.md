@@ -5,21 +5,25 @@ description: Breaking down the PRD into implementation phases. I use this when I
 
 # Plan Generator
 
-Read the PRD from the file: $ARGUMENTS
+Read the PRD from the file: $prd_file
 
-Create an implementation plan and save it in the file 'docs/plan-$ARGUMENTS.md' (use the English translation and kebab-case)
+Create an implementation plan and save it in the file 'docs/plan-$prd_file.md' (use the English translation and kebab-case)
 
 ## Plan Structure:
 
 # Plan: {feature name}
 
-**PRD:** $ARGUMENTS
+**PRD:** $prd_file
 
 **Date:** {current date}
 
 ## Implementation Phases
 
-### Phase 1: {name}
+- If `short_feature_name` was provided, use:
+  `### Phase 1-$short_feature_name: {name}`
+
+- Otherwise, use:
+  `### Phase 1: {name}`
 
 **Goal:** What this phase delivers
 
