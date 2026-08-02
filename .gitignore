@@ -55,3 +55,6 @@ __pycache__/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Claude Code tooling
+.claude/ralph.iterations.json

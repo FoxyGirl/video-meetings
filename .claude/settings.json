@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/stop.js"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|NotebookEdit",
@@ -19,7 +29,16 @@
     "sessionUrl": false
   },
   "permissions": {
-    "deny": ["Bash(git merge *)", "Bash(gh pr merge *)"]
+    "deny": ["Bash(git merge *)", "Bash(gh pr merge *)"],
+    "allow": [
+      "Edit(*)",
+      "Write(*)",
+      "Bash(npm run test)",
+      "Bash(npm run test:e2e)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(npx prisma *)"
+    ]
   },
   "enabledMcpjsonServers": ["playwright"]
 }
