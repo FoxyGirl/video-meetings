@@ -66,6 +66,10 @@ For manually exercising auth-gated features (e.g. the shared meeting detail page
 
 It owns one seeded meeting ("QA Test Meeting") to check the detail page's organizer view. This user only exists in the local dev database (created via `POST /auth/register`) — re-create it the same way after a `docker compose down -v` wipes the volume.
 
+## Active feature plans
+
+- `docs/plan-user-profile-and-edit-page.md` (PRD: `docs/prd-user-profile-and-edit-page.md`; research: `docs/research-plan-user-profile-and-edit-page.md.md`) — user profile page and profile editing. Consult the research file before implementing any phase of this plan; it maps each phase onto this repo's existing CQRS/upload/HTTP-client patterns.
+
 ## Keeping documentation in sync
 
 When a change alters the project's architecture — new workspace/app, new shared config, a module/service restructuring, a changed port or entry point, a new database or external dependency — update the relevant `CLAUDE.md` (root and/or the affected app's) in the same change. Don't leave documentation describing a prior structure once the code no longer matches it.
