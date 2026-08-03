@@ -1,16 +1,12 @@
 {
   "active": false,
-  "maxIterations": 1,
+  "maxIterations": 10,
   "maxTurns": 50,
   "prompt": "Read .claude/ralph.md and follow the rules there. Take the next open issue from milestone '{milestone}' and implement it in '{branch}'",
   "phases": [
     {
       "milestone": "Phase 1-user-profile: Backend — schema migration + profile read endpoint",
       "branch": "feat/BE/schema-migration-profile-read-endpoint"
-    },
-    {
-      "milestone": "Phase 2-user-profile: Frontend — profile page",
-      "branch": "feat/FE/profile-page"
     }
   ]
 }
