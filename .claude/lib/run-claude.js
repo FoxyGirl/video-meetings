@@ -15,7 +15,14 @@ function summarizeToolInput(name, input) {
 // unattended run never looks silently stuck — see .claude/ralph.md.
 function runClaude(prompt, { maxTurns, model } = {}) {
   return new Promise((resolve, reject) => {
-    const args = ['-p', prompt, '--output-format', 'stream-json', '--verbose'];
+    const args = [
+      '-p',
+      prompt,
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--include-hook-events',
+    ];
     if (maxTurns) args.push('--max-turns', String(maxTurns));
     if (model) args.push('--model', model);
 
@@ -24,6 +31,7 @@ function runClaude(prompt, { maxTurns, model } = {}) {
     });
     const rl = readline.createInterface({ input: child.stdout });
     let result = null;
+    const hookStdoutSeen = new Map();
 
     rl.on('line', (line) => {
       if (!line.trim()) return;
@@ -37,6 +45,19 @@ function runClaude(prompt, { maxTurns, model } = {}) {
       if (event.type === 'system' && event.subtype === 'init') {
         console.log(`🟢 Session started (model: ${event.model})`);
         console.log(`🟢 Session started -> prompt: ${prompt}`);
+      } else if (event.type === 'system' && event.subtype === 'hook_started') {
+        console.log(`🪝 ${event.hook_name} hook started`);
+      } else if (event.type === 'system' && event.subtype === 'hook_progress') {
+        const seen = hookStdoutSeen.get(event.hook_id) ?? 0;
+        const stdout = event.stdout ?? '';
+        const delta = stdout.slice(seen).trim();
+        if (delta) console.log(delta);
+        hookStdoutSeen.set(event.hook_id, stdout.length);
+      } else if (
+        event.type === 'system' &&
+        event.subtype === 'hook_completed'
+      ) {
+        console.log(`🪝 ${event.hook_name} hook finished`);
       } else if (event.type === 'assistant') {
         for (const block of event.message?.content ?? []) {
           if (block.type === 'text' && block.text.trim()) {
