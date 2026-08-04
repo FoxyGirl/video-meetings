@@ -17,7 +17,9 @@ async function main() {
   const prompt = config.prompt
     .replace('{milestone}', phase.milestone)
     .replace('{branch}', phase.branch);
-  console.log(`🚀 Запускаем Ralph для milestone: ${phase.milestone}`);
+  console.log(`🚀 START -> Запускаем Ralph для milestone: ${phase.milestone}`);
+  console.log(`⏹️ Starting Ralph. prompt: ${prompt}`);
+  console.log(`⏹️ Starting Ralph. maxTurns: ${config.maxTurns}`);
 
   await runClaude(prompt, { maxTurns: config.maxTurns });
 }
