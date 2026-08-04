@@ -21,10 +21,9 @@ function isIssueClosed(issueNumber) {
   const { state } = JSON.parse(
     execSync(`gh issue view ${issueNumber} --json state`).toString(),
   );
-  console /
-    log(
-      `⏹️ Stopping Ralph isIssueClosed. Issue #${issueNumber} state: ${state}`,
-    );
+  console.log(
+    `⏹️ Stopping Ralph isIssueClosed. Issue #${issueNumber} state: ${state}`,
+  );
   return state === 'CLOSED';
 }
 
