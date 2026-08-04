@@ -9,11 +9,15 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  meetings  Meeting[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  createdAt        DateTime  @default(now())
+  username         String?
+  avatarPath       String?
+  avatarMimeType   String?
+  avatarUploadedAt DateTime?
+  meetings         Meeting[]
 }
 
 model Meeting {

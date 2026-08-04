@@ -1,20 +1,30 @@
-const { execSync } = require('child_process');
 const fs = require('fs');
+const { runClaude } = require('./lib/run-claude');
 
-const config = JSON.parse(fs.readFileSync('.claude/ralph.config.json', 'utf8'));
+async function main() {
+  const config = JSON.parse(
+    fs.readFileSync('.claude/ralph.config.json', 'utf8'),
+  );
 
-// Сбрасываем счётчик итераций
-fs.writeFileSync(
-  '.claude/ralph.iterations.json',
-  JSON.stringify({ count: 0, phaseIndex: 0 }),
-);
+  // Reset the counter file to start from the beginning
+  fs.writeFileSync(
+    '.claude/ralph.iterations.json',
+    JSON.stringify({ count: 0, phaseIndex: 0 }),
+  );
 
-// Запускаем первую итерацию
-const prompt = config.prompt
-  .replace('{milestone}', config.phases[0].milestone)
-  .replace('{branch}', config.phases[0].branch);
-console.log(`🚀 Запускаем Ralph для milestone: ${config.phases[0].milestone}`);
+  // Start Ralph with the first phase
+  const phase = config.phases[0];
+  const prompt = config.prompt
+    .replace('{milestone}', phase.milestone)
+    .replace('{branch}', phase.branch);
+  console.log(`🚀 START -> Запускаем Ralph для milestone: ${phase.milestone}`);
+  console.log(`⏹️ Starting Ralph. prompt: ${prompt}`);
+  console.log(`⏹️ Starting Ralph. maxTurns: ${config.maxTurns}`);
 
-execSync(`claude -p "${prompt}" --max-turns ${config.maxTurns}`, {
-  stdio: 'inherit',
+  await runClaude(prompt, { maxTurns: config.maxTurns });
+}
+
+main().catch((err) => {
+  console.error(`❌ Ralph run failed: ${err.message}`);
+  process.exit(1);
 });
