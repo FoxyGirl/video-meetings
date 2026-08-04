@@ -36,6 +36,7 @@ function runClaude(prompt, { maxTurns, model } = {}) {
 
       if (event.type === 'system' && event.subtype === 'init') {
         console.log(`🟢 Session started (model: ${event.model})`);
+        console.log(`🟢 Session started -> prompt: ${prompt}`);
       } else if (event.type === 'assistant') {
         for (const block of event.message?.content ?? []) {
           if (block.type === 'text' && block.text.trim()) {

@@ -31,6 +31,7 @@ async function main() {
   const config = JSON.parse(
     fs.readFileSync('.claude/ralph.config.json', 'utf8'),
   );
+  console.log(`⏹️ Stopping Ralph. Config: ${JSON.stringify(config, null, 2)}`);
 
   if (!config.active) {
     process.exit(0);
