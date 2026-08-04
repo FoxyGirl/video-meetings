@@ -67,6 +67,12 @@ On `/meetings/[id]`, once `meetingFile` is non-null, the page renders `MeetingFi
 - **Delete is organizer-only** (`isOrganizer` prop, same value the page already computes for the "You are the organizer" badge) and goes through a HeroUI `AlertDialog` confirmation (`<Trash2>` trigger button → "Delete this recording?" dialog) before calling `deleteMeetingFile`. The dialog is controlled (`isOpen`/`onOpenChange` state), not the library's default `slot="close"` auto-close pattern, specifically so the confirm button can stay open and show an inline error if the delete request fails, and only close + call the page's `onDeleted` (`setMeetingFile(null)`) on actual success. `onDeleted` un-renders `MeetingFileDisplay`, which — combined with the page's existing render logic — reverts the page to the upload control for the organizer or the "No recording yet." message for everyone else, without a manual re-fetch.
 - A 401 from either the download or delete request calls back up to the page's `onSessionExpired`, same convention as the upload component.
 
+## Avatar display (`src/components/avatar.tsx`)
+
+`UserAvatar` is a shared presentational component built on HeroUI's `Avatar`/`Avatar.Fallback` primitives (`@heroui/react`). Today it only renders the initials placeholder (no avatar upload/serving exists yet — that lands in a later profile phase), but its props are shaped so a future image variant is an additive change, not a rewrite: `{ username?: string | null; email: string; size?; className? }` — callers never compute initials themselves, `UserAvatar` derives them internally from `username` (if set) else `email`.
+
+- **Initials rule**: a set `username` is split on whitespace — two-plus words use the first letter of the first two words (e.g. "Jane Doe" → "JD"); a single word uses its first two characters (e.g. "elena" → "EL"). No `username` falls back to the local part of `email` (before `@`), same two-character rule. Always uppercased.
+
 ## UI changes must be visually tested
 
 Any change that affects the UI (component markup, styling, layout, theming, interactive behavior) must be visually verified before the task is considered complete:
