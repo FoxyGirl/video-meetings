@@ -3,17 +3,29 @@ const fs = require('fs');
 
 const config = JSON.parse(fs.readFileSync('.claude/ralph.config.json', 'utf8'));
 
-if (!config.active) process.exit(0);
+if (!config.active) {
+  process.exit(0);
+}
 
 const counterFile = '.claude/ralph.iterations.json';
 let counter = { count: 0, phaseIndex: 0 };
+console.log(
+  `⏹️ Stopping Ralph for milestone: ${config.phases[counter.phaseIndex].milestone}`,
+);
+console.log(
+  `⏹️ Stopping Ralph. 1. Counter: ${counter.count}/${config.maxIterations}`,
+);
 if (fs.existsSync(counterFile)) {
   counter = JSON.parse(fs.readFileSync(counterFile, 'utf8'));
+  console.log(
+    `⏹️ Stopping Ralph. 2. Counter: ${counter.count}/${config.maxIterations}`,
+  );
 }
 
 const phase = config.phases
   ? config.phases[counter.phaseIndex]
   : { milestone: config.milestone, branch: config.branch };
+console.log(`⏹️ Stopping Ralph. phase: ${phase}`);
 
 if (!phase) {
   console.log('🎉 All phases are completed.');
@@ -35,9 +47,12 @@ const issues = JSON.parse(
   ).toString(),
 );
 
+console.log(`⏹️ Stopping Ralph. Issues: ${issues}/${issues.length}`);
+
 if (issues.length > 0) {
   counter.count++;
   fs.writeFileSync(counterFile, JSON.stringify(counter));
+  console.log(`⏹️ Stopping Ralph. 3. Counter: ${counter.count}`);
 
   const next = issues[0];
   console.log(
@@ -48,6 +63,10 @@ if (issues.length > 0) {
   const prompt = config.prompt
     .replace('{milestone}', phase.milestone)
     .replace('{branch}', phase.branch);
+
+  console.log(`🚀 Запускаем Ralph для milestone: ${phase.milestone}`);
+  console.log(`⏹️ Stopping Ralph. prompt: ${prompt}`);
+  console.log(`⏹️ Stopping Ralph. maxTurns: ${config.maxTurns}`);
 
   execSync(`claude -p "${prompt}" --max-turns ${config.maxTurns}`, {
     stdio: 'inherit',
@@ -71,6 +90,7 @@ if (issues.length > 0) {
   fs.writeFileSync(counterFile, JSON.stringify(counter));
 
   const nextPhase = config.phases ? config.phases[counter.phaseIndex] : null;
+  console.log(`⏹️ Stopping Ralph. Next phase: ${nextPhase}`);
   if (!nextPhase) {
     console.log('🎉 All phases are completed!');
     process.exit(0);

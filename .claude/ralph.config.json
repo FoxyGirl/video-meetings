@@ -1,5 +1,5 @@
 {
-  "active": false,
+  "active": true,
   "maxIterations": 10,
   "maxTurns": 50,
   "prompt": "Read .claude/ralph.md and follow the rules there. Take the next open issue from milestone '{milestone}' and implement it in '{branch}'",
