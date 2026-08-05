@@ -29,7 +29,11 @@
     "sessionUrl": false
   },
   "permissions": {
-    "deny": ["Bash(git merge *)", "Bash(gh pr merge *)"],
+    "deny": [
+      "Bash(git merge *)",
+      "Bash(gh pr merge *)",
+      "mcp__playwright__browser_run_code_unsafe"
+    ],
     "allow": [
       "Edit(*)",
       "Write(*)",
@@ -40,7 +44,10 @@
       "Bash(npx prettier*)",
       "Bash(git *)",
       "Bash(gh *)",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(curl http://localhost:3000*)",
+      "Bash(curl http://localhost:3001*)",
+      "mcp__playwright__*"
     ]
   },
   "enabledMcpjsonServers": ["playwright"]
