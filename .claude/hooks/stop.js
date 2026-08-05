@@ -41,6 +41,7 @@ async function main() {
   console.log(
     `⏹️ Stopping Ralph. 1. Counter: ${counter.count}/${counter.phaseIndex}`,
   );
+  console.log(`⏹️ Stopping Ralph. Counter PHASEINDEX: ${counter.phaseIndex}`);
   if (fs.existsSync(counterFile)) {
     counter = JSON.parse(fs.readFileSync(counterFile, 'utf8'));
     console.log(
@@ -51,7 +52,7 @@ async function main() {
   const phase = config.phases
     ? config.phases[counter.phaseIndex]
     : { milestone: config.milestone, branch: config.branch };
-  console.log(`⏹️ Stopping Ralph. phase: ${phase}`);
+  console.log(`⏹️ Stopping Ralph. phase: ${JSON.stringify(phase, null, 2)}`);
 
   if (!phase) {
     console.log('🎉 All phases are completed.');
@@ -66,7 +67,7 @@ async function main() {
     execSync(
       `gh issue list --milestone "${phase.milestone}" --state open --json number,title`,
     ).toString(),
-  );
+  ).sort((a, b) => a.number - b.number);
 
   if (counter.count >= config.maxIterations) {
     console.log(`⛔ Limit of iterations (${config.maxIterations}) reached.`);
@@ -85,7 +86,9 @@ async function main() {
     );
     process.exit(0);
   }
-  console.log(`⏹️ Stopping Ralph. Issues: ${issues}/${issues.length}`);
+  console.log(
+    `⏹️ Stopping Ralph. Issues: ${JSON.stringify(issues, null, 2)}/${issues.length}`,
+  );
 
   if (issues.length > 0) {
     counter.count++;
@@ -116,8 +119,28 @@ async function main() {
     );
   } else {
     console.log(`✅ Phase ${counter.phaseIndex + 1} completed. Creating PR...`);
+
+    // The PR-creation and review sessions below are themselves full Claude
+    // Code sessions, so *their* Stop hook fires and re-enters this same
+    // script before these two runClaude() calls even return. If the phase
+    // advance were written only after both calls finished (as it used to
+    // be), every nested re-entry would still see phaseIndex unchanged and
+    // 0 open issues, so it would land in this exact branch again and spawn
+    // its own duplicate PR/review sessions — recursively. Persisting the
+    // advance (and pausing the loop) up front means any nested Stop hook
+    // invocation sees the phase already completed and exits immediately.
+    counter.phaseIndex++;
+    counter.count = 0;
+    fs.writeFileSync(counterFile, JSON.stringify(counter));
+    fs.writeFileSync(
+      '.claude/ralph.config.json',
+      JSON.stringify({ ...config, active: false }, null, 2),
+    );
+
     await runClaude(
-      `Create a PR from branch ${phase.branch} to master branch with the skill 'create-pr'.`,
+      `Run 'gh pr list --head ${phase.branch} --base master --state open' first. ` +
+        `If an open PR already exists for this branch, skip creation and just report it. ` +
+        `Otherwise, create a PR from branch ${phase.branch} to master branch with the skill 'create-pr'.`,
       {
         model: 'claude-opus-4-7',
         maxTurns: 10,
@@ -130,16 +153,21 @@ async function main() {
       { model: 'claude-opus-4-7', maxTurns: config.maxTurns },
     );
 
-    counter.phaseIndex++;
-    counter.count = 0;
-    fs.writeFileSync(counterFile, JSON.stringify(counter));
-
     const nextPhase = config.phases ? config.phases[counter.phaseIndex] : null;
-    console.log(`⏹️ Stopping Ralph. Next phase: ${nextPhase}`);
+    console.log(
+      `⏹️ Stopping Ralph. Next phase: ${JSON.stringify(nextPhase, null, 2)}`,
+    );
     if (!nextPhase) {
       console.log('🎉 All phases are completed!');
       process.exit(0);
     }
+
+    // Resume the loop now that the paused window (PR + review) is over and
+    // there's a next phase to hand off to.
+    fs.writeFileSync(
+      '.claude/ralph.config.json',
+      JSON.stringify({ ...config, active: true }, null, 2),
+    );
 
     console.log(`➡️ Phase ${counter.phaseIndex + 1}: ${nextPhase.milestone}`);
     const prompt = config.prompt
