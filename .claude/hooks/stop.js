@@ -67,7 +67,7 @@ async function main() {
     execSync(
       `gh issue list --milestone "${phase.milestone}" --state open --json number,title`,
     ).toString(),
-  );
+  ).sort((a, b) => a.number - b.number);
 
   if (counter.count >= config.maxIterations) {
     console.log(`⛔ Limit of iterations (${config.maxIterations}) reached.`);
