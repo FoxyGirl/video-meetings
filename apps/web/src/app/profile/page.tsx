@@ -1,14 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, Spinner } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
 import { getProfile, type UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { auth, isLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !auth) {
+      router.replace('/login');
+    }
+  }, [isLoading, auth, router]);
 
   useEffect(() => {
     if (!auth) {

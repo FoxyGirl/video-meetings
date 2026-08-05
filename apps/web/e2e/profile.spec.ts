@@ -19,4 +19,11 @@ test.describe('profile page', () => {
     await expect(page.getByTestId('profile-loading')).not.toBeVisible();
     await expect(page.getByText(TEST_USER_EMAIL).first()).toBeVisible();
   });
+
+  test('redirects unauthenticated visitors to the login page', async ({
+    page,
+  }) => {
+    await page.goto('/profile');
+    await expect(page).toHaveURL('/login');
+  });
 });
