@@ -13,9 +13,14 @@ test.describe('profile page', () => {
       await route.continue();
     });
 
+    const profileResponse = page.waitForResponse('**/users/me');
+
     await page.goto('/profile');
 
     await expect(page.getByTestId('profile-loading')).toBeVisible();
+
+    await profileResponse;
+
     await expect(page.getByTestId('profile-loading')).not.toBeVisible();
     await expect(page.getByText(TEST_USER_EMAIL).first()).toBeVisible();
   });
@@ -24,6 +29,28 @@ test.describe('profile page', () => {
     page,
   }) => {
     await page.goto('/profile');
+    await expect(page).toHaveURL('/login');
+  });
+
+  test('redirects to the login page when the profile fetch returns 401', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+
+    await page.route('**/users/me', async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 401,
+          message: 'Invalid or expired token',
+          error: 'Unauthorized',
+        }),
+      });
+    });
+
+    await page.goto('/profile');
+
     await expect(page).toHaveURL('/login');
   });
 });
