@@ -140,6 +140,20 @@ describe('User profile (e2e)', () => {
       expect((await getProfile(accessToken)).username).toBeNull();
     });
 
+    it('only updates the authenticated user, not other users', async () => {
+      const alice = await registerUser();
+      const bob = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${alice.accessToken}`)
+        .send({ username: 'Alice' })
+        .expect(200);
+
+      expect((await getProfile(alice.accessToken)).username).toBe('Alice');
+      expect((await getProfile(bob.accessToken)).username).toBeNull();
+    });
+
     it('rejects a username longer than 50 characters', async () => {
       const { accessToken } = await registerUser();
 
