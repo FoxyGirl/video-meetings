@@ -27,8 +27,11 @@ export class UpdateUsernameHandler implements ICommandHandler<UpdateUsernameComm
     userId,
     username,
   }: UpdateUsernameCommand): Promise<UserProfile> {
+    // Presence check only — `select` keeps the password hash out of memory,
+    // since the update below re-reads the columns actually needed.
     const existing = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: { id: true },
     });
     if (!existing) {
       throw new NotFoundException('User not found');
