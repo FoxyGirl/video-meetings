@@ -17,32 +17,22 @@ The two apps do not share code or a package today; each has its own `package.jso
 
 api's dev server defaults to port 3001 (not Nest's default 3000) specifically to avoid colliding with web's port 3000 when both run together via `npm run dev`.
 
+## Token efficiency
+
+- `git diff` always with `--unified=0`
+- `git log` always with `--oneline -10`
+- `gh issue list` always with `--json number,title`
+- `npm run test` always with `--silent`
+- `npx tsc --noEmit` always with `2>&1 | tail -50` (a `-5` cutoff can truncate mid-error, since a single TS error spans several lines)
+
 ## Commands (run from repo root)
 
-```bash
-npm install                # install once for both workspaces (hoisted node_modules)
+See `package.json`'s `scripts` for the full list. A few things not obvious from the script names alone:
 
-npm run dev                # run web (:3000) and api (:3001) concurrently
-npm run dev:web            # web only
-npm run dev:api            # api only
-
-npm run build              # build both apps (npm run build --workspaces --if-present)
-npm run start              # start both apps in production mode (after build)
-
-npm run lint                                # lint both apps
-npm run lint --workspace=web                # lint one app
-npm run lint --workspace=api
-
-npm run typecheck                           # tsc --noEmit in both apps
-
-npm run test                                # run unit tests in both apps (api only has unit tests currently)
-npm run test --workspace=api -- --watch     # forward flags to an app's own script
-
-npm run test:e2e                            # run e2e tests in both apps (needs the Postgres container up, see below)
-
-npm run format          # prettier --write . across the whole repo
-npm run format:check    # prettier --check .
-```
+- `npm run dev` runs web (`:3000`) and api (`:3001`) concurrently; `npm run dev:web` / `npm run dev:api` run just one.
+- Target a single workspace with `--workspace=<web|api>` (e.g. `npm run lint --workspace=web`); forward flags to an app's own script with `-- <flags>` (e.g. `npm run test --workspace=api -- --watch`).
+- `npm run test` currently only runs `apps/api`'s unit tests — `web` has no `test` script yet, so `--if-present` skips it.
+- `npm run test:e2e` needs the Postgres container up first (see "Local database" below).
 
 Any per-app script (see each app's CLAUDE.md) can be run the same way: `npm run <script> --workspace=<web|api>`.
 
