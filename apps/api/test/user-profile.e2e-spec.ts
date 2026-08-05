@@ -75,4 +75,88 @@ describe('User profile (e2e)', () => {
       await request(app.getHttpServer()).get('/users/me').expect(401);
     });
   });
+
+  describe('PATCH /users/me/username', () => {
+    async function getProfile(
+      accessToken: string,
+    ): Promise<UserProfileResponseBody> {
+      const response = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      return response.body as UserProfileResponseBody;
+    }
+
+    it('persists the new username and reflects it in GET /users/me', async () => {
+      const { accessToken, email } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 'Ada Lovelace' })
+        .expect(200);
+
+      const profile = await getProfile(accessToken);
+      expect(profile.username).toBe('Ada Lovelace');
+      expect(profile.email).toBe(email);
+    });
+
+    it('clears the username when given an empty string', async () => {
+      const { accessToken } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 'Grace Hopper' })
+        .expect(200);
+      expect((await getProfile(accessToken)).username).toBe('Grace Hopper');
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: '' })
+        .expect(200);
+
+      expect((await getProfile(accessToken)).username).toBeNull();
+    });
+
+    it('clears the username when given null', async () => {
+      const { accessToken } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 'Alan Turing' })
+        .expect(200);
+      expect((await getProfile(accessToken)).username).toBe('Alan Turing');
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: null })
+        .expect(200);
+
+      expect((await getProfile(accessToken)).username).toBeNull();
+    });
+
+    it('rejects a username longer than 50 characters', async () => {
+      const { accessToken } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 'a'.repeat(51) })
+        .expect(400);
+
+      expect((await getProfile(accessToken)).username).toBeNull();
+    });
+
+    it('rejects an unauthenticated request', async () => {
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .send({ username: 'Anonymous' })
+        .expect(401);
+    });
+  });
 });
