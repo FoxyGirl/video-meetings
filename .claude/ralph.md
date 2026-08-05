@@ -34,6 +34,7 @@
 - Postgres (`docker compose up -d db`) and the dev servers (`npm run dev` — web on :3000, api on :3001) are already running in the background for the whole Ralph session.
 - Don't run `docker compose up`, `npm run dev`, `npm run dev:web`, or `npm run dev:api` yourself — they're long-running processes and starting them again will just hang the turn or collide with the ports already in use.
 - For manual/browser verification (e.g. with the Playwright MCP tools), navigate straight to `http://localhost:3000` (web) or `http://localhost:3001` (api) — no setup needed first.
+- If you open a browser with the Playwright MCP tools, call `mcp__playwright__browser_close` once you're done verifying, before ending the session — don't leave the browser open across turns.
 
 ## If You Get Stuck
 

@@ -6,7 +6,8 @@
         "-y",
         "@playwright/mcp@latest",
         "--executable-path",
-        "/usr/bin/chromium"
+        "/usr/bin/chromium",
+        "--isolated"
       ]
     }
   }
