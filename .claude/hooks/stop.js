@@ -41,6 +41,7 @@ async function main() {
   console.log(
     `⏹️ Stopping Ralph. 1. Counter: ${counter.count}/${counter.phaseIndex}`,
   );
+  console.log(`⏹️ Stopping Ralph. Counter PHASEINDEX: ${counter.phaseIndex}`);
   if (fs.existsSync(counterFile)) {
     counter = JSON.parse(fs.readFileSync(counterFile, 'utf8'));
     console.log(
@@ -51,7 +52,7 @@ async function main() {
   const phase = config.phases
     ? config.phases[counter.phaseIndex]
     : { milestone: config.milestone, branch: config.branch };
-  console.log(`⏹️ Stopping Ralph. phase: ${phase}`);
+  console.log(`⏹️ Stopping Ralph. phase: ${JSON.stringify(phase, null, 2)}`);
 
   if (!phase) {
     console.log('🎉 All phases are completed.');
@@ -85,7 +86,9 @@ async function main() {
     );
     process.exit(0);
   }
-  console.log(`⏹️ Stopping Ralph. Issues: ${issues}/${issues.length}`);
+  console.log(
+    `⏹️ Stopping Ralph. Issues: ${JSON.stringify(issues, null, 2)}/${issues.length}`,
+  );
 
   if (issues.length > 0) {
     counter.count++;
@@ -135,7 +138,9 @@ async function main() {
     fs.writeFileSync(counterFile, JSON.stringify(counter));
 
     const nextPhase = config.phases ? config.phases[counter.phaseIndex] : null;
-    console.log(`⏹️ Stopping Ralph. Next phase: ${nextPhase}`);
+    console.log(
+      `⏹️ Stopping Ralph. Next phase: ${JSON.stringify(nextPhase, null, 2)}`,
+    );
     if (!nextPhase) {
       console.log('🎉 All phases are completed!');
       process.exit(0);
