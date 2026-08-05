@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Spinner } from '@heroui/react';
+import { Alert, Card, Spinner } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
-import { getProfile, type UserProfile } from '@/lib/api';
+import { ApiError, getProfile, type UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { auth, isLoading } = useAuth();
+  const { auth, isLoading, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !auth) {
@@ -32,15 +33,38 @@ export default function ProfilePage() {
         }
       })
       .catch((error: unknown) => {
-        if (!cancelled) {
-          console.error('Failed to load profile', error);
+        if (cancelled) {
+          return;
         }
+        if (error instanceof ApiError && error.status === 401) {
+          logout();
+          router.replace('/login');
+          return;
+        }
+        setProfileError(
+          error instanceof ApiError
+            ? error.message
+            : 'Failed to load profile. Please try again.',
+        );
       });
 
     return () => {
       cancelled = true;
     };
-  }, [auth]);
+  }, [auth, logout, router]);
+
+  if (profileError) {
+    return (
+      <div className="flex flex-1 items-center justify-center px-4">
+        <Alert status="danger" className="w-full max-w-md">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{profileError}</Alert.Title>
+          </Alert.Content>
+        </Alert>
+      </div>
+    );
+  }
 
   if (isLoading || !auth || !profile) {
     return (
