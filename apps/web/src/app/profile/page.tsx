@@ -17,11 +17,17 @@ export default function ProfilePage() {
 
     let cancelled = false;
 
-    getProfile().then((data) => {
-      if (!cancelled) {
-        setProfile(data);
-      }
-    });
+    getProfile()
+      .then((data) => {
+        if (!cancelled) {
+          setProfile(data);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          console.error('Failed to load profile', error);
+        }
+      });
 
     return () => {
       cancelled = true;
