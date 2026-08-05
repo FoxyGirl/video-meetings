@@ -29,6 +29,12 @@
 - Don't take the next issue yourself.
 - Stop Hook will automatically start a new session for the next issue.
 
+## Local Environment
+
+- Postgres (`docker compose up -d db`) and the dev servers (`npm run dev` — web on :3000, api on :3001) are already running in the background for the whole Ralph session.
+- Don't run `docker compose up`, `npm run dev`, `npm run dev:web`, or `npm run dev:api` yourself — they're long-running processes and starting them again will just hang the turn or collide with the ports already in use.
+- For manual/browser verification (e.g. with the Playwright MCP tools), navigate straight to `http://localhost:3000` (web) or `http://localhost:3001` (api) — no setup needed first.
+
 ## If You Get Stuck
 
 - If you hit an unexpected environment problem (e.g. database schema drift, a failing tool permission, a broken local service) that isn't about the issue's own logic, don't leave the working tree in a half-fixed state.
