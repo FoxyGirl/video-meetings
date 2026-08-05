@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card } from '@heroui/react';
+import { Card, Spinner } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
 import { getProfile, type UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
-  const { auth } = useAuth();
+  const { auth, isLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -34,8 +34,12 @@ export default function ProfilePage() {
     };
   }, [auth]);
 
-  if (!profile) {
-    return null;
+  if (isLoading || !auth || !profile) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <Spinner data-testid="profile-loading" size="lg" />
+      </div>
+    );
   }
 
   return (
