@@ -1,11 +1,12 @@
 'use client';
 
-import { Avatar as HeroAvatar, type AvatarVariants } from '@heroui/react';
+import { Avatar as HeroAvatar } from '@heroui/react';
+import type { ComponentProps } from 'react';
 
 interface UserAvatarProps {
   username?: string | null;
   email: string;
-  size?: AvatarVariants['size'];
+  size?: ComponentProps<typeof HeroAvatar>['size'];
   className?: string;
 }
 
