@@ -6,6 +6,14 @@ import { UpdateUsernameHandler } from './update-username.handler';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 
+const PROFILE_SELECT = {
+  id: true,
+  email: true,
+  username: true,
+  avatarMimeType: true,
+  avatarUploadedAt: true,
+};
+
 function buildUser(username: string | null) {
   return {
     id: USER_ID,
@@ -20,6 +28,16 @@ function buildUser(username: string | null) {
   };
 }
 
+function buildProfile(username: string | null) {
+  return {
+    id: USER_ID,
+    email: 'ada@example.com',
+    username,
+    avatarMimeType: null,
+    avatarUploadedAt: null,
+  };
+}
+
 describe('UpdateUsernameHandler', () => {
   let findUnique: jest.Mock;
   let update: jest.Mock;
@@ -27,7 +45,7 @@ describe('UpdateUsernameHandler', () => {
 
   beforeEach(() => {
     findUnique = jest.fn(() => Promise.resolve(buildUser(null)));
-    update = jest.fn(() => Promise.resolve(buildUser('Ada Lovelace')));
+    update = jest.fn(() => Promise.resolve(buildProfile('Ada Lovelace')));
 
     handler = new UpdateUsernameHandler({
       user: { findUnique, update },
@@ -40,6 +58,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: 'Ada Lovelace' },
+      select: PROFILE_SELECT,
     });
   });
 
@@ -63,6 +82,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: 'Ada' },
+      select: PROFILE_SELECT,
     });
   });
 
@@ -72,6 +92,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: null },
+      select: PROFILE_SELECT,
     });
   });
 
@@ -81,6 +102,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: null },
+      select: PROFILE_SELECT,
     });
   });
 
@@ -90,6 +112,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: null },
+      select: PROFILE_SELECT,
     });
   });
 
@@ -99,6 +122,7 @@ describe('UpdateUsernameHandler', () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: USER_ID },
       data: { username: undefined },
+      select: PROFILE_SELECT,
     });
   });
 
