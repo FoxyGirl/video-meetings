@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NotFoundException } from '@nestjs/common';
+import { Prisma } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdateUsernameCommand } from '../update-username.command';
 import { UpdateUsernameHandler } from './update-username.handler';
@@ -14,20 +15,6 @@ const PROFILE_SELECT = {
   avatarUploadedAt: true,
 };
 
-function buildUser(username: string | null) {
-  return {
-    id: USER_ID,
-    email: 'ada@example.com',
-    password: 'hashed',
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    username,
-    avatarPath: null,
-    avatarMimeType: null,
-    avatarUploadedAt: null,
-  };
-}
-
 function buildProfile(username: string | null) {
   return {
     id: USER_ID,
@@ -39,16 +26,14 @@ function buildProfile(username: string | null) {
 }
 
 describe('UpdateUsernameHandler', () => {
-  let findUnique: jest.Mock;
   let update: jest.Mock;
   let handler: UpdateUsernameHandler;
 
   beforeEach(() => {
-    findUnique = jest.fn(() => Promise.resolve(buildUser(null)));
     update = jest.fn(() => Promise.resolve(buildProfile('Ada Lovelace')));
 
     handler = new UpdateUsernameHandler({
-      user: { findUnique, update },
+      user: { update },
     } as unknown as PrismaService);
   });
 
@@ -127,11 +112,29 @@ describe('UpdateUsernameHandler', () => {
   });
 
   it('throws 404 when the user no longer exists', async () => {
-    findUnique.mockImplementation(() => Promise.resolve(null));
+    update.mockImplementation(() =>
+      Promise.reject(
+        new Prisma.PrismaClientKnownRequestError('Record not found', {
+          code: 'P2025',
+          clientVersion: 'test',
+        }),
+      ),
+    );
 
     await expect(
       handler.execute(new UpdateUsernameCommand(USER_ID, 'Ada Lovelace')),
     ).rejects.toBeInstanceOf(NotFoundException);
-    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('rethrows other Prisma errors unchanged', async () => {
+    const unrelatedError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      { code: 'P2002', clientVersion: 'test' },
+    );
+    update.mockImplementation(() => Promise.reject(unrelatedError));
+
+    await expect(
+      handler.execute(new UpdateUsernameCommand(USER_ID, 'Ada Lovelace')),
+    ).rejects.toBe(unrelatedError);
   });
 });

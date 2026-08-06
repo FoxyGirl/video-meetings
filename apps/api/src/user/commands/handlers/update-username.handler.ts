@@ -1,8 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Prisma } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserProfile } from '../../interfaces/user-record.interface';
 import { UpdateUsernameCommand } from '../update-username.command';
+
+const PRISMA_ERROR_RECORD_NOT_FOUND = 'P2025';
 
 /**
  * `undefined` (username omitted from the request body) leaves the stored value
@@ -27,28 +30,31 @@ export class UpdateUsernameHandler implements ICommandHandler<UpdateUsernameComm
     userId,
     username,
   }: UpdateUsernameCommand): Promise<UserProfile> {
-    // Presence check only — the actual profile columns are re-read via the
-    // update's own `select` below.
-    const existing = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-    if (!existing) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { username: normalizeUsername(username) },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          avatarMimeType: true,
+          avatarUploadedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      // A still-valid JWT for a since-deleted user hits this: the row is gone
+      // by the time `update` runs, which Prisma reports as P2025 rather than
+      // returning null (unlike `findUnique`).
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === PRISMA_ERROR_RECORD_NOT_FOUND
+      ) {
+        throw new NotFoundException('User not found');
+      }
+      throw error;
     }
-
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { username: normalizeUsername(username) },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        avatarMimeType: true,
-        avatarUploadedAt: true,
-      },
-    });
-
-    return user;
   }
 }
