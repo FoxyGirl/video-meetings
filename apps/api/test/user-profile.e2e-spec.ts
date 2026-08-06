@@ -166,6 +166,32 @@ describe('User profile (e2e)', () => {
       expect((await getProfile(accessToken)).username).toBeNull();
     });
 
+    it('rejects a non-string username', async () => {
+      const { accessToken } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 42 })
+        .expect(400);
+
+      expect((await getProfile(accessToken)).username).toBeNull();
+    });
+
+    it('strips unknown fields instead of persisting them', async () => {
+      const { accessToken } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/username')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ username: 'Margaret Hamilton', avatarPath: '../evil' })
+        .expect(200);
+
+      const profile = await getProfile(accessToken);
+      expect(profile.username).toBe('Margaret Hamilton');
+      expect(profile).not.toHaveProperty('avatarPath');
+    });
+
     it('rejects an unauthenticated request', async () => {
       await request(app.getHttpServer())
         .patch('/users/me/username')
