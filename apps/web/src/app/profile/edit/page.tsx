@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Alert,
@@ -15,66 +15,21 @@ import {
   toast,
 } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
-import {
-  ApiError,
-  getProfile,
-  updateUsername,
-  type UserProfile,
-} from '@/lib/api';
+import { ApiError, updateUsername } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { useProfile } from '@/lib/use-profile';
 
 // Hand-mirrored from apps/api/src/user/dto/update-username.dto.ts's @MaxLength(50) — keep in sync.
 const MAX_USERNAME_LENGTH = 50;
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { auth, isLoading, logout } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileError, setProfileError] = useState<string | null>(null);
+  const { logout } = useAuth();
+  const { profile, setProfile, profileError, isLoading } = useProfile();
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
   const [username, setUsername] = useState('');
   const [hasSeededUsername, setHasSeededUsername] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && !auth) {
-      router.replace('/login');
-    }
-  }, [isLoading, auth, router]);
-
-  useEffect(() => {
-    if (!auth) {
-      return;
-    }
-
-    let cancelled = false;
-
-    getProfile()
-      .then((data) => {
-        if (!cancelled) {
-          setProfile(data);
-        }
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        if (error instanceof ApiError && error.status === 401) {
-          logout();
-          router.replace('/login');
-          return;
-        }
-        setProfileError(
-          error instanceof ApiError
-            ? error.message
-            : 'Failed to load profile. Please try again.',
-        );
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [auth, logout, router]);
 
   if (profile && !hasSeededUsername) {
     setHasSeededUsername(true);
@@ -120,7 +75,7 @@ export default function ProfileEditPage() {
     );
   }
 
-  if (isLoading || !auth || !profile) {
+  if (isLoading || !profile) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spinner data-testid="profile-edit-loading" size="lg" />

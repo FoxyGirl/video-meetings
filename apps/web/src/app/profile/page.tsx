@@ -1,58 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
-import { ApiError, getProfile, type UserProfile } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useProfile } from '@/lib/use-profile';
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { auth, isLoading, logout } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileError, setProfileError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isLoading && !auth) {
-      router.replace('/login');
-    }
-  }, [isLoading, auth, router]);
-
-  useEffect(() => {
-    if (!auth) {
-      return;
-    }
-
-    let cancelled = false;
-
-    getProfile()
-      .then((data) => {
-        if (!cancelled) {
-          setProfile(data);
-        }
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        if (error instanceof ApiError && error.status === 401) {
-          logout();
-          router.replace('/login');
-          return;
-        }
-        setProfileError(
-          error instanceof ApiError
-            ? error.message
-            : 'Failed to load profile. Please try again.',
-        );
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [auth, logout, router]);
+  const { profile, profileError, isLoading } = useProfile();
 
   if (profileError) {
     return (
@@ -67,7 +21,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (isLoading || !auth || !profile) {
+  if (isLoading || !profile) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spinner data-testid="profile-loading" size="lg" />
