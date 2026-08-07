@@ -92,7 +92,7 @@ test.describe('profile page', () => {
       await page.goto('/profile');
 
       await expect(page.getByText('Updated Name').first()).toBeVisible();
-      await expect(page.getByText(email)).toBeVisible();
+      await expect(page.getByText(email).first()).toBeVisible();
     } finally {
       await deleteUserByEmail(email);
     }
