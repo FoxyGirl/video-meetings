@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
