@@ -33,6 +33,8 @@ export default function ProfileEditPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
+  const [username, setUsername] = useState('');
+  const [hasSeededUsername, setHasSeededUsername] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !auth) {
@@ -74,17 +76,20 @@ export default function ProfileEditPage() {
     };
   }, [auth, logout, router]);
 
+  if (profile && !hasSeededUsername) {
+    setHasSeededUsername(true);
+    setUsername(profile.username ?? '');
+  }
+
   const onSubmitUsername = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const formData = new FormData(e.currentTarget);
-    const username = formData.get('username')?.toString() ?? '';
 
     setUsernameError(null);
     setIsSavingUsername(true);
     try {
       const updated = await updateUsername(username);
       setProfile(updated);
+      setUsername(updated.username ?? '');
       toast.success('Username updated');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -156,9 +161,9 @@ export default function ProfileEditPage() {
         <Card.Content>
           <Form className="flex flex-col gap-4" onSubmit={onSubmitUsername}>
             <TextField
-              key={profile.username ?? ''}
               name="username"
-              defaultValue={profile.username ?? ''}
+              value={username}
+              onChange={setUsername}
               validate={(value) =>
                 value.length > MAX_USERNAME_LENGTH
                   ? `Username must be ${MAX_USERNAME_LENGTH} characters or fewer.`
