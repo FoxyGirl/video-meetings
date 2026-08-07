@@ -23,6 +23,7 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
+// Hand-mirrored from apps/api/src/user/dto/update-username.dto.ts's @MaxLength(50) — keep in sync.
 const MAX_USERNAME_LENGTH = 50;
 
 export default function ProfileEditPage() {
@@ -155,6 +156,7 @@ export default function ProfileEditPage() {
         <Card.Content>
           <Form className="flex flex-col gap-4" onSubmit={onSubmitUsername}>
             <TextField
+              key={profile.username ?? ''}
               name="username"
               defaultValue={profile.username ?? ''}
               validate={(value) =>

@@ -113,6 +113,28 @@ test.describe('username form', () => {
     );
   });
 
+  test('shows the server-trimmed value in the field after saving surrounding whitespace', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page
+      .getByRole('textbox', { name: 'Username' })
+      .fill('  Padded Name  ');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Username updated')).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
+      'Padded Name',
+    );
+  });
+
   test('shows an error message when the update fails', async ({ page }) => {
     await loginViaUi(page, TEST_USER_EMAIL);
     await page.goto('/profile/edit');
