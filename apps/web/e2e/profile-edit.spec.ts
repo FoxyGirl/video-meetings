@@ -175,4 +175,50 @@ test.describe('username form', () => {
 
     await expect(page.getByText('Server error')).toBeVisible();
   });
+
+  test('rejects a username over 50 characters without issuing a request', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    let requestIssued = false;
+    await page.route('**/users/me/username', async (route) => {
+      requestIssued = true;
+      await route.continue();
+    });
+
+    await page.getByRole('textbox', { name: 'Username' }).fill('x'.repeat(51));
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect(
+      page.getByText('Username must be 50 characters or fewer.'),
+    ).toBeVisible();
+    expect(requestIssued).toBe(false);
+  });
+
+  test('clears the username and falls back to the email on the profile page', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+    const accessToken = await loginUserViaApi(request, email);
+    await request.patch(`${API_URL}/users/me/username`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { username: 'Soon Cleared' },
+    });
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page.getByRole('textbox', { name: 'Username' }).fill('');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Username updated')).toBeVisible();
+
+    await page.goto('/profile');
+    await expect(page.getByText(email).first()).toBeVisible();
+    await expect(page.getByText('Soon Cleared')).not.toBeVisible();
+  });
 });
