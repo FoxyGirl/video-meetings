@@ -42,7 +42,7 @@ export default function ProfileEditPage() {
     setUsernameError(null);
     setIsSavingUsername(true);
     try {
-      const updated = await updateUsername(username);
+      const updated = await updateUsername(username.trim() ? username : null);
       setProfile(updated);
       setUsername(updated.username ?? '');
       toast.success('Username updated');
