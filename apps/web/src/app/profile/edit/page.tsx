@@ -36,7 +36,7 @@ export default function ProfileEditPage() {
     setUsername(profile.username ?? '');
   }
 
-  const onSubmitUsername = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitUsername = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setUsernameError(null);
