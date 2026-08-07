@@ -53,4 +53,15 @@ test.describe('profile page', () => {
 
     await expect(page).toHaveURL('/login');
   });
+
+  test('links to the edit page', async ({ page }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+
+    await page.goto('/profile');
+    await expect(page.getByText(TEST_USER_EMAIL).first()).toBeVisible();
+
+    await page.getByRole('link', { name: 'Edit profile' }).click();
+
+    await expect(page).toHaveURL('/profile/edit');
+  });
 });

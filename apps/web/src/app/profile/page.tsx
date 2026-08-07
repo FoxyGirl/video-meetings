@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
 import { ApiError, getProfile, type UserProfile } from '@/lib/api';
@@ -91,6 +92,12 @@ export default function ProfilePage() {
               {profile.email}
             </p>
           </div>
+          <Link
+            className="text-sm font-medium text-foreground underline underline-offset-2"
+            href="/profile/edit"
+          >
+            Edit profile
+          </Link>
         </Card.Content>
       </Card>
     </div>
