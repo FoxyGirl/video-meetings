@@ -1,3 +1,5 @@
+import { createReadStream } from 'node:fs';
+import { join } from 'node:path';
 import {
   Body,
   Controller,
@@ -7,19 +9,27 @@ import {
   Patch,
   Post,
   Req,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { UpdateUsernameCommand } from './commands/update-username.command';
 import { UploadAvatarCommand } from './commands/upload-avatar.command';
 import { UpdateUsernameDto } from './dto/update-username.dto';
 import { UserProfile } from './interfaces/user-record.interface';
+import {
+  GetUserAvatarQuery,
+  UserAvatarRecord,
+} from './queries/get-user-avatar.query';
 import { GetUserProfileQuery } from './queries/get-user-profile.query';
+import { AVATAR_UPLOAD_DIR } from './upload/avatar-upload.constants';
 import { avatarUploadOptions } from './upload/multer.config';
 
 @Controller('users')
@@ -54,6 +64,23 @@ export class UserController {
   ): Promise<UserProfile> {
     return this.commandBus.execute(
       new UploadAvatarCommand(request.user.userId, file),
+    );
+  }
+
+  @Get('me/avatar')
+  async getAvatar(
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const avatar = await this.queryBus.execute<
+      GetUserAvatarQuery,
+      UserAvatarRecord
+    >(new GetUserAvatarQuery(request.user.userId));
+
+    res.set({ 'Content-Type': avatar.avatarMimeType });
+
+    return new StreamableFile(
+      createReadStream(join(AVATAR_UPLOAD_DIR, avatar.avatarPath)),
     );
   }
 }
