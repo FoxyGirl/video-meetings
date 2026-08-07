@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { TEST_USER_EMAIL } from './api-helpers';
+import {
+  API_URL,
+  TEST_USER_EMAIL,
+  deleteUserByEmail,
+  loginUserViaApi,
+  registerUserViaApi,
+} from './api-helpers';
 import { loginViaUi } from './ui-helpers';
 
 test.describe('profile edit page', () => {
@@ -52,5 +58,76 @@ test.describe('profile edit page', () => {
     await page.goto('/profile/edit');
 
     await expect(page).toHaveURL('/login');
+  });
+});
+
+test.describe('username form', () => {
+  const createdEmails: string[] = [];
+
+  test.afterEach(async () => {
+    await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
+  });
+
+  test('prefills the username field with the current value', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+    const accessToken = await loginUserViaApi(request, email);
+    await request.patch(`${API_URL}/users/me/username`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { username: 'Existing Name' },
+    });
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
+      'Existing Name',
+    );
+  });
+
+  test('updates the username and shows a success message', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page
+      .getByRole('textbox', { name: 'Username' })
+      .fill('New Display Name');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Username updated')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
+      'New Display Name',
+    );
+  });
+
+  test('shows an error message when the update fails', async ({ page }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.route('**/users/me/username', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: 'Server error' }),
+      });
+    });
+
+    await page.getByRole('textbox', { name: 'Username' }).fill('Will Fail');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Server error')).toBeVisible();
   });
 });

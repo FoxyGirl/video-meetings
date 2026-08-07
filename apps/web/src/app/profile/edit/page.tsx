@@ -2,16 +2,36 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Card, Spinner } from '@heroui/react';
+import {
+  Alert,
+  Button,
+  Card,
+  FieldError,
+  Form,
+  Input,
+  Label,
+  Spinner,
+  TextField,
+  toast,
+} from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
-import { ApiError, getProfile, type UserProfile } from '@/lib/api';
+import {
+  ApiError,
+  getProfile,
+  updateUsername,
+  type UserProfile,
+} from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+
+const MAX_USERNAME_LENGTH = 50;
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const { auth, isLoading, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !auth) {
@@ -52,6 +72,34 @@ export default function ProfileEditPage() {
       cancelled = true;
     };
   }, [auth, logout, router]);
+
+  const onSubmitUsername = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username')?.toString() ?? '';
+
+    setUsernameError(null);
+    setIsSavingUsername(true);
+    try {
+      const updated = await updateUsername(username);
+      setProfile(updated);
+      toast.success('Username updated');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        logout();
+        router.replace('/login');
+        return;
+      }
+      setUsernameError(
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to update username. Please try again.',
+      );
+    } finally {
+      setIsSavingUsername(false);
+    }
+  };
 
   if (profileError) {
     return (
@@ -94,6 +142,46 @@ export default function ProfileEditPage() {
               {profile.email}
             </p>
           </div>
+        </Card.Content>
+      </Card>
+
+      <Card className="w-full max-w-md">
+        <Card.Header>
+          <Card.Title>Username</Card.Title>
+          <Card.Description>
+            Shown instead of your email wherever your name appears.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <Form className="flex flex-col gap-4" onSubmit={onSubmitUsername}>
+            <TextField
+              name="username"
+              defaultValue={profile.username ?? ''}
+              validate={(value) =>
+                value.length > MAX_USERNAME_LENGTH
+                  ? `Username must be ${MAX_USERNAME_LENGTH} characters or fewer.`
+                  : null
+              }
+            >
+              <Label>Username</Label>
+              <Input placeholder="Your name" variant="secondary" />
+              <FieldError />
+            </TextField>
+
+            {usernameError ? (
+              <Alert status="danger">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>{usernameError}</Alert.Title>
+                </Alert.Content>
+              </Alert>
+            ) : null}
+
+            <Button isPending={isSavingUsername} type="submit">
+              {isSavingUsername ? <Spinner color="current" size="sm" /> : null}
+              {isSavingUsername ? 'Saving…' : 'Save'}
+            </Button>
+          </Form>
         </Card.Content>
       </Card>
     </div>
