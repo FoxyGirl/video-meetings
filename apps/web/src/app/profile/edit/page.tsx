@@ -97,9 +97,6 @@ export default function ProfileEditPage() {
               Edit profile
             </h1>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {profile.username ?? profile.email}
-            </p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {profile.email}
             </p>
           </div>
