@@ -9,8 +9,10 @@ import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { AVATAR_UPLOAD_DIR } from '../src/user/upload/avatar-upload.constants';
 
-const MAX_AVATAR_FILE_SIZE_BYTES =
-  Number(process.env.MAX_AVATAR_FILE_SIZE_BYTES) || 5 * 1024 * 1024;
+// Well over the 5 MB default (MAX_AVATAR_FILE_SIZE_BYTES) without needing to
+// duplicate that value here — same approach meeting-file-upload.e2e-spec.ts
+// takes for its own oversized-file test.
+const OVERSIZED_AVATAR_BYTES = 6 * 1024 * 1024;
 
 interface AuthResponseBody {
   accessToken: string;
@@ -201,7 +203,7 @@ describe('User avatar upload and serving (e2e)', () => {
       const filesBefore = await listUploadedFiles();
 
       await uploadRequest(accessToken)
-        .attach('file', Buffer.alloc(MAX_AVATAR_FILE_SIZE_BYTES + 1), {
+        .attach('file', Buffer.alloc(OVERSIZED_AVATAR_BYTES), {
           filename: 'avatar.png',
           contentType: 'image/png',
         })
