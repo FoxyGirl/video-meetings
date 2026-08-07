@@ -135,6 +135,29 @@ test.describe('username form', () => {
     );
   });
 
+  test('keeps the field in sync when trimming yields the already-stored value', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page.getByRole('textbox', { name: 'Username' }).fill('Alice');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Username updated')).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Username' }).fill('  Alice  ');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
+      'Alice',
+    );
+  });
+
   test('shows an error message when the update fails', async ({ page }) => {
     await loginViaUi(page, TEST_USER_EMAIL);
     await page.goto('/profile/edit');
