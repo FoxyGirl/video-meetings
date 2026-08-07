@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { TEST_USER_EMAIL } from './api-helpers';
+import {
+  TEST_USER_EMAIL,
+  deleteUserByEmail,
+  registerUserViaApi,
+} from './api-helpers';
 import { loginViaUi } from './ui-helpers';
 
 test.describe('profile page', () => {
@@ -63,5 +67,34 @@ test.describe('profile page', () => {
     await page.getByRole('link', { name: 'Edit profile' }).click();
 
     await expect(page).toHaveURL('/profile/edit');
+  });
+
+  test('reflects a username updated on the edit page after navigating back', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-${Date.now()}@video-meetings.local`;
+    await registerUserViaApi(request, email);
+
+    try {
+      await loginViaUi(page, email);
+      await page.goto('/profile');
+      await expect(page.getByText(email).first()).toBeVisible();
+
+      await page.getByRole('link', { name: 'Edit profile' }).click();
+      await expect(page).toHaveURL('/profile/edit');
+      await page
+        .getByRole('textbox', { name: 'Username' })
+        .fill('Updated Name');
+      await page.getByRole('button', { name: 'Save' }).click();
+      await expect(page.getByText('Username updated')).toBeVisible();
+
+      await page.goto('/profile');
+
+      await expect(page.getByText('Updated Name').first()).toBeVisible();
+      await expect(page.getByText(email)).toBeVisible();
+    } finally {
+      await deleteUserByEmail(email);
+    }
   });
 });
