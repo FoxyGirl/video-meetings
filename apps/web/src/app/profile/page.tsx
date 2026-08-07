@@ -39,14 +39,14 @@ export default function ProfilePage() {
             size="lg"
           />
           <div className="flex flex-col items-center gap-1 text-center">
-            <p className="text-lg font-semibold text-foreground">
-              {profile.username ?? profile.email}
-            </p>
-            {profile.username ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                {profile.email}
+            {profile.username && (
+              <p className="text-lg font-semibold text-foreground">
+                {profile.username}
               </p>
-            ) : null}
+            )}
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              {profile.email}
+            </p>
           </div>
           <Link
             className="text-sm font-medium text-foreground underline underline-offset-2"
