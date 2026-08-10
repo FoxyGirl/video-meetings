@@ -15,6 +15,7 @@ import {
   toast,
 } from '@heroui/react';
 import { UserAvatar } from '@/components/avatar';
+import { AvatarUpload } from '@/components/avatar-upload';
 import { ApiError, updateUsername } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useProfile } from '@/lib/use-profile';
@@ -36,6 +37,11 @@ export default function ProfileEditPage() {
     setUsername(profile.username ?? '');
   }
 
+  const handleSessionExpired = () => {
+    logout();
+    router.replace('/login');
+  };
+
   const onSubmitUsername = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -48,8 +54,7 @@ export default function ProfileEditPage() {
       toast.success('Username updated');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        logout();
-        router.replace('/login');
+        handleSessionExpired();
         return;
       }
       setUsernameError(
@@ -107,6 +112,13 @@ export default function ProfileEditPage() {
           </div>
         </Card.Content>
       </Card>
+
+      <div className="w-full max-w-md">
+        <AvatarUpload
+          onSessionExpired={handleSessionExpired}
+          onUploaded={setProfile}
+        />
+      </div>
 
       <Card className="w-full max-w-md">
         <Card.Header>
