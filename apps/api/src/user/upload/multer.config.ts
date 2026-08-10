@@ -14,7 +14,10 @@ export const avatarUploadOptions: MulterOptions = {
     // Never trust the client's original name for the on-disk name (path
     // traversal defense); the original name is kept separately as metadata.
     filename: (_req, file, callback) =>
-      callback(null, `${randomUUID()}${extname(file.originalname)}`),
+      callback(
+        null,
+        `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
+      ),
   }),
   limits: { fileSize: MAX_AVATAR_FILE_SIZE_BYTES },
   // Cheap first-pass rejection before any bytes are written to disk. The
