@@ -72,9 +72,16 @@ On `/meetings/[id]`, once `meetingFile` is non-null, the page renders `MeetingFi
 
 ## Avatar display (`src/components/avatar.tsx`)
 
-`UserAvatar` is a shared presentational component built on HeroUI's `Avatar`/`Avatar.Fallback` primitives (`@heroui/react`). Today it only renders the initials placeholder (no avatar upload/serving exists yet — that lands in a later profile phase), but its props are shaped so a future image variant is an additive change, not a rewrite: `{ username?: string | null; email: string; size?; className? }` — callers never compute initials themselves, `UserAvatar` derives them internally from `username` (if set) else `email`.
+`UserAvatar` is a shared presentational component built on HeroUI's `Avatar`/`Avatar.Fallback` primitives (`@heroui/react`). It currently only ever renders the initials placeholder — `uploadAvatar()`/`getAvatarBlob()` exist (see "HTTP client" above) and the edit page's upload control (below) can populate an avatar server-side, but no component yet fetches the blob and swaps it in for the placeholder; that's a later profile phase. Its props are shaped so that image variant is an additive change, not a rewrite: `{ username?: string | null; email: string; size?; className? }` — callers never compute initials themselves, `UserAvatar` derives them internally from `username` (if set) else `email`.
 
 - **Initials rule**: a set `username` is split on whitespace — two-plus words use the first letter of the first two words (e.g. "Jane Doe" → "JD"); a single word uses its first two characters (e.g. "elena" → "EL"). No `username` falls back to the local part of `email` (before `@`), same two-character rule. Always uppercased.
+
+## Avatar upload UI (`src/components/avatar-upload.tsx`, `src/lib/avatar-file-types.ts`)
+
+On `/profile/edit`, `AvatarUpload` renders unconditionally (unlike `MeetingFileUpload`, it isn't gated on "no avatar yet" — re-uploading replaces the existing one). A successful upload calls the `onUploaded` prop back up to the page (`setProfile`), refreshing the profile state used elsewhere on the page (e.g. the username field's `UserAvatar` preview); the component resets its own file input afterward so the same file can be re-selected for a follow-up upload.
+
+- `avatar-file-types.ts` holds `ACCEPTED_AVATAR_TYPES` (extension → MIME) and `MAX_AVATAR_FILE_SIZE_BYTES`, hand-mirrored from `apps/api/src/user/upload/avatar-upload.constants.ts`. `validateAvatarFile(file)` delegates to `file-types.ts`'s `validateFileAgainstTypes(file, acceptedTypes, maxSizeBytes)` — the same extension/MIME/size checks `validateFile` (meeting uploads) runs, generalized to take a table and size limit so both call sites share one implementation instead of two copies.
+- Validation re-runs on every file selection, disabling the Upload button until a file is selected and valid. Distinct `Alert`s separate a client-side validation error from a server-side upload failure (400s, or a size-specific message for 413) so the two never overwrite each other. A 401 calls back up to the page's `onSessionExpired`, same convention as the meeting file upload flow. No drag-and-drop here (unlike `MeetingFileUpload`) — click-to-browse only.
 
 ## UI changes must be visually tested
 
