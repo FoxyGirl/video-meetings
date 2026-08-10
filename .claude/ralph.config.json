@@ -1,12 +1,12 @@
 {
   "active": false,
   "maxIterations": 10,
-  "maxTurns": 50,
+  "maxTurns": 70,
   "prompt": "Read .claude/ralph.md and follow the rules there. Take the next open issue from milestone '{milestone}' and implement it in '{branch}'",
   "phases": [
     {
-      "milestone": "Phase 3-user-profile: Backend — update username endpoint",
-      "branch": "feat/BE/update-username-endpoint"
+      "milestone": "Phase 5-user-profile: Backend — avatar upload and serving endpoints",
+      "branch": "feat/BE/avatar-upload-and-serving-endpoints"
     }
   ]
 }

@@ -3,16 +3,14 @@ import { extname } from 'node:path';
 import { diskStorage } from 'multer';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import {
-  MAX_UPLOAD_FILE_SIZE_BYTES,
-  getUploadDir,
-} from './file-upload.constants';
+  AVATAR_UPLOAD_DIR,
+  MAX_AVATAR_FILE_SIZE_BYTES,
+} from './avatar-upload.constants';
 import { validateFileType } from './validate-file-type';
 
-export const meetingFileUploadOptions: MulterOptions = {
+export const avatarUploadOptions: MulterOptions = {
   storage: diskStorage({
-    // A function, not a static path, so the directory is resolved per
-    // upload rather than once when this module is first required.
-    destination: (_req, _file, callback) => callback(null, getUploadDir()),
+    destination: (_req, _file, callback) => callback(null, AVATAR_UPLOAD_DIR),
     // Never trust the client's original name for the on-disk name (path
     // traversal defense); the original name is kept separately as metadata.
     filename: (_req, file, callback) =>
@@ -21,9 +19,9 @@ export const meetingFileUploadOptions: MulterOptions = {
         `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
       ),
   }),
-  limits: { fileSize: MAX_UPLOAD_FILE_SIZE_BYTES },
+  limits: { fileSize: MAX_AVATAR_FILE_SIZE_BYTES },
   // Cheap first-pass rejection before any bytes are written to disk. The
-  // handler re-validates authoritatively (see UploadMeetingFileHandler).
+  // handler re-validates authoritatively (same as meeting file upload).
   fileFilter: (_req, file, callback) => {
     try {
       validateFileType(file.originalname, file.mimetype);
