@@ -7,4 +7,5 @@ export class GetUserAvatarQuery {
 export interface UserAvatarRecord {
   avatarPath: string;
   avatarMimeType: string;
+  avatarUploadedAt: Date;
 }

@@ -75,8 +75,9 @@ Data access goes through Prisma ORM 7, talking to the Postgres container from th
 
 ### Avatar serving (`GET /users/me/avatar`)
 
-- `GetUserAvatarHandler` (`@QueryHandler` for `GetUserAvatarQuery`, `src/user/queries/`) is scoped to `request.user.userId` from the JWT, same as the upload handler — there's no separate ownership check, since an avatar is only ever reachable via the requesting user's own session. `404 NotFoundException` if the user row has no avatar (`avatarPath` null); both `avatarPath` and `avatarMimeType` are always written together by `UploadAvatarHandler`, so a non-null `avatarPath` guarantees a non-null `avatarMimeType` too.
+- `GetUserAvatarHandler` (`@QueryHandler` for `GetUserAvatarQuery`, `src/user/queries/`) is scoped to `request.user.userId` from the JWT, same as the upload handler — there's no separate ownership check, since an avatar is only ever reachable via the requesting user's own session. `404 NotFoundException` if the user row has no avatar (`avatarPath` null); all three of `avatarPath`, `avatarMimeType`, and `avatarUploadedAt` are always written together by `UploadAvatarHandler`, so a non-null `avatarPath` guarantees the other two are non-null too.
 - The controller streams the file with `StreamableFile` (`@Res({ passthrough: true })`, not bare `@Res()`, same as meeting file download), setting `Content-Type` from the stored MIME type. Unlike meeting file download, there's no `Content-Disposition` — an avatar is displayed inline (e.g. an `<img>` tag), never downloaded as a named attachment.
+- The avatar is displayed on several pages at once (profile, edit, main), so the response sets `Cache-Control: private, max-age=60, must-revalidate` and `Last-Modified` (from `avatarUploadedAt`, refreshed on every re-upload) to let the browser skip re-fetching the same bytes across navigations within that window.
 
 ## Meetings
 

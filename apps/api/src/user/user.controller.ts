@@ -77,7 +77,11 @@ export class UserController {
       UserAvatarRecord
     >(new GetUserAvatarQuery(request.user.userId));
 
-    res.set({ 'Content-Type': avatar.avatarMimeType });
+    res.set({
+      'Content-Type': avatar.avatarMimeType,
+      'Cache-Control': 'private, max-age=60, must-revalidate',
+      'Last-Modified': avatar.avatarUploadedAt.toUTCString(),
+    });
 
     return new StreamableFile(
       createReadStream(join(AVATAR_UPLOAD_DIR, avatar.avatarPath)),
