@@ -5,7 +5,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserProfile } from '../../interfaces/user-record.interface';
 import { AVATAR_UPLOAD_DIR } from '../../upload/avatar-upload.constants';
-import { validateFileType } from '../../upload/validate-file-type';
 import { UploadAvatarCommand } from '../upload-avatar.command';
 
 interface LockedUserRow {
@@ -23,9 +22,6 @@ export class UploadAvatarHandler implements ICommandHandler<UploadAvatarCommand>
     }
 
     try {
-      // Authoritative re-check, on top of the interceptor's fileFilter.
-      validateFileType(file.originalname, file.mimetype);
-
       const { updated, oldAvatarPath } = await this.prisma.$transaction(
         async (tx) => {
           // SELECT ... FOR UPDATE locks the row for the rest of this
