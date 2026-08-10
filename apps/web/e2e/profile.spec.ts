@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import {
   TEST_USER_EMAIL,
@@ -5,6 +6,16 @@ import {
   registerUserViaApi,
 } from './api-helpers';
 import { loginViaUi } from './ui-helpers';
+
+// A real decodable PNG, needed here specifically because the assertion
+// waits for the browser to actually render an <img> (unlike the upload
+// flow's own fixture, whose content is arbitrary and only exercises
+// extension/declared-MIME-type validation).
+const VALID_AVATAR_FIXTURE = path.join(
+  __dirname,
+  'fixtures',
+  'valid-avatar-image.png',
+);
 
 test.describe('profile page', () => {
   test('shows a loading spinner while the profile is being fetched', async ({
@@ -93,6 +104,32 @@ test.describe('profile page', () => {
 
       await expect(page.getByText('Updated Name').first()).toBeVisible();
       await expect(page.getByText(email).first()).toBeVisible();
+    } finally {
+      await deleteUserByEmail(email);
+    }
+  });
+
+  test('shows the uploaded avatar image instead of the initials placeholder after a fresh page load', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-${Date.now()}@video-meetings.local`;
+    await registerUserViaApi(request, email);
+
+    try {
+      await loginViaUi(page, email);
+      await page.goto('/profile/edit');
+      await expect(page.locator('img')).toHaveCount(0);
+
+      await page
+        .locator('input[type="file"]')
+        .setInputFiles(VALID_AVATAR_FIXTURE);
+      await page.getByRole('button', { name: 'Upload' }).click();
+      await expect(page.getByText('Avatar updated')).toBeVisible();
+
+      await page.goto('/profile');
+
+      await expect(page.locator('img').first()).toBeVisible();
     } finally {
       await deleteUserByEmail(email);
     }

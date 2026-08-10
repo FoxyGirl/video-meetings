@@ -95,6 +95,8 @@ export default function ProfileEditPage() {
           <UserAvatar
             email={profile.email}
             username={profile.username}
+            avatarMimeType={profile.avatarMimeType}
+            avatarUploadedAt={profile.avatarUploadedAt}
             size="lg"
           />
           <div className="flex flex-col items-center gap-1 text-center">

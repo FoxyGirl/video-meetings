@@ -5,6 +5,14 @@ import { loginViaUi } from './ui-helpers';
 
 const VALID_FIXTURE = path.join(__dirname, 'fixtures', 'valid-avatar.png');
 const INVALID_FIXTURE = path.join(__dirname, 'fixtures', 'invalid-file.txt');
+// A real decodable PNG (unlike VALID_FIXTURE, whose content is arbitrary
+// text — fine for upload validation, which only checks extension/declared
+// MIME type, but not enough for the browser to actually render an <img>).
+const REAL_IMAGE_FIXTURE = path.join(
+  __dirname,
+  'fixtures',
+  'valid-avatar-image.png',
+);
 
 test.describe('avatar upload control', () => {
   const createdEmails: string[] = [];
@@ -31,6 +39,20 @@ test.describe('avatar upload control', () => {
     await page.getByRole('button', { name: 'Upload' }).click();
 
     await expect(page.getByText('Avatar updated')).toBeVisible();
+  });
+
+  test('renders the uploaded image in place of the initials placeholder', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await expect(page.locator('img')).toHaveCount(0);
+
+    await page.locator('input[type="file"]').setInputFiles(REAL_IMAGE_FIXTURE);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('Avatar updated')).toBeVisible();
+
+    await expect(page.locator('img').first()).toBeVisible();
   });
 
   test('rejects an invalid file type with a specific message', async ({
