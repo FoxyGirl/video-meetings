@@ -85,6 +85,13 @@ export class UserController {
 
     return new StreamableFile(
       createReadStream(join(AVATAR_UPLOAD_DIR, avatar.avatarPath)),
-    );
+    ).setErrorHandler((err, response) => {
+      if (response.headersSent) {
+        response.end();
+        return;
+      }
+      response.statusCode = HttpStatus.NOT_FOUND;
+      response.send('Avatar file not found');
+    });
   }
 }
