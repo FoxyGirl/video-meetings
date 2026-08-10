@@ -1,4 +1,4 @@
-import { formatBytes } from './file-types';
+import { formatBytes, getExtension } from './file-types';
 
 // Mirrors the server's default (apps/api's MAX_AVATAR_FILE_SIZE_BYTES) —
 // this client-side copy is a fixed UX fast-fail, not the authority; the
@@ -15,11 +15,6 @@ export const ACCEPTED_AVATAR_TYPES: Readonly<Record<string, string>> = {
   '.png': 'image/png',
   '.webp': 'image/webp',
 };
-
-function getExtension(fileName: string): string | null {
-  const dotIndex = fileName.lastIndexOf('.');
-  return dotIndex === -1 ? null : fileName.slice(dotIndex).toLowerCase();
-}
 
 // UX-level fast-fail against the same table the server validates
 // authoritatively — a client can lie about a file's extension or MIME type,

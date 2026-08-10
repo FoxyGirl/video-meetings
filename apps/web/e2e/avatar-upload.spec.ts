@@ -1,0 +1,54 @@
+import path from 'node:path';
+import { test, expect } from '@playwright/test';
+import { deleteUserByEmail, registerUserViaApi } from './api-helpers';
+import { loginViaUi } from './ui-helpers';
+
+const VALID_FIXTURE = path.join(__dirname, 'fixtures', 'valid-avatar.png');
+const INVALID_FIXTURE = path.join(__dirname, 'fixtures', 'invalid-file.txt');
+
+test.describe('avatar upload control', () => {
+  const createdEmails: string[] = [];
+
+  test.afterEach(async () => {
+    await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
+  });
+
+  async function loginAsFreshUser(page: import('@playwright/test').Page) {
+    const email = `e2e-avatar-upload-${Date.now()}-${Math.random().toString(36).slice(2)}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(page.request, email);
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+    return email;
+  }
+
+  test('uploads a valid avatar and shows a success message', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await page.locator('input[type="file"]').setInputFiles(VALID_FIXTURE);
+    await page.getByRole('button', { name: 'Upload' }).click();
+
+    await expect(page.getByText('Avatar updated')).toBeVisible();
+  });
+
+  test('rejects an invalid file type with a specific message', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await page.locator('input[type="file"]').setInputFiles(INVALID_FIXTURE);
+
+    await expect(page.getByText(/Unsupported file type/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Upload' })).toBeDisabled();
+  });
+
+  test('disables the upload button until a file is selected', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await expect(page.getByRole('button', { name: 'Upload' })).toBeDisabled();
+  });
+});

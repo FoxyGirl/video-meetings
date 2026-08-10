@@ -39,7 +39,7 @@ export function formatFileSize(bytes: number): string {
   return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unitIndex]}`;
 }
 
-function getExtension(fileName: string): string | null {
+export function getExtension(fileName: string): string | null {
   const dotIndex = fileName.lastIndexOf('.');
   return dotIndex === -1 ? null : fileName.slice(dotIndex).toLowerCase();
 }

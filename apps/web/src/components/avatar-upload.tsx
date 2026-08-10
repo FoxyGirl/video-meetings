@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -30,6 +30,7 @@ export function AvatarUpload({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0] ?? null;
@@ -50,6 +51,12 @@ export function AvatarUpload({
       const profile = await uploadAvatar(file, setProgress);
       onUploaded(profile);
       setFile(null);
+      // The native input keeps its own internal file selection independent
+      // of React state — without clearing it, re-selecting the exact same
+      // file for a follow-up upload wouldn't fire another change event.
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
       toast.success('Avatar updated');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -79,6 +86,7 @@ export function AvatarUpload({
           accept={Object.keys(ACCEPTED_AVATAR_TYPES).join(',')}
           className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
           disabled={isUploading}
+          ref={inputRef}
           type="file"
           onChange={handleFileChange}
         />
