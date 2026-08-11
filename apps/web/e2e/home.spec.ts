@@ -44,4 +44,14 @@ test.describe('main page logged-in-user area', () => {
     await expect(page.getByText('Jane Doe').first()).toBeVisible();
     await expect(page.getByText(email)).not.toBeVisible();
   });
+
+  test('clicking the avatar navigates to the profile page', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await page.getByRole('link', { name: 'View profile' }).click();
+
+    await expect(page).toHaveURL('/profile');
+  });
 });

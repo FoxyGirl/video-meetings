@@ -79,13 +79,19 @@ export default function HomePage() {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <UserAvatar
-              email={auth.email}
-              username={profile?.username}
-              avatarMimeType={profile?.avatarMimeType}
-              avatarUploadedAt={profile?.avatarUploadedAt}
-              size="md"
-            />
+            <Link
+              href="/profile"
+              aria-label="View profile"
+              className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              <UserAvatar
+                email={auth.email}
+                username={profile?.username}
+                avatarMimeType={profile?.avatarMimeType}
+                avatarUploadedAt={profile?.avatarUploadedAt}
+                size="md"
+              />
+            </Link>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                 Video Meetings
