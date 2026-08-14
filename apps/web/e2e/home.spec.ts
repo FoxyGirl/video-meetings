@@ -1,6 +1,16 @@
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { deleteUserByEmail, registerUserViaApi } from './api-helpers';
 import { loginViaUi } from './ui-helpers';
+
+// A real decodable PNG, needed here specifically because the assertion
+// waits for the browser to actually render an <img> — same fixture
+// avatar-upload.spec.ts and profile.spec.ts use for the same reason.
+const REAL_IMAGE_FIXTURE = path.join(
+  __dirname,
+  'fixtures',
+  'valid-avatar-image.png',
+);
 
 test.describe('main page logged-in-user area', () => {
   const createdEmails: string[] = [];
@@ -43,6 +53,23 @@ test.describe('main page logged-in-user area', () => {
 
     await expect(page.getByText('Jane Doe').first()).toBeVisible();
     await expect(page.getByText(email)).not.toBeVisible();
+  });
+
+  test('shows the uploaded avatar image instead of the initials placeholder', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    await page.goto('/profile/edit');
+    await expect(page.locator('img')).toHaveCount(0);
+
+    await page.locator('input[type="file"]').setInputFiles(REAL_IMAGE_FIXTURE);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('Avatar updated')).toBeVisible();
+
+    await page.goto('/');
+
+    await expect(page.locator('img').first()).toBeVisible();
   });
 
   test('clicking the avatar navigates to the profile page', async ({
