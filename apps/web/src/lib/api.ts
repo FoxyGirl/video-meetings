@@ -1,7 +1,5 @@
 import axios from 'axios';
 import { http } from './http';
-import { MAX_AVATAR_FILE_SIZE_BYTES } from './avatar-file-types';
-import { formatBytes, MAX_UPLOAD_FILE_SIZE_BYTES } from './file-types';
 
 export { API_URL } from './http';
 
@@ -144,9 +142,14 @@ export async function uploadAvatar(
   } catch (error) {
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
-      // Nest's default 413 body just says "File too large" — the actual
-      // limit is more actionable than the server's generic message.
-      413: `File is too large. Maximum size is ${formatBytes(MAX_AVATAR_FILE_SIZE_BYTES)}.`,
+      // Deliberately not size-specific: avatar-file-types.ts's client-side
+      // max is only a mirrored guess at the server's real (env-configurable)
+      // limit, and client-side validation already rejects anything over
+      // that guess before a request is sent — so this path only fires when
+      // the server's actual limit is *lower* than the client's, which is
+      // exactly the case where citing the client's number would state a
+      // wrong one.
+      413: 'File is too large. Please try a smaller image.',
     });
   }
 }
@@ -296,9 +299,14 @@ export async function uploadMeetingFile(
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
       404: 'This meeting no longer exists or you are not its organizer.',
-      // Nest's default 413 body just says "File too large" — the actual
-      // limit is more actionable than the server's generic message.
-      413: `File is too large. Maximum size is ${formatBytes(MAX_UPLOAD_FILE_SIZE_BYTES)}.`,
+      // Deliberately not size-specific: file-types.ts's client-side max is
+      // only a mirrored guess at the server's real (env-configurable)
+      // limit, and client-side validation already rejects anything over
+      // that guess before a request is sent — so this path only fires when
+      // the server's actual limit is *lower* than the client's, which is
+      // exactly the case where citing the client's number would state a
+      // wrong one.
+      413: 'File is too large. Please try a smaller file.',
     });
   }
 }
