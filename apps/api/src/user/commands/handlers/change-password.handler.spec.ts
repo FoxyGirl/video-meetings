@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { QueryBus } from '@nestjs/cqrs';
+import { Prisma } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChangePasswordCommand } from '../change-password.command';
 import { ChangePasswordHandler } from './change-password.handler';
@@ -67,5 +68,36 @@ describe('ChangePasswordHandler', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
 
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it('throws 401 when the user is deleted between the lookup and the update', async () => {
+    update.mockImplementation(() =>
+      Promise.reject(
+        new Prisma.PrismaClientKnownRequestError('Record not found', {
+          code: 'P2025',
+          clientVersion: 'test',
+        }),
+      ),
+    );
+
+    await expect(
+      handler.execute(
+        new ChangePasswordCommand(USER_ID, 'CurrentPass1!', 'NewPassword1!'),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('rethrows other Prisma errors unchanged', async () => {
+    const unrelatedError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      { code: 'P2002', clientVersion: 'test' },
+    );
+    update.mockImplementation(() => Promise.reject(unrelatedError));
+
+    await expect(
+      handler.execute(
+        new ChangePasswordCommand(USER_ID, 'CurrentPass1!', 'NewPassword1!'),
+      ),
+    ).rejects.toBe(unrelatedError);
   });
 });
