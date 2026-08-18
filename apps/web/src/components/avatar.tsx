@@ -3,7 +3,7 @@
 import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
-import { ApiError, getAvatarBlob } from '@/lib/api';
+import { ApiError, getAvatarBlob, type UserProfile } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 interface UserAvatarProps {
@@ -102,7 +102,12 @@ function useAvatarImageUrl(
   );
 
   useEffect(() => {
-    if (!key) {
+    if (!key || cachedAvatarPreview?.key === key) {
+      // Either nothing to fetch, or cacheAvatarPreview (see below) already
+      // has this exact avatar's bytes from a just-completed upload — skip
+      // the network round trip entirely. The render below reads straight
+      // from the cache in that case rather than mirroring it into
+      // `fetched` state.
       return;
     }
 
@@ -138,7 +143,36 @@ function useAvatarImageUrl(
     };
   }, [key, logout]);
 
+  if (key && cachedAvatarPreview?.key === key) {
+    return cachedAvatarPreview.url;
+  }
+
   return fetched?.key === key ? fetched.url : null;
+}
+
+let cachedAvatarPreview: { key: string; url: string } | null = null;
+
+// Called right after a successful avatar upload (see AvatarUpload), while
+// the file's bytes are already in hand — seeds useAvatarImageUrl's cache so
+// it can skip re-fetching the exact same bytes the browser just finished
+// sending. Purely an optimistic shortcut: if this is never called, or the
+// key it computes doesn't end up matching (e.g. the server ever
+// normalizes avatarUploadedAt differently), useAvatarImageUrl's normal
+// getAvatarBlob() fetch still runs as the fallback source of truth. The
+// previous preview (if any) is revoked before being replaced; the very
+// last one is simply left for the browser to reclaim on tab close rather
+// than tracked for cleanup on logout — one small leftover blob isn't worth
+// the extra plumbing.
+export function cacheAvatarPreview(profile: UserProfile, file: File): void {
+  if (!profile.avatarMimeType) {
+    return;
+  }
+  const key = `${profile.avatarMimeType}:${profile.avatarUploadedAt}`;
+  const url = URL.createObjectURL(file);
+  if (cachedAvatarPreview) {
+    URL.revokeObjectURL(cachedAvatarPreview.url);
+  }
+  cachedAvatarPreview = { key, url };
 }
 
 function getInitials(

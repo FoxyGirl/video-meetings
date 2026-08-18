@@ -11,6 +11,7 @@ import {
 } from '@heroui/react';
 import { Upload } from 'lucide-react';
 import { ApiError, uploadAvatar, type UserProfile } from '@/lib/api';
+import { cacheAvatarPreview } from '@/components/avatar';
 import {
   ACCEPTED_AVATAR_TYPES,
   validateAvatarFile,
@@ -49,6 +50,7 @@ export function AvatarUpload({
     setProgress(0);
     try {
       const profile = await uploadAvatar(file, setProgress);
+      cacheAvatarPreview(profile, file);
       onUploaded(profile);
       setFile(null);
       // The native input keeps its own internal file selection independent
