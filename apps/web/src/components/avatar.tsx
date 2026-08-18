@@ -48,7 +48,7 @@ interface CurrentUserAvatarProps {
 // page) automatically shows the current user and can't be pointed at
 // someone else's data by mistake.
 export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
-  const { auth, profile } = useAuth();
+  const { auth, profile, profileError } = useAuth();
   const avatarUrl = useAvatarImageUrl(
     profile?.avatarMimeType,
     profile?.avatarUploadedAt,
@@ -56,6 +56,17 @@ export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
 
   if (!auth) {
     return null;
+  }
+
+  // Profile fetch still in flight: render a neutral, empty circle rather
+  // than initials derived from `auth.email` — those can be a third state
+  // that's wrong in both directions (not the eventual username-derived
+  // initials, and not the avatar image either), flashing before the real
+  // one paints a moment later. `profileError` still counts as "settled",
+  // so a failed fetch falls through to the email-derived initials below
+  // rather than getting stuck on the empty placeholder forever.
+  if (!profile && !profileError) {
+    return <HeroAvatar size={size} className={className} />;
   }
 
   return (
