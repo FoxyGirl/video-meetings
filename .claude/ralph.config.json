@@ -1,12 +1,12 @@
 {
-  "active": false,
+  "active": true,
   "maxIterations": 10,
   "maxTurns": 70,
   "prompt": "Read .claude/ralph.md and follow the rules there. Take the next open issue from milestone '{milestone}' and implement it in '{branch}'",
   "phases": [
     {
-      "milestone": "Phase 6-user-profile: Frontend — avatar upload UI, and avatar everywhere",
-      "branch": "feat/FE/avatar-upload-UI"
+      "milestone": "Phase 7-user-profile: Backend — password change endpoint",
+      "branch": "feat/BE/password-change-endpoint"
     }
   ]
 }
