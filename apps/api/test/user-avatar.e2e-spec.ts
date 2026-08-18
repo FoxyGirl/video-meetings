@@ -120,7 +120,14 @@ describe('User avatar upload and serving (e2e)', () => {
         .buffer(true)
         .parse(binaryParser)
         .expect(200)
-        .expect('Content-Type', 'image/png');
+        .expect('Content-Type', 'image/png')
+        // `private` alone only keeps this out of shared/proxy caches — it
+        // doesn't stop a browser's own cache from keying purely on the URL
+        // and replaying a previously-cached response to a different
+        // Authorization value. Vary is what prevents a shared/kiosk browser
+        // from serving one user's cached avatar bytes to the next user who
+        // authenticates with a different token within the cache window.
+        .expect('Vary', 'Authorization');
 
       expect(download.body as Buffer).toEqual(content);
     });

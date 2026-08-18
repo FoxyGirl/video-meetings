@@ -81,6 +81,13 @@ export class UserController {
       'Content-Type': avatar.avatarMimeType,
       'Cache-Control': 'private, max-age=60, must-revalidate',
       'Last-Modified': avatar.avatarUploadedAt.toUTCString(),
+      // `private` only keeps this out of shared/proxy caches — it doesn't
+      // stop the browser's own cache from keying purely on the URL and
+      // replaying a previously-cached response to a different Authorization
+      // value within the 60s window. On a shared/kiosk browser that could
+      // serve one user's avatar bytes to the next user who logs in shortly
+      // after. Vary tells the cache the response depends on this header too.
+      Vary: 'Authorization',
     });
 
     return new StreamableFile(
