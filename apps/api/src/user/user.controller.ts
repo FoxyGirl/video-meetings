@@ -20,6 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
+import type { AuthResult } from '../auth/interfaces/auth-result.interface';
 import { ChangePasswordCommand } from './commands/change-password.command';
 import { UpdateUsernameCommand } from './commands/update-username.command';
 import { UploadAvatarCommand } from './commands/upload-avatar.command';
@@ -61,7 +62,7 @@ export class UserController {
   changePassword(
     @Req() request: AuthenticatedRequest,
     @Body() { currentPassword, newPassword }: ChangePasswordDto,
-  ): Promise<void> {
+  ): Promise<AuthResult> {
     return this.commandBus.execute(
       new ChangePasswordCommand(
         request.user.userId,

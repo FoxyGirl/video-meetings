@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, beforeAll, afterAll, expect } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -54,10 +54,23 @@ describe('User password change (e2e)', () => {
       const { accessToken, email, password } = await registerUser();
       const newPassword = 'N3wSecret!';
 
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .patch('/users/me/password')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ currentPassword: password, newPassword })
+        .expect(200);
+
+      // Not asserted not-equal to the original token: signing the same
+      // { sub, email } payload within the same second produces an identical
+      // JWT (jsonwebtoken's `iat` claim has second granularity), so the two
+      // tokens can legitimately collide here. What matters is that a valid
+      // token comes back and authenticates.
+      const newAccessToken = (response.body as AuthResponseBody).accessToken;
+      expect(typeof newAccessToken).toBe('string');
+
+      await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${newAccessToken}`)
         .expect(200);
 
       await login(email, newPassword).expect(200);

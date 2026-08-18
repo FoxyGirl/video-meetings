@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { QueryBus } from '@nestjs/cqrs';
+import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChangePasswordCommand } from '../change-password.command';
@@ -12,6 +13,7 @@ const USER_ID = '11111111-1111-4111-8111-111111111111';
 describe('ChangePasswordHandler', () => {
   let queryBusExecute: jest.Mock;
   let update: jest.Mock;
+  let sign: jest.Mock;
   let handler: ChangePasswordHandler;
   let currentHash: string;
 
@@ -25,10 +27,12 @@ describe('ChangePasswordHandler', () => {
       }),
     );
     update = jest.fn(() => Promise.resolve());
+    sign = jest.fn(() => 'new-jwt-token');
 
     handler = new ChangePasswordHandler(
       { user: { update } } as unknown as PrismaService,
       { execute: queryBusExecute } as unknown as QueryBus,
+      { sign } as unknown as JwtService,
     );
   });
 
@@ -46,6 +50,18 @@ describe('ChangePasswordHandler', () => {
     await expect(
       bcrypt.compare('NewPassword1!', call[0].data.password),
     ).resolves.toBe(true);
+  });
+
+  it('returns a freshly signed JWT for the calling session', async () => {
+    const result = await handler.execute(
+      new ChangePasswordCommand(USER_ID, 'CurrentPass1!', 'NewPassword1!'),
+    );
+
+    expect(sign).toHaveBeenCalledWith({
+      sub: USER_ID,
+      email: 'ada@example.com',
+    });
+    expect(result).toEqual({ accessToken: 'new-jwt-token' });
   });
 
   it('throws 401 and does not persist when the current password does not match', async () => {

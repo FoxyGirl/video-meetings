@@ -1,8 +1,10 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler, QueryBus } from '@nestjs/cqrs';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AuthResult } from '../../../auth/interfaces/auth-result.interface';
 import { UserWithCredentials } from '../../interfaces/user-record.interface';
 import { FindUserByIdQuery } from '../../queries/find-user-by-id.query';
 import { ChangePasswordCommand } from '../change-password.command';
@@ -15,13 +17,14 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
   constructor(
     private readonly prisma: PrismaService,
     private readonly queryBus: QueryBus,
+    private readonly jwtService: JwtService,
   ) {}
 
   async execute({
     userId,
     currentPassword,
     newPassword,
-  }: ChangePasswordCommand): Promise<void> {
+  }: ChangePasswordCommand): Promise<AuthResult> {
     const user = await this.queryBus.execute<
       FindUserByIdQuery,
       UserWithCredentials | null
@@ -56,5 +59,14 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
       }
       throw error;
     }
+
+    // Outstanding JWTs issued before this change (other tabs/devices, or this
+    // same request's own token) stay valid until they naturally expire —
+    // nothing re-checks the stored hash on each request. Reissuing a fresh
+    // token here at least lets the calling session pick up a token that was
+    // minted after the change, matching LoginHandler's AuthResult shape.
+    return {
+      accessToken: this.jwtService.sign({ sub: user.id, email: user.email }),
+    };
   }
 }
