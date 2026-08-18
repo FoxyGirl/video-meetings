@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -39,6 +39,12 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
     );
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (newPassword === currentPassword) {
+      throw new BadRequestException(
+        'New password must differ from current password',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);

@@ -89,6 +89,18 @@ describe('User password change (e2e)', () => {
       await login(email, password).expect(200);
     });
 
+    it('rejects a new password equal to the current one, leaving the password unchanged', async () => {
+      const { accessToken, email, password } = await registerUser();
+
+      await request(app.getHttpServer())
+        .patch('/users/me/password')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ currentPassword: password, newPassword: password })
+        .expect(400);
+
+      await login(email, password).expect(200);
+    });
+
     it('rejects a new password shorter than 8 characters, leaving the password unchanged', async () => {
       const { accessToken, email, password } = await registerUser();
 
