@@ -7,8 +7,21 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // 1 retry locally (not just CI's 2): the webServer block below starts a
+  // fresh `next dev` when nothing's already listening on :3000 (e.g. a
+  // pre-push run with no `npm run dev` already up), and Next's dev server
+  // compiles each route on-demand on its first hit — the first test to
+  // navigate to a given route can take several seconds longer than every
+  // later hit of that same route. A single retry absorbs that one-off cold
+  // compile without silently hiding a genuinely broken test, which would
+  // still fail identically on the retry.
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
+  // Above the 5s default specifically for the same cold-compile reason —
+  // an assertion racing a route's first-ever compile (e.g. toHaveURL right
+  // after a client-side navigation to a not-yet-compiled route) needs more
+  // than 5s of headroom under a freshly-started dev server.
+  expect: { timeout: 10_000 },
   reporter: 'html',
   use: {
     baseURL: process.env.WEB_URL ?? 'http://localhost:3000',
