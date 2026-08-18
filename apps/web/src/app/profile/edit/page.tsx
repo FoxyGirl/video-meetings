@@ -16,21 +16,37 @@ import {
 } from '@heroui/react';
 import { CurrentUserAvatar } from '@/components/avatar';
 import { AvatarUpload } from '@/components/avatar-upload';
-import { ApiError, updateUsername } from '@/lib/api';
+import { PasswordVisibilityToggle } from '@/components/password-visibility-toggle';
+import { ApiError, changePassword, updateUsername } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useProfile } from '@/lib/use-profile';
 
 // Hand-mirrored from apps/api/src/user/dto/update-username.dto.ts's @MaxLength(50) — keep in sync.
 const MAX_USERNAME_LENGTH = 50;
+// Hand-mirrored from apps/api/src/user/dto/change-password.dto.ts's @MinLength(8) on newPassword — keep in sync.
+const MIN_NEW_PASSWORD_LENGTH = 8;
+// changePassword() deliberately skips the usual blanket 401 -> "session expired"
+// override (see its comment in lib/api.ts), since a 401 here can mean either an
+// expired session (JwtAuthGuard) or a wrong current password
+// (ChangePasswordHandler, hand-mirrored message below) — keep in sync with
+// apps/api/src/user/commands/handlers/change-password.handler.ts.
+const WRONG_CURRENT_PASSWORD_MESSAGE = 'Invalid credentials';
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { login, logout } = useAuth();
   const { profile, setProfile, profileError, isLoading } = useProfile();
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
   const [username, setUsername] = useState('');
   const [hasSeededUsername, setHasSeededUsername] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
+    useState(false);
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   if (profile && !hasSeededUsername) {
     setHasSeededUsername(true);
@@ -64,6 +80,41 @@ export default function ProfileEditPage() {
       );
     } finally {
       setIsSavingUsername(false);
+    }
+  };
+
+  const onSubmitPassword = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!profile) {
+      return;
+    }
+
+    setPasswordError(null);
+    setIsSavingPassword(true);
+    try {
+      const { accessToken } = await changePassword({
+        currentPassword,
+        newPassword,
+      });
+      // ChangePasswordHandler reissues a fresh JWT — adopt it so the
+      // session stays valid under whatever token the server now expects.
+      login({ accessToken, email: profile.email });
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 401 &&
+        error.message !== WRONG_CURRENT_PASSWORD_MESSAGE
+      ) {
+        handleSessionExpired();
+        return;
+      }
+      setPasswordError(
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to change password. Please try again.',
+      );
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -152,6 +203,92 @@ export default function ProfileEditPage() {
             <Button isPending={isSavingUsername} type="submit">
               {isSavingUsername ? <Spinner color="current" size="sm" /> : null}
               {isSavingUsername ? 'Saving…' : 'Save'}
+            </Button>
+          </Form>
+        </Card.Content>
+      </Card>
+
+      <Card className="w-full max-w-md">
+        <Card.Header>
+          <Card.Title>Password</Card.Title>
+          <Card.Description>
+            Change the password you use to sign in.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <Form className="flex flex-col gap-4" onSubmit={onSubmitPassword}>
+            <TextField
+              isRequired
+              name="currentPassword"
+              type={isCurrentPasswordVisible ? 'text' : 'password'}
+              value={currentPassword}
+              onChange={setCurrentPassword}
+              validate={(value) =>
+                value.length === 0 ? 'Enter your current password.' : null
+              }
+            >
+              <Label>Current password</Label>
+              <div className="relative">
+                <Input
+                  autoComplete="current-password"
+                  className="pr-10"
+                  fullWidth
+                  placeholder="••••••••"
+                  variant="secondary"
+                />
+                <PasswordVisibilityToggle
+                  isVisible={isCurrentPasswordVisible}
+                  onToggle={() =>
+                    setIsCurrentPasswordVisible((visible) => !visible)
+                  }
+                />
+              </div>
+              <FieldError />
+            </TextField>
+
+            <TextField
+              isRequired
+              name="newPassword"
+              type={isNewPasswordVisible ? 'text' : 'password'}
+              value={newPassword}
+              onChange={setNewPassword}
+              validate={(value) =>
+                value.length < MIN_NEW_PASSWORD_LENGTH
+                  ? `New password must be at least ${MIN_NEW_PASSWORD_LENGTH} characters.`
+                  : null
+              }
+            >
+              <Label>New password</Label>
+              <div className="relative">
+                <Input
+                  autoComplete="new-password"
+                  className="pr-10"
+                  fullWidth
+                  placeholder="••••••••"
+                  variant="secondary"
+                />
+                <PasswordVisibilityToggle
+                  isVisible={isNewPasswordVisible}
+                  onToggle={() =>
+                    setIsNewPasswordVisible((visible) => !visible)
+                  }
+                />
+              </div>
+              <FieldError />
+            </TextField>
+
+            {passwordError ? (
+              <Alert status="danger">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>{passwordError}</Alert.Title>
+                </Alert.Content>
+              </Alert>
+            ) : null}
+
+            <Button isPending={isSavingPassword} type="submit">
+              {isSavingPassword ? <Spinner color="current" size="sm" /> : null}
+              {isSavingPassword ? 'Saving…' : 'Save'}
             </Button>
           </Form>
         </Card.Content>

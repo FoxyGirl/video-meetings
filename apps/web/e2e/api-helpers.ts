@@ -29,9 +29,10 @@ export async function registerUserViaApi(
 export async function loginUserViaApi(
   request: APIRequestContext,
   email: string,
+  password: string = TEST_PASSWORD,
 ): Promise<string> {
   const res = await request.post(`${API_URL}/auth/login`, {
-    data: { email, password: TEST_PASSWORD },
+    data: { email, password },
   });
   if (!res.ok()) {
     throw new Error(

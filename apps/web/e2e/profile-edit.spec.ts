@@ -1,12 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   API_URL,
+  TEST_PASSWORD,
   TEST_USER_EMAIL,
   deleteUserByEmail,
   loginUserViaApi,
   registerUserViaApi,
 } from './api-helpers';
 import { loginViaUi } from './ui-helpers';
+
+// Both the username and password forms render their own "Save" button, so a
+// bare getByRole('button', { name: 'Save' }) is ambiguous once both exist on
+// the page — scope to the enclosing <form> via a field only that form has.
+function usernameForm(page: Page) {
+  return page
+    .locator('form')
+    .filter({ has: page.getByRole('textbox', { name: 'Username' }) });
+}
+
+function passwordForm(page: Page) {
+  return page
+    .locator('form')
+    .filter({ has: page.getByLabel('Current password') });
+}
 
 test.describe('profile edit page', () => {
   test('shows a loading spinner while the profile is being fetched', async ({
@@ -103,7 +119,7 @@ test.describe('username form', () => {
     await page
       .getByRole('textbox', { name: 'Username' })
       .fill('New Display Name');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByText('Username updated')).toBeVisible();
 
@@ -127,7 +143,7 @@ test.describe('username form', () => {
     await page
       .getByRole('textbox', { name: 'Username' })
       .fill('  Padded Name  ');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByText('Username updated')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
@@ -147,11 +163,11 @@ test.describe('username form', () => {
     await page.goto('/profile/edit');
 
     await page.getByRole('textbox', { name: 'Username' }).fill('Alice');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Username updated')).toBeVisible();
 
     await page.getByRole('textbox', { name: 'Username' }).fill('  Alice  ');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByRole('textbox', { name: 'Username' })).toHaveValue(
       'Alice',
@@ -171,7 +187,7 @@ test.describe('username form', () => {
     });
 
     await page.getByRole('textbox', { name: 'Username' }).fill('Will Fail');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
 
     await expect(page.getByText('Server error')).toBeVisible();
   });
@@ -189,7 +205,7 @@ test.describe('username form', () => {
     });
 
     await page.getByRole('textbox', { name: 'Username' }).fill('x'.repeat(51));
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
 
     await expect(
       page.getByText('Username must be 50 characters or fewer.'),
@@ -214,11 +230,198 @@ test.describe('username form', () => {
     await page.goto('/profile/edit');
 
     await page.getByRole('textbox', { name: 'Username' }).fill('');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await usernameForm(page).getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Username updated')).toBeVisible();
 
     await page.goto('/profile');
     await expect(page.getByText(email).first()).toBeVisible();
     await expect(page.getByText('Soon Cleared')).not.toBeVisible();
+  });
+});
+
+test.describe('password form', () => {
+  const createdEmails: string[] = [];
+
+  test.afterEach(async () => {
+    await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
+  });
+
+  test('renders the current and new password fields', async ({ page }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await expect(page.getByLabel('Current password')).toBeVisible();
+    await expect(page.getByLabel('New password')).toBeVisible();
+  });
+
+  test('toggles visibility of the current and new password fields independently', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    const currentPasswordInput = page.getByLabel('Current password');
+    const newPasswordInput = page.getByLabel('New password');
+    await expect(currentPasswordInput).toHaveAttribute('type', 'password');
+    await expect(newPasswordInput).toHaveAttribute('type', 'password');
+
+    await passwordForm(page)
+      .getByRole('button', { name: 'Show password' })
+      .first()
+      .click();
+
+    await expect(currentPasswordInput).toHaveAttribute('type', 'text');
+    await expect(newPasswordInput).toHaveAttribute('type', 'password');
+  });
+
+  test('requires the current password without issuing a request', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    let requestIssued = false;
+    await page.route('**/users/me/password', async (route) => {
+      requestIssued = true;
+      await route.continue();
+    });
+
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Enter your current password.')).toBeVisible();
+    expect(requestIssued).toBe(false);
+  });
+
+  test('rejects a new password under 8 characters without issuing a request', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    let requestIssued = false;
+    await page.route('**/users/me/password', async (route) => {
+      requestIssued = true;
+      await route.continue();
+    });
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill('short');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(
+      page.getByText('New password must be at least 8 characters.'),
+    ).toBeVisible();
+    expect(requestIssued).toBe(false);
+  });
+
+  test('submits independently from the username form', async ({ page }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    let passwordRequestIssued = false;
+    await page.route('**/users/me/password', async (route) => {
+      passwordRequestIssued = true;
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 401,
+          message: 'Invalid credentials',
+          error: 'Unauthorized',
+        }),
+      });
+    });
+    let usernameRequestIssued = false;
+    await page.route('**/users/me/username', async (route) => {
+      usernameRequestIssued = true;
+      await route.continue();
+    });
+
+    await page.getByLabel('Current password').fill('wrong-password');
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
+    expect(passwordRequestIssued).toBe(true);
+    expect(usernameRequestIssued).toBe(false);
+  });
+
+  test('shows an error for the wrong current password without logging the user out', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.route('**/users/me/password', async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 401,
+          message: 'Invalid credentials',
+          error: 'Unauthorized',
+        }),
+      });
+    });
+
+    await page.getByLabel('Current password').fill('wrong-password');
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
+    await expect(page).toHaveURL('/profile/edit');
+  });
+
+  test('redirects to the login page when the session has actually expired', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.route('**/users/me/password', async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 401,
+          message: 'Invalid or expired token',
+          error: 'Unauthorized',
+        }),
+      });
+    });
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page).toHaveURL('/login');
+  });
+
+  test('changes the password and keeps the session usable', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-pw-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+    const newPassword = 'NewPassword123!';
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill(newPassword);
+    const responsePromise = page.waitForResponse('**/users/me/password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(200);
+    // The session's token is reissued on success and the page stays put
+    // rather than bouncing to /login the way a real 401 would.
+    await expect(page).toHaveURL('/profile/edit');
+
+    const accessToken = await loginUserViaApi(request, email, newPassword);
+    expect(accessToken).toBeTruthy();
   });
 });
