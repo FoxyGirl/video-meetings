@@ -78,7 +78,7 @@ test.describe('profile page', () => {
     page,
     request,
   }) => {
-    const email = `e2e-profile-${Date.now()}@video-meetings.local`;
+    const email = `e2e-profile-${Date.now()}-${Math.random().toString(36).slice(2)}@video-meetings.local`;
     await registerUserViaApi(request, email);
 
     try {
@@ -123,7 +123,7 @@ test.describe('profile page', () => {
     page,
     request,
   }) => {
-    const email = `e2e-profile-${Date.now()}@video-meetings.local`;
+    const email = `e2e-profile-${Date.now()}-${Math.random().toString(36).slice(2)}@video-meetings.local`;
     await registerUserViaApi(request, email);
 
     try {
@@ -152,7 +152,7 @@ test.describe('profile page', () => {
     page,
     request,
   }) => {
-    const email = `e2e-profile-${Date.now()}@video-meetings.local`;
+    const email = `e2e-profile-${Date.now()}-${Math.random().toString(36).slice(2)}@video-meetings.local`;
     await registerUserViaApi(request, email);
 
     try {
