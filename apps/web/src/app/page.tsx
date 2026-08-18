@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
-import { UserAvatar } from '@/components/avatar';
+import { CurrentUserAvatar } from '@/components/avatar';
 import { ApiError, getMeetings, type Meeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
@@ -84,13 +84,7 @@ export default function HomePage() {
               aria-label="View profile"
               className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
-              <UserAvatar
-                email={auth.email}
-                username={profile?.username}
-                avatarMimeType={profile?.avatarMimeType}
-                avatarUploadedAt={profile?.avatarUploadedAt}
-                size="md"
-              />
+              <CurrentUserAvatar size="md" />
             </Link>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">

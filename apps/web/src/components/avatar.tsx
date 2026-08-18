@@ -4,31 +4,68 @@ import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { getAvatarBlob } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 interface UserAvatarProps {
   username?: string | null;
   email: string;
-  avatarMimeType?: string | null;
-  avatarUploadedAt?: string | null;
+  imageUrl?: string | null;
   size?: ComponentProps<typeof HeroAvatar>['size'];
   className?: string;
 }
 
+// Purely presentational — takes an already-resolved image URL instead of
+// fetching one itself, so it can render *any* user's identity without a
+// signature that quietly assumes "the current user". The only avatar image
+// this app can fetch belongs to the logged-in user (GET /users/me/avatar
+// has no :id variant) — CurrentUserAvatar below is the one place that
+// bridges that gap; a future participant/meeting-list avatar should use
+// this component directly with its own imageUrl, not reach for
+// CurrentUserAvatar.
 export function UserAvatar({
   username,
   email,
-  avatarMimeType,
-  avatarUploadedAt,
+  imageUrl,
   size,
   className,
 }: UserAvatarProps) {
-  const avatarUrl = useAvatarImageUrl(avatarMimeType, avatarUploadedAt);
-
   return (
     <HeroAvatar size={size} className={className}>
-      {avatarUrl ? <HeroAvatar.Image alt="" src={avatarUrl} /> : null}
+      {imageUrl ? <HeroAvatar.Image alt="" src={imageUrl} /> : null}
       <HeroAvatar.Fallback>{getInitials(username, email)}</HeroAvatar.Fallback>
     </HeroAvatar>
+  );
+}
+
+interface CurrentUserAvatarProps {
+  size?: ComponentProps<typeof HeroAvatar>['size'];
+  className?: string;
+}
+
+// Renders the logged-in user's own avatar — the only avatar this app can
+// currently fetch. Reads identity from auth-context itself rather than
+// taking it as props, so every call site (profile page, edit page, main
+// page) automatically shows the current user and can't be pointed at
+// someone else's data by mistake.
+export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
+  const { auth, profile } = useAuth();
+  const avatarUrl = useAvatarImageUrl(
+    profile?.avatarMimeType,
+    profile?.avatarUploadedAt,
+  );
+
+  if (!auth) {
+    return null;
+  }
+
+  return (
+    <UserAvatar
+      email={profile?.email ?? auth.email}
+      username={profile?.username}
+      imageUrl={avatarUrl}
+      size={size}
+      className={className}
+    />
   );
 }
 
