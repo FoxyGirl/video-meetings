@@ -9,13 +9,14 @@ Create a PR (Pull Request) from the current branch into `$ARGUMENTS`.
 
 ## Instructions
 
-1. Compare the current branch against `$ARGUMENTS`.
-2. Analyze the overall purpose of the changes.
-3. Generate:
+1. Push the current branch to `origin` (`git push -u origin <current-branch>`) if it isn't already there or is behind — `gh pr create` requires the branch to exist on the remote first.
+2. Compare the current branch against `$ARGUMENTS`.
+3. Analyze the overall purpose of the changes.
+4. Generate:
    - a concise PR title;
    - a clear PR description.
-4. Prefix the title with the most appropriate Gitmoji.
-5. Use imperative mood for the title.
+5. Prefix the title with the most appropriate Gitmoji.
+6. Use imperative mood for the title.
 
 ## PR Title
 
