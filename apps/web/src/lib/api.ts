@@ -176,6 +176,31 @@ export async function getAvatarBlob(): Promise<Blob | null> {
   }
 }
 
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// Unlike every other authenticated call in this file, a 401 here can mean
+// two different things: JwtAuthGuard rejecting a missing/expired token (same
+// as everywhere else) or ChangePasswordHandler rejecting a wrong current
+// password (a credential check, not a session problem) — see
+// apps/api/src/user/commands/handlers/change-password.handler.ts. The
+// server's own message already distinguishes the two ("Invalid or expired
+// token" / "Missing bearer token" vs "Invalid credentials"), so this
+// deliberately skips the blanket 401 -> "session expired" override every
+// other call site here uses, and lets that message pass through instead.
+export async function changePassword(
+  payload: ChangePasswordPayload,
+): Promise<AuthResult> {
+  try {
+    const res = await http.patch<AuthResult>('/users/me/password', payload);
+    return res.data;
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
 export interface Meeting {
   id: string;
   title: string;
