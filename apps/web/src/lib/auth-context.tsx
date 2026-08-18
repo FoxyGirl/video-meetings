@@ -56,29 +56,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [auth],
   );
 
-  // Both tagged with the session token they were produced for (profile also
+  // Both tagged with the id of the user they were produced for (profile also
   // via the public setProfile below) so a new session doesn't need a
   // synchronous reset of the previous one's leftover state — `profile` and
-  // `profileError` just derive to null once `auth` no longer matches, same
+  // `profileError` just derive to null once `userId` no longer matches, same
   // "only valid while the key still matches" technique avatar.tsx's
-  // useAvatarImageUrl already uses for its fetched object URL.
+  // useAvatarImageUrl already uses for its fetched object URL. Keyed on
+  // `userId` rather than the raw access token: it's not a secret (unlike the
+  // token, which this would otherwise be copying into React state — and
+  // from there into DevTools/error boundaries/session-replay tooling), and
+  // re-login as the *same* user (e.g. a token refresh) keeps the cached
+  // profile instead of needlessly discarding it.
   const [fetchedProfile, setFetchedProfile] = useState<{
-    token: string;
+    userId: string;
     profile: UserProfile;
   } | null>(null);
   const [fetchedProfileError, setFetchedProfileError] = useState<{
-    token: string;
+    userId: string;
     message: string;
   } | null>(null);
 
   const setProfile = useCallback(
     (next: UserProfile) => {
-      if (!auth) {
+      if (!userId) {
         return;
       }
-      setFetchedProfile({ token: auth.accessToken, profile: next });
+      setFetchedProfile({ userId, profile: next });
     },
-    [auth],
+    [userId],
   );
 
   // Fetches the profile (username/avatar — not carried by the JWT payload,
@@ -96,8 +101,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getProfile()
       .then((data) => {
-        if (!cancelled) {
-          setFetchedProfile({ token: auth.accessToken, profile: data });
+        // userId can be null if the token fails to decode — nothing sane to
+        // key the cache on in that case, so just skip caching (the derived
+        // `profile` below never matches a null key, so this never regresses
+        // to serving stale data for a different, later-decodable session).
+        if (!cancelled && userId) {
+          setFetchedProfile({ userId, profile: data });
         }
       })
       .catch((error: unknown) => {
@@ -110,26 +119,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           logout();
           return;
         }
-        setFetchedProfileError({
-          token: auth.accessToken,
-          message:
-            error instanceof ApiError
-              ? error.message
-              : 'Failed to load profile. Please try again.',
-        });
+        if (userId) {
+          setFetchedProfileError({
+            userId,
+            message:
+              error instanceof ApiError
+                ? error.message
+                : 'Failed to load profile. Please try again.',
+          });
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [auth, logout]);
+  }, [auth, userId, logout]);
 
+  // `userId &&` guards against a null userId (undecodable token) matching a
+  // stale null-keyed entry — a null key must never be treated as valid.
   const profile =
-    auth && fetchedProfile?.token === auth.accessToken
-      ? fetchedProfile.profile
-      : null;
+    userId && fetchedProfile?.userId === userId ? fetchedProfile.profile : null;
   const profileError =
-    auth && fetchedProfileError?.token === auth.accessToken
+    userId && fetchedProfileError?.userId === userId
       ? fetchedProfileError.message
       : null;
 
