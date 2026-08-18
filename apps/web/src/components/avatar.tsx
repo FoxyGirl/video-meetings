@@ -3,7 +3,7 @@
 import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
-import { getAvatarBlob } from '@/lib/api';
+import { ApiError, getAvatarBlob } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 interface UserAvatarProps {
@@ -48,10 +48,11 @@ interface CurrentUserAvatarProps {
 // page) automatically shows the current user and can't be pointed at
 // someone else's data by mistake.
 export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
-  const { auth, profile, profileError } = useAuth();
+  const { auth, profile, profileError, logout } = useAuth();
   const avatarUrl = useAvatarImageUrl(
     profile?.avatarMimeType,
     profile?.avatarUploadedAt,
+    logout,
   );
 
   if (!auth) {
@@ -93,6 +94,7 @@ export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
 function useAvatarImageUrl(
   avatarMimeType: string | null | undefined,
   avatarUploadedAt: string | null | undefined,
+  logout: () => void,
 ): string | null {
   const key = avatarMimeType ? `${avatarMimeType}:${avatarUploadedAt}` : null;
   const [fetched, setFetched] = useState<{ key: string; url: string } | null>(
@@ -115,9 +117,17 @@ function useAvatarImageUrl(
         objectUrl = URL.createObjectURL(blob);
         setFetched({ key, url: objectUrl });
       })
-      .catch(() => {
-        // Degrade to the initials placeholder on any fetch failure — a
-        // broken avatar image shouldn't block the rest of the page.
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        if (error instanceof ApiError && error.status === 401) {
+          // Session is no longer valid — clear it, same as auth-context's
+          // own profile fetch. Any other failure degrades to the initials
+          // placeholder instead: a broken avatar image shouldn't block the
+          // rest of the page.
+          logout();
+        }
       });
 
     return () => {
@@ -126,7 +136,7 @@ function useAvatarImageUrl(
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [key]);
+  }, [key, logout]);
 
   return fetched?.key === key ? fetched.url : null;
 }
