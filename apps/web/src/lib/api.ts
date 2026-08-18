@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { http } from './http';
-import { formatBytes, MAX_UPLOAD_FILE_SIZE_BYTES } from './file-types';
 
 export { API_URL } from './http';
 
@@ -115,6 +114,62 @@ export async function updateUsername(
     });
     return res.data;
   } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+    });
+  }
+}
+
+export async function uploadAvatar(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<UserProfile> {
+  const form = new FormData();
+  // Field name must match the server's FileInterceptor('file', ...).
+  form.append('file', file);
+
+  try {
+    const res = await http.post<UserProfile>('/users/me/avatar', form, {
+      onUploadProgress: (event) => {
+        // event.total can be undefined if content length can't be
+        // computed — same guard raw XHR's lengthComputable would need.
+        if (event.total) {
+          onProgress?.(Math.round((event.loaded / event.total) * 100));
+        }
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      // Deliberately not size-specific: avatar-file-types.ts's client-side
+      // max is only a mirrored guess at the server's real (env-configurable)
+      // limit, and client-side validation already rejects anything over
+      // that guess before a request is sent — so this path only fires when
+      // the server's actual limit is *lower* than the client's, which is
+      // exactly the case where citing the client's number would state a
+      // wrong one.
+      413: 'File is too large. Please try a smaller image.',
+    });
+  }
+}
+
+// Fetches the current user's avatar image via a Bearer-authenticated GET,
+// same reasoning as downloadMeetingFile: the browser won't attach custom
+// headers to a plain <img src>, so the bytes come back as a Blob and the
+// caller renders it via an object URL instead. Resolves null on a 404
+// ("no avatar yet"), same convention as getMeetingFile, rather than
+// throwing — callers should fall back to the initials placeholder.
+export async function getAvatarBlob(): Promise<Blob | null> {
+  try {
+    const res = await http.get<Blob>('/users/me/avatar', {
+      responseType: 'blob',
+    });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
     });
@@ -244,9 +299,14 @@ export async function uploadMeetingFile(
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
       404: 'This meeting no longer exists or you are not its organizer.',
-      // Nest's default 413 body just says "File too large" — the actual
-      // limit is more actionable than the server's generic message.
-      413: `File is too large. Maximum size is ${formatBytes(MAX_UPLOAD_FILE_SIZE_BYTES)}.`,
+      // Deliberately not size-specific: file-types.ts's client-side max is
+      // only a mirrored guess at the server's real (env-configurable)
+      // limit, and client-side validation already rejects anything over
+      // that guess before a request is sent — so this path only fires when
+      // the server's actual limit is *lower* than the client's, which is
+      // exactly the case where citing the client's number would state a
+      // wrong one.
+      413: 'File is too large. Please try a smaller file.',
     });
   }
 }

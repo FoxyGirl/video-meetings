@@ -14,7 +14,8 @@ import {
   TextField,
   toast,
 } from '@heroui/react';
-import { UserAvatar } from '@/components/avatar';
+import { CurrentUserAvatar } from '@/components/avatar';
+import { AvatarUpload } from '@/components/avatar-upload';
 import { ApiError, updateUsername } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useProfile } from '@/lib/use-profile';
@@ -36,6 +37,11 @@ export default function ProfileEditPage() {
     setUsername(profile.username ?? '');
   }
 
+  const handleSessionExpired = () => {
+    logout();
+    router.replace('/login');
+  };
+
   const onSubmitUsername = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -48,8 +54,7 @@ export default function ProfileEditPage() {
       toast.success('Username updated');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        logout();
-        router.replace('/login');
+        handleSessionExpired();
         return;
       }
       setUsernameError(
@@ -87,11 +92,7 @@ export default function ProfileEditPage() {
     <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
       <Card className="w-full max-w-md">
         <Card.Content className="flex flex-col items-center gap-4 py-10">
-          <UserAvatar
-            email={profile.email}
-            username={profile.username}
-            size="lg"
-          />
+          <CurrentUserAvatar size="lg" />
           <div className="flex flex-col items-center gap-1 text-center">
             <h1 className="text-lg font-semibold text-foreground">
               Edit profile
@@ -107,6 +108,13 @@ export default function ProfileEditPage() {
           </div>
         </Card.Content>
       </Card>
+
+      <div className="w-full max-w-md">
+        <AvatarUpload
+          onSessionExpired={handleSessionExpired}
+          onUploaded={setProfile}
+        />
+      </div>
 
       <Card className="w-full max-w-md">
         <Card.Header>

@@ -39,30 +39,44 @@ export function formatFileSize(bytes: number): string {
   return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unitIndex]}`;
 }
 
-function getExtension(fileName: string): string | null {
+export function getExtension(fileName: string): string | null {
   const dotIndex = fileName.lastIndexOf('.');
   return dotIndex === -1 ? null : fileName.slice(dotIndex).toLowerCase();
 }
 
-// UX-level fast-fail against the same table the server validates
-// authoritatively — a client can lie about a file's extension or MIME type,
-// so this never replaces the server-side check, it just avoids a pointless
-// round trip for the common case of an obviously wrong file.
-export function validateFile(file: File): string | null {
+// UX-level fast-fail against a caller-supplied extension -> MIME table — a
+// client can lie about a file's extension or MIME type, so this never
+// replaces the server-side check, it just avoids a pointless round trip for
+// the common case of an obviously wrong file. Shared by validateFile below
+// and avatar-file-types.ts's validateAvatarFile, which check the same three
+// things (extension, declared MIME, size) against different tables/limits.
+export function validateFileAgainstTypes(
+  file: File,
+  acceptedTypes: Readonly<Record<string, string>>,
+  maxSizeBytes: number,
+): string | null {
   const extension = getExtension(file.name);
-  const expectedMimeType = extension ? ACCEPTED_FILE_TYPES[extension] : null;
+  const expectedMimeType = extension ? acceptedTypes[extension] : null;
 
   if (!extension || !expectedMimeType) {
-    return `Unsupported file type. Accepted formats: ${Object.keys(ACCEPTED_FILE_TYPES).join(', ')}.`;
+    return `Unsupported file type. Accepted formats: ${Object.keys(acceptedTypes).join(', ')}.`;
   }
 
   if (file.type && file.type !== expectedMimeType) {
     return `This file's type (${file.type}) doesn't match its extension (${extension}).`;
   }
 
-  if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
-    return `File is too large. Maximum size is ${formatBytes(MAX_UPLOAD_FILE_SIZE_BYTES)}.`;
+  if (file.size > maxSizeBytes) {
+    return `File is too large. Maximum size is ${formatBytes(maxSizeBytes)}.`;
   }
 
   return null;
+}
+
+export function validateFile(file: File): string | null {
+  return validateFileAgainstTypes(
+    file,
+    ACCEPTED_FILE_TYPES,
+    MAX_UPLOAD_FILE_SIZE_BYTES,
+  );
 }

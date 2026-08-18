@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
+import { CurrentUserAvatar } from '@/components/avatar';
 import { ApiError, getMeetings, type Meeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function HomePage() {
   const router = useRouter();
-  const { auth, isLoading, logout } = useAuth();
+  const { auth, isLoading, logout, profile } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[] | null>(null);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
   const isMeetingsLoading = meetings === null && meetingsError === null;
@@ -77,13 +78,22 @@ export default function HomePage() {
     <div className="flex flex-1 flex-col bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Video Meetings
-            </h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {auth.email}
-            </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/profile"
+              aria-label="View profile"
+              className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              <CurrentUserAvatar size="md" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                Video Meetings
+              </h1>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                {profile?.username ?? auth.email}
+              </p>
+            </div>
           </div>
           <Button variant="secondary" onPress={handleLogout}>
             Logout

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
-import { UserAvatar } from '@/components/avatar';
+import { CurrentUserAvatar } from '@/components/avatar';
 import { useProfile } from '@/lib/use-profile';
 
 export default function ProfilePage() {
@@ -33,11 +33,7 @@ export default function ProfilePage() {
     <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
       <Card className="w-full max-w-md">
         <Card.Content className="flex flex-col items-center gap-4 py-10">
-          <UserAvatar
-            email={profile.email}
-            username={profile.username}
-            size="lg"
-          />
+          <CurrentUserAvatar size="lg" />
           <div className="flex flex-col items-center gap-1 text-center">
             {profile.username && (
               <p className="text-lg font-semibold text-foreground">

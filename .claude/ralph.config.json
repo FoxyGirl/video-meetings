@@ -5,8 +5,8 @@
   "prompt": "Read .claude/ralph.md and follow the rules there. Take the next open issue from milestone '{milestone}' and implement it in '{branch}'",
   "phases": [
     {
-      "milestone": "Phase 5-user-profile: Backend — avatar upload and serving endpoints",
-      "branch": "feat/BE/avatar-upload-and-serving-endpoints"
+      "milestone": "Phase 6-user-profile: Frontend — avatar upload UI, and avatar everywhere",
+      "branch": "feat/FE/avatar-upload-UI"
     }
   ]
 }
