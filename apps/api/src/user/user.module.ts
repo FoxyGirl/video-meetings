@@ -6,6 +6,7 @@ import { CreateUserHandler } from './commands/handlers/create-user.handler';
 import { UpdateUsernameHandler } from './commands/handlers/update-username.handler';
 import { UploadAvatarHandler } from './commands/handlers/upload-avatar.handler';
 import { FindUserByEmailHandler } from './queries/handlers/find-user-by-email.handler';
+import { FindUserByIdHandler } from './queries/handlers/find-user-by-id.handler';
 import { GetUserAvatarHandler } from './queries/handlers/get-user-avatar.handler';
 import { GetUserProfileHandler } from './queries/handlers/get-user-profile.handler';
 import { UserCreatedHandler } from './events/handlers/user-created.handler';
@@ -19,6 +20,7 @@ const CommandHandlers = [
 ];
 const QueryHandlers = [
   FindUserByEmailHandler,
+  FindUserByIdHandler,
   GetUserAvatarHandler,
   GetUserProfileHandler,
 ];
