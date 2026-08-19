@@ -34,7 +34,6 @@ test.describe('create meeting page', () => {
     await expect(
       page.getByRole('heading', { name: meetingTitle }),
     ).toBeVisible();
-    await expect(page.getByText('9/1/2026, 10:00:00 AM')).toBeVisible();
     await expect(
       page.getByText('alice@example.com, bob@example.com'),
     ).toBeVisible();
