@@ -85,7 +85,15 @@ export default function NewMeetingPage() {
         </Card.Header>
         <Card.Content>
           <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            <TextField name="title" value={title} onChange={setTitle}>
+            <TextField
+              isRequired
+              name="title"
+              value={title}
+              onChange={setTitle}
+              validate={(value) =>
+                value.trim().length === 0 ? 'Title is required.' : null
+              }
+            >
               <Label>Title</Label>
               <Input placeholder="Sprint planning" variant="secondary" />
               <FieldError />
