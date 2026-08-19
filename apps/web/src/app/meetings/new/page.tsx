@@ -45,6 +45,12 @@ export default function NewMeetingPage() {
   const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Clear any previous server-side failure up front, before either the
+    // date check below or the async call can short-circuit — otherwise a
+    // stale alert from an earlier failed submit could linger on screen
+    // alongside a new, unrelated validation message.
+    setSubmitError(null);
+
     // The date field is a plain <input type="datetime-local"> (HeroUI's
     // React-Aria-backed TextField/Input doesn't support that type), so it
     // isn't part of Form's automatic per-field validation like Title and
@@ -54,7 +60,6 @@ export default function NewMeetingPage() {
       return;
     }
 
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       const meeting = await createMeeting({
@@ -105,7 +110,10 @@ export default function NewMeetingPage() {
               isRequired
               name="title"
               value={title}
-              onChange={setTitle}
+              onChange={(value) => {
+                setTitle(value);
+                setSubmitError(null);
+              }}
               validate={(value) =>
                 value.trim().length === 0 ? 'Title is required.' : null
               }
@@ -129,6 +137,7 @@ export default function NewMeetingPage() {
                 onChange={(e) => {
                   setDate(e.target.value);
                   setDateError(null);
+                  setSubmitError(null);
                 }}
                 type="datetime-local"
                 value={date}
@@ -148,7 +157,10 @@ export default function NewMeetingPage() {
               isRequired
               name="participants"
               value={participants}
-              onChange={setParticipants}
+              onChange={(value) => {
+                setParticipants(value);
+                setSubmitError(null);
+              }}
               validate={(value) => {
                 const emails = parseParticipants(value);
                 if (emails.length === 0) {

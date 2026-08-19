@@ -170,4 +170,40 @@ test.describe('create meeting page', () => {
 
     await expect(page).toHaveURL('/login');
   });
+
+  test('clears a previous server-side error once the user starts correcting the form', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/meetings/new');
+
+    await page.route('**/meetings', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: 'Server error' }),
+      });
+    });
+
+    await page.getByRole('textbox', { name: 'Title' }).fill('E2E Validation');
+    await page
+      .getByRole('textbox', { name: 'Date and time' })
+      .fill('2026-09-01T10:00');
+    await page
+      .getByRole('textbox', { name: 'Participants' })
+      .fill('alice@example.com');
+    await page.getByRole('button', { name: 'Create meeting' }).click();
+
+    await expect(page.getByText('Server error')).toBeVisible();
+
+    // Clearing Title makes the field itself invalid, which blocks the next
+    // submit attempt client-side before it ever reaches the submit handler
+    // — the stale server error from the earlier attempt must not linger
+    // alongside the new, unrelated validation message.
+    await page.getByRole('textbox', { name: 'Title' }).fill('');
+    await page.getByRole('button', { name: 'Create meeting' }).click();
+
+    await expect(page.getByText('Title is required.')).toBeVisible();
+    await expect(page.getByText('Server error')).not.toBeVisible();
+  });
 });
