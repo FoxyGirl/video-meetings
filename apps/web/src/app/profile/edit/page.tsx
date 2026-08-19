@@ -31,6 +31,10 @@ const MIN_NEW_PASSWORD_LENGTH = 8;
 // (ChangePasswordHandler, hand-mirrored message below) — keep in sync with
 // apps/api/src/user/commands/handlers/change-password.handler.ts.
 const WRONG_CURRENT_PASSWORD_MESSAGE = 'Invalid credentials';
+// Hand-mirrored from ChangePasswordHandler's exact string — keep in sync with
+// apps/api/src/user/commands/handlers/change-password.handler.ts.
+const SAME_AS_CURRENT_PASSWORD_MESSAGE =
+  'New password must differ from current password';
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -46,6 +50,9 @@ export default function ProfileEditPage() {
     useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState<
+    Record<string, string>
+  >({});
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   if (profile && !hasSeededUsername) {
@@ -90,6 +97,7 @@ export default function ProfileEditPage() {
     }
 
     setPasswordError(null);
+    setPasswordFieldErrors({});
     setIsSavingPassword(true);
     try {
       const { accessToken } = await changePassword({
@@ -100,12 +108,30 @@ export default function ProfileEditPage() {
       // session stays valid under whatever token the server now expects.
       login({ accessToken, email: profile.email });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        if (error.message === WRONG_CURRENT_PASSWORD_MESSAGE) {
+          // Attached to the Current password field itself, not the shared
+          // failure Alert — it's a problem with that one field, and this
+          // keeps it visually distinct from a "new password too short"
+          // failure (already field-scoped via the field's own `validate`)
+          // or a generic form-wide failure.
+          setPasswordFieldErrors({
+            currentPassword: 'Incorrect current password.',
+          });
+          return;
+        }
+        handleSessionExpired();
+        return;
+      }
       if (
         error instanceof ApiError &&
-        error.status === 401 &&
-        error.message !== WRONG_CURRENT_PASSWORD_MESSAGE
+        error.status === 400 &&
+        error.message === SAME_AS_CURRENT_PASSWORD_MESSAGE
       ) {
-        handleSessionExpired();
+        setPasswordFieldErrors({
+          newPassword:
+            'New password must be different from your current password.',
+        });
         return;
       }
       setPasswordError(
@@ -216,7 +242,11 @@ export default function ProfileEditPage() {
           </Card.Description>
         </Card.Header>
         <Card.Content>
-          <Form className="flex flex-col gap-4" onSubmit={onSubmitPassword}>
+          <Form
+            className="flex flex-col gap-4"
+            onSubmit={onSubmitPassword}
+            validationErrors={passwordFieldErrors}
+          >
             <TextField
               isRequired
               name="currentPassword"

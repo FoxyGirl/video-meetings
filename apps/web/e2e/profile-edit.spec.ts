@@ -342,7 +342,7 @@ test.describe('password form', () => {
     await page.getByLabel('New password').fill('a-valid-new-password');
     await passwordForm(page).getByRole('button', { name: 'Save' }).click();
 
-    await expect(page.getByText('Invalid credentials')).toBeVisible();
+    await expect(page.getByText('Incorrect current password.')).toBeVisible();
     expect(passwordRequestIssued).toBe(true);
     expect(usernameRequestIssued).toBe(false);
   });
@@ -369,8 +369,73 @@ test.describe('password form', () => {
     await page.getByLabel('New password').fill('a-valid-new-password');
     await passwordForm(page).getByRole('button', { name: 'Save' }).click();
 
-    await expect(page.getByText('Invalid credentials')).toBeVisible();
+    // Distinct field-level feedback, not the form's shared failure Alert:
+    // attached to the Current password field specifically, since the wrong
+    // password is a problem with that field, not the form as a whole.
+    await expect(page.getByText('Incorrect current password.')).toBeVisible();
+    await expect(page.getByLabel('Current password')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     await expect(page).toHaveURL('/profile/edit');
+  });
+
+  test('shows a new-password field error when it matches the current password', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.route('**/users/me/password', async (route) => {
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 400,
+          message: 'New password must differ from current password',
+          error: 'Bad Request',
+        }),
+      });
+    });
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill(TEST_PASSWORD);
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(
+      page.getByText(
+        'New password must be different from your current password.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByLabel('New password')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+  });
+
+  test('falls back to the shared alert for an unexpected password failure', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.route('**/users/me/password', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ statusCode: 500, message: 'Server error' }),
+      });
+    });
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Server error')).toBeVisible();
+    await expect(page.getByLabel('Current password')).not.toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
   });
 
   test('redirects to the login page when the session has actually expired', async ({
