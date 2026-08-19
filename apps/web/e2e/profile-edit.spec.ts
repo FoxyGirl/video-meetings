@@ -365,6 +365,26 @@ test.describe('password form', () => {
     await expect(page).toHaveURL('/profile/edit');
   });
 
+  // Unlike the mocked test above, this hits the real API — the mocked
+  // version only proves the page agrees with a response body it wrote
+  // itself, not that it agrees with what ChangePasswordHandler actually
+  // returns. A wrong current password never touches the account, so this
+  // can safely reuse the shared TEST_USER_EMAIL without registering a
+  // throwaway user or needing afterEach cleanup.
+  test('shows an error for a genuinely wrong current password against the real API', async ({
+    page,
+  }) => {
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto('/profile/edit');
+
+    await page.getByLabel('Current password').fill('DefinitelyWrong1!');
+    await page.getByLabel('New password').fill('a-valid-new-password');
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Incorrect current password.')).toBeVisible();
+    await expect(page).toHaveURL('/profile/edit');
+  });
+
   test('shows a new-password field error when it matches the current password', async ({
     page,
   }) => {
