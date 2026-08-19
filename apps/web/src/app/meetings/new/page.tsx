@@ -14,11 +14,12 @@ import {
   TextArea,
   TextField,
 } from '@heroui/react';
+import { ApiError, createMeeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
 export default function NewMeetingPage() {
   const router = useRouter();
-  const { auth, isLoading } = useAuth();
+  const { auth, isLoading, logout } = useAuth();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [participants, setParticipants] = useState('');
@@ -31,8 +32,38 @@ export default function NewMeetingPage() {
     }
   }, [isLoading, auth, router]);
 
-  const onSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const meeting = await createMeeting({
+        title: title.trim(),
+        // datetime-local yields "YYYY-MM-DDTHH:mm" in the browser's local
+        // time zone; Date parses that as local time, and toISOString()
+        // converts it to the UTC ISO 8601 string CreateMeetingDto expects.
+        date: new Date(date).toISOString(),
+        participants: participants
+          .split(/[,\n]/)
+          .map((email) => email.trim())
+          .filter(Boolean),
+      });
+      router.push(`/meetings/${meeting.id}`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        logout();
+        router.replace('/login');
+        return;
+      }
+      setSubmitError(
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to create meeting. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading || !auth) {
