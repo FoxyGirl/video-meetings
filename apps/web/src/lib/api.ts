@@ -209,6 +209,25 @@ export interface Meeting {
   createdAt: string;
 }
 
+export interface CreateMeetingPayload {
+  title: string;
+  date: string;
+  participants: string[];
+}
+
+export async function createMeeting(
+  payload: CreateMeetingPayload,
+): Promise<Meeting> {
+  try {
+    const res = await http.post<Meeting>('/meetings', payload);
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+    });
+  }
+}
+
 export async function getMeetings(): Promise<Meeting[]> {
   try {
     const res = await http.get<Meeting[]>('/meetings');
