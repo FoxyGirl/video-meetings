@@ -16,8 +16,7 @@ import {
 } from '@heroui/react';
 import { ApiError, createMeeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-
-const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+import { EMAIL_PATTERN } from '@/lib/email';
 
 function parseParticipants(value: string): string[] {
   return value

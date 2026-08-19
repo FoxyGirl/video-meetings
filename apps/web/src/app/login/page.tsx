@@ -17,8 +17,7 @@ import {
 import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError, loginUser } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-
-const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+import { EMAIL_PATTERN } from '@/lib/email';
 
 export default function LoginPage() {
   const router = useRouter();
