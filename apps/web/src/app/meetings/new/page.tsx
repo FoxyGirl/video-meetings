@@ -17,6 +17,15 @@ import {
 import { ApiError, createMeeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
+const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+function parseParticipants(value: string): string[] {
+  return value
+    .split(/[,\n]/)
+    .map((email) => email.trim())
+    .filter(Boolean);
+}
+
 export default function NewMeetingPage() {
   const router = useRouter();
   const { auth, isLoading, logout } = useAuth();
@@ -54,10 +63,7 @@ export default function NewMeetingPage() {
         // time zone; Date parses that as local time, and toISOString()
         // converts it to the UTC ISO 8601 string CreateMeetingDto expects.
         date: new Date(date).toISOString(),
-        participants: participants
-          .split(/[,\n]/)
-          .map((email) => email.trim())
-          .filter(Boolean),
+        participants: parseParticipants(participants),
       });
       router.push(`/meetings/${meeting.id}`);
     } catch (error) {
@@ -139,9 +145,19 @@ export default function NewMeetingPage() {
             </div>
 
             <TextField
+              isRequired
               name="participants"
               value={participants}
               onChange={setParticipants}
+              validate={(value) => {
+                const emails = parseParticipants(value);
+                if (emails.length === 0) {
+                  return 'Add at least one participant email.';
+                }
+                return emails.every((email) => EMAIL_PATTERN.test(email))
+                  ? null
+                  : 'Enter valid participant email addresses, separated by commas.';
+              }}
             >
               <Label>Participants</Label>
               <TextArea
