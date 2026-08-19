@@ -489,4 +489,25 @@ test.describe('password form', () => {
     const accessToken = await loginUserViaApi(request, email, newPassword);
     expect(accessToken).toBeTruthy();
   });
+
+  test('shows a success message and clears the form fields', async ({
+    page,
+    request,
+  }) => {
+    const email = `e2e-profile-edit-pw-${Date.now()}@video-meetings.local`;
+    createdEmails.push(email);
+    await registerUserViaApi(request, email);
+    const newPassword = 'NewPassword123!';
+
+    await loginViaUi(page, email);
+    await page.goto('/profile/edit');
+
+    await page.getByLabel('Current password').fill(TEST_PASSWORD);
+    await page.getByLabel('New password').fill(newPassword);
+    await passwordForm(page).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Password updated')).toBeVisible();
+    await expect(page.getByLabel('Current password')).toHaveValue('');
+    await expect(page.getByLabel('New password')).toHaveValue('');
+  });
 });

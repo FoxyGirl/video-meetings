@@ -107,6 +107,9 @@ export default function ProfileEditPage() {
       // ChangePasswordHandler reissues a fresh JWT — adopt it so the
       // session stays valid under whatever token the server now expects.
       login({ accessToken, email: profile.email });
+      setCurrentPassword('');
+      setNewPassword('');
+      toast.success('Password updated');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         if (error.message === WRONG_CURRENT_PASSWORD_MESSAGE) {
