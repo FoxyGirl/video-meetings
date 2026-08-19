@@ -1,4 +1,8 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CommandHandler, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -30,6 +34,9 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
       UserWithCredentials | null
     >(new FindUserByIdQuery(userId));
     if (!user) {
+      // A still-valid JWT for a since-deleted user: this is a session
+      // problem (the token no longer names a real account), not a wrong
+      // password — 401, so the client treats it as an expired session.
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -38,7 +45,13 @@ export class ChangePasswordHandler implements ICommandHandler<ChangePasswordComm
       user.password,
     );
     if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid credentials');
+      // 403, not 401: the caller is authenticated (the guard already passed)
+      // and is being refused this specific operation on a credential check,
+      // not an auth failure — keeps this distinguishable from the two 401s
+      // above/below, which mean "this session's user no longer exists" and
+      // should be treated by the client as an expired session, not a wrong
+      // password.
+      throw new ForbiddenException('Invalid credentials');
     }
 
     if (newPassword === currentPassword) {

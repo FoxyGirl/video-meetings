@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { QueryBus } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
@@ -74,12 +78,12 @@ describe('ChangePasswordHandler', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  it('throws 401 and does not persist when the current password does not match', async () => {
+  it('throws 403 and does not persist when the current password does not match', async () => {
     await expect(
       handler.execute(
         new ChangePasswordCommand(USER_ID, 'WrongPassword!', 'NewPassword1!'),
       ),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).rejects.toBeInstanceOf(ForbiddenException);
 
     expect(update).not.toHaveBeenCalled();
   });
