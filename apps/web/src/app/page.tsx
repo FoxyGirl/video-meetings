@@ -129,9 +129,17 @@ export default function HomePage() {
             ) : null}
 
             <section className="flex flex-col gap-4">
-              <h2 className="text-lg font-medium text-foreground">
-                Your meetings
-              </h2>
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-lg font-medium text-foreground">
+                  Your meetings
+                </h2>
+                <Link
+                  className="button button--primary button--md"
+                  href="/meetings/new"
+                >
+                  New meeting
+                </Link>
+              </div>
               {meetings && meetings.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {meetings.map((meeting) => (
