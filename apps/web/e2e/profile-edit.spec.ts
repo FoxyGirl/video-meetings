@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import {
   API_URL,
   TEST_PASSWORD,
@@ -7,22 +7,7 @@ import {
   loginUserViaApi,
   registerUserViaApi,
 } from './api-helpers';
-import { loginViaUi } from './ui-helpers';
-
-// Both the username and password forms render their own "Save" button, so a
-// bare getByRole('button', { name: 'Save' }) is ambiguous once both exist on
-// the page — scope to the enclosing <form> via a field only that form has.
-function usernameForm(page: Page) {
-  return page
-    .locator('form')
-    .filter({ has: page.getByRole('textbox', { name: 'Username' }) });
-}
-
-function passwordForm(page: Page) {
-  return page
-    .locator('form')
-    .filter({ has: page.getByLabel('Current password') });
-}
+import { loginViaUi, passwordForm, usernameForm } from './ui-helpers';
 
 test.describe('profile edit page', () => {
   test('shows a loading spinner while the profile is being fetched', async ({

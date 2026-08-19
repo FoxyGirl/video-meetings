@@ -5,7 +5,7 @@ import {
   deleteUserByEmail,
   registerUserViaApi,
 } from './api-helpers';
-import { loginViaUi } from './ui-helpers';
+import { loginViaUi, usernameForm } from './ui-helpers';
 
 // A real decodable PNG, needed here specifically because the assertion
 // waits for the browser to actually render an <img> (unlike the upload
@@ -136,7 +136,7 @@ test.describe('profile page', () => {
       await page
         .getByRole('textbox', { name: 'Username' })
         .fill('Updated Name');
-      await page.getByRole('button', { name: 'Save' }).click();
+      await usernameForm(page).getByRole('button', { name: 'Save' }).click();
       await expect(page.getByText('Username updated')).toBeVisible();
 
       await page.goto('/profile');
