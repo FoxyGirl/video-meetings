@@ -252,6 +252,9 @@ export default function ProfileEditPage() {
             validationErrors={passwordFieldErrors}
           >
             <TextField
+              // isRequired only sets aria-required here — validate's custom
+              // message is what actually renders on an empty submit (RAC's
+              // own required message would otherwise show instead).
               isRequired
               name="currentPassword"
               type={isCurrentPasswordVisible ? 'text' : 'password'}
@@ -281,6 +284,9 @@ export default function ProfileEditPage() {
             </TextField>
 
             <TextField
+              // Same isRequired/validate split as Current password above —
+              // the length check below already rejects an empty value, so
+              // isRequired here is aria-required only.
               isRequired
               name="newPassword"
               type={isNewPasswordVisible ? 'text' : 'password'}
