@@ -25,12 +25,10 @@ import { useProfile } from '@/lib/use-profile';
 const MAX_USERNAME_LENGTH = 50;
 // Hand-mirrored from apps/api/src/user/dto/change-password.dto.ts's @MinLength(8) on newPassword — keep in sync.
 const MIN_NEW_PASSWORD_LENGTH = 8;
-// changePassword() deliberately skips the usual blanket 401 -> "session expired"
-// override (see its comment in lib/api.ts), since a 401 here can mean either an
-// expired session (JwtAuthGuard) or a wrong current password
-// (ChangePasswordHandler, hand-mirrored message below) — keep in sync with
+// HTTP status ChangePasswordHandler uses for a wrong current password —
+// distinct from 401, which means the session itself is invalid. See
 // apps/api/src/user/commands/handlers/change-password.handler.ts.
-const WRONG_CURRENT_PASSWORD_MESSAGE = 'Invalid credentials';
+const WRONG_CURRENT_PASSWORD_STATUS = 403;
 // Hand-mirrored from ChangePasswordHandler's exact string — keep in sync with
 // apps/api/src/user/commands/handlers/change-password.handler.ts.
 const SAME_AS_CURRENT_PASSWORD_MESSAGE =
@@ -111,18 +109,21 @@ export default function ProfileEditPage() {
       setNewPassword('');
       toast.success('Password updated');
     } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === WRONG_CURRENT_PASSWORD_STATUS
+      ) {
+        // Attached to the Current password field itself, not the shared
+        // failure Alert — it's a problem with that one field, and this
+        // keeps it visually distinct from a "new password too short"
+        // failure (already field-scoped via the field's own `validate`)
+        // or a generic form-wide failure.
+        setPasswordFieldErrors({
+          currentPassword: 'Incorrect current password.',
+        });
+        return;
+      }
       if (error instanceof ApiError && error.status === 401) {
-        if (error.message === WRONG_CURRENT_PASSWORD_MESSAGE) {
-          // Attached to the Current password field itself, not the shared
-          // failure Alert — it's a problem with that one field, and this
-          // keeps it visually distinct from a "new password too short"
-          // failure (already field-scoped via the field's own `validate`)
-          // or a generic form-wide failure.
-          setPasswordFieldErrors({
-            currentPassword: 'Incorrect current password.',
-          });
-          return;
-        }
         handleSessionExpired();
         return;
       }

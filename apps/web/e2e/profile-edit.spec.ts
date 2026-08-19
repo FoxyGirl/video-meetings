@@ -308,12 +308,12 @@ test.describe('password form', () => {
     await page.route('**/users/me/password', async (route) => {
       passwordRequestIssued = true;
       await route.fulfill({
-        status: 401,
+        status: 403,
         contentType: 'application/json',
         body: JSON.stringify({
-          statusCode: 401,
+          statusCode: 403,
           message: 'Invalid credentials',
-          error: 'Unauthorized',
+          error: 'Forbidden',
         }),
       });
     });
@@ -340,12 +340,12 @@ test.describe('password form', () => {
 
     await page.route('**/users/me/password', async (route) => {
       await route.fulfill({
-        status: 401,
+        status: 403,
         contentType: 'application/json',
         body: JSON.stringify({
-          statusCode: 401,
+          statusCode: 403,
           message: 'Invalid credentials',
-          error: 'Unauthorized',
+          error: 'Forbidden',
         }),
       });
     });

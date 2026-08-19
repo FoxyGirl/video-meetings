@@ -181,15 +181,12 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
-// Unlike every other authenticated call in this file, a 401 here can mean
-// two different things: JwtAuthGuard rejecting a missing/expired token (same
-// as everywhere else) or ChangePasswordHandler rejecting a wrong current
-// password (a credential check, not a session problem) — see
-// apps/api/src/user/commands/handlers/change-password.handler.ts. The
-// server's own message already distinguishes the two ("Invalid or expired
-// token" / "Missing bearer token" vs "Invalid credentials"), so this
-// deliberately skips the blanket 401 -> "session expired" override every
-// other call site here uses, and lets that message pass through instead.
+// A wrong current password is a 403 here (ChangePasswordHandler), not a 401
+// — see apps/api/src/user/commands/handlers/change-password.handler.ts. That
+// keeps this call's 401 meaning exactly what it means everywhere else in
+// this file (JwtAuthGuard rejecting a missing/expired token), so this can
+// use the same blanket "session expired" override as every other call site
+// instead of string-matching the response body to tell the two apart.
 export async function changePassword(
   payload: ChangePasswordPayload,
 ): Promise<AuthResult> {
@@ -197,7 +194,9 @@ export async function changePassword(
     const res = await http.patch<AuthResult>('/users/me/password', payload);
     return res.data;
   } catch (error) {
-    throw toApiError(error);
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+    });
   }
 }
 
