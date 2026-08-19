@@ -80,11 +80,17 @@ describe('User password change (e2e)', () => {
     it('rejects an incorrect current password, leaving the password unchanged', async () => {
       const { accessToken, email, password } = await registerUser();
 
-      await request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .patch('/users/me/password')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ currentPassword: 'WrongCurrent1!', newPassword: 'N3wSecret!' })
-        .expect(401);
+        .expect(403);
+      // Pinned so a client-side reword of ChangePasswordHandler's message
+      // (which the web client string-matches to attach a field-level error)
+      // fails loudly here instead of silently in the browser.
+      expect((res.body as { message: string }).message).toBe(
+        'Invalid credentials',
+      );
 
       await login(email, password).expect(200);
     });
