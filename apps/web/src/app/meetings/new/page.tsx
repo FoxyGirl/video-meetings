@@ -22,6 +22,7 @@ export default function NewMeetingPage() {
   const { auth, isLoading, logout } = useAuth();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
+  const [dateError, setDateError] = useState<string | null>(null);
   const [participants, setParticipants] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -34,6 +35,15 @@ export default function NewMeetingPage() {
 
   const onSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // The date field is a plain <input type="datetime-local"> (HeroUI's
+    // React-Aria-backed TextField/Input doesn't support that type), so it
+    // isn't part of Form's automatic per-field validation like Title and
+    // Participants are — it's validated by hand here instead.
+    if (!date || Number.isNaN(new Date(date).getTime())) {
+      setDateError('Enter a valid date and time.');
+      return;
+    }
 
     setSubmitError(null);
     setIsSubmitting(true);
@@ -104,13 +114,28 @@ export default function NewMeetingPage() {
                 Date and time
               </label>
               <input
+                aria-describedby={dateError ? 'meeting-date-error' : undefined}
+                aria-invalid={dateError ? true : undefined}
                 className="input input--secondary"
+                data-invalid={dateError ? true : undefined}
                 id="meeting-date"
                 name="date"
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setDateError(null);
+                }}
                 type="datetime-local"
                 value={date}
               />
+              {dateError ? (
+                <p
+                  className="field-error"
+                  data-visible=""
+                  id="meeting-date-error"
+                >
+                  {dateError}
+                </p>
+              ) : null}
             </div>
 
             <TextField
