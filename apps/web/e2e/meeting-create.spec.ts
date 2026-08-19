@@ -68,6 +68,10 @@ test.describe('create meeting page', () => {
     expect(requestIssued).toBe(false);
   });
 
+  // Only the empty case is covered here, not a malformed/out-of-range one
+  // (e.g. "2026-02-30T10:00") — Playwright's fill() actively rejects such
+  // values on a datetime-local input ("Malformed value"), so there's no way
+  // to drive that case through the real UI to begin with.
   test('rejects an empty date without issuing a request', async ({ page }) => {
     await loginViaUi(page, TEST_USER_EMAIL);
     await page.goto('/meetings/new');
