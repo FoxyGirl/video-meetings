@@ -1,10 +1,12 @@
 import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import { getUploadDir } from '../../upload/file-upload.constants';
 import { validateFileType } from '../../upload/validate-file-type';
+import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
 
 interface LockedMeetingRow {
@@ -14,7 +16,10 @@ interface LockedMeetingRow {
 
 @CommandHandler(UploadMeetingFileCommand)
 export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFileCommand> {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   async execute({ meetingId, organizerId, file }: UploadMeetingFileCommand) {
     if (!file) {
@@ -72,7 +77,31 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
         await unlink(join(getUploadDir(), oldFilePath)).catch(() => undefined);
       }
 
-      return updated;
+      if (!isTranscriptionEnabled()) {
+        return updated;
+      }
+
+      // Set PENDING as its own write (after the upload's own transaction has
+      // committed) so the response already reflects it, then dispatch the
+      // actual transcription job without awaiting it — the HTTP response
+      // returns as soon as the upload itself is done, per the plan's
+      // "Open technical decision" (in-process, fire-and-forget, not a
+      // durable queue).
+      const withPendingStatus = await this.prisma.meeting.update({
+        where: { id: meetingId },
+        data: { transcriptionStatus: 'PENDING' },
+      });
+
+      this.commandBus
+        .execute(new TranscribeMeetingFileCommand(meetingId, file.filename))
+        .catch((error: unknown) => {
+          console.error(
+            `[UploadMeetingFileHandler] failed to dispatch transcription for meeting ${meetingId}:`,
+            error,
+          );
+        });
+
+      return withPendingStatus;
     } catch (error) {
       // No file should be left on disk in a rejection case.
       await unlink(file.path).catch(() => undefined);
