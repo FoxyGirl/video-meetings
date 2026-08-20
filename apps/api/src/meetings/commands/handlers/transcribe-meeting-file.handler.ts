@@ -34,8 +34,16 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
       // produces an absolute path too.
       const text = await transcribeFile(join(getUploadDir(), filePath));
 
-      await this.prisma.meeting.update({
-        where: { id: meetingId },
+      // Guard against the file being replaced/deleted while this job was
+      // mid-flight: transcribeFile() above can take anywhere from seconds
+      // to minutes, long enough for a re-upload or delete to have already
+      // moved the meeting on to a different (or no) file and dispatched
+      // its own job. updateMany's where-filter re-checks filePath and the
+      // write atomically — if it no longer matches, this is a stale
+      // result from a superseded run, so drop it silently rather than
+      // overwriting whatever the newer run (or the delete) already wrote.
+      await this.prisma.meeting.updateMany({
+        where: { id: meetingId, filePath },
         data: {
           transcriptionStatus: 'COMPLETED',
           transcriptionText: text,
@@ -48,8 +56,8 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
         error,
       );
 
-      await this.prisma.meeting.update({
-        where: { id: meetingId },
+      await this.prisma.meeting.updateMany({
+        where: { id: meetingId, filePath },
         data: { transcriptionStatus: 'FAILED' },
       });
     }
