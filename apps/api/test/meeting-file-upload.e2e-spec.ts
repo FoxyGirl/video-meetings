@@ -6,12 +6,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../prisma/generated/prisma/client';
 import { AppModule } from './../src/app.module';
 import { getUploadDir } from '../src/meetings/upload/file-upload.constants';
 
 // Jest's setupFiles (jest-e2e.setup.ts) load .env.test before this file is
 // required, so it's safe to resolve this once for the whole suite.
 const UPLOAD_DIR = getUploadDir();
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 
 interface AuthResponseBody {
   accessToken: string;
@@ -24,6 +30,9 @@ interface MeetingResponseBody {
   fileMimeType: string | null;
   fileSize: number | null;
   fileUploadedAt: string | null;
+  transcriptionStatus: string | null;
+  transcriptionText: string | null;
+  transcriptionUpdatedAt: string | null;
 }
 
 describe('Meeting file upload (e2e)', () => {
@@ -72,6 +81,7 @@ describe('Meeting file upload (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    await prisma.$disconnect();
     if (existsSync(UPLOAD_DIR)) {
       await rm(UPLOAD_DIR, { recursive: true, force: true });
     }
@@ -233,6 +243,42 @@ describe('Meeting file upload (e2e)', () => {
 
       const secondStoredPath = join(UPLOAD_DIR, secondBody.filePath as string);
       expect(existsSync(secondStoredPath)).toBe(true);
+    });
+
+    it('clears a previously-set transcription when the file is replaced', async () => {
+      const { accessToken } = await registerUser();
+      const meetingId = await createMeeting(accessToken);
+
+      const first = await uploadRequest(meetingId, accessToken)
+        .attach('file', Buffer.from('first version'), {
+          filename: 'first.mp4',
+          contentType: 'video/mp4',
+        })
+        .expect(201);
+      expect(
+        (first.body as MeetingResponseBody).transcriptionStatus,
+      ).toBeNull();
+
+      await prisma.meeting.update({
+        where: { id: meetingId },
+        data: {
+          transcriptionStatus: 'COMPLETED',
+          transcriptionText: 'a previously completed transcript',
+          transcriptionUpdatedAt: new Date(),
+        },
+      });
+
+      const second = await uploadRequest(meetingId, accessToken)
+        .attach('file', Buffer.from('second version'), {
+          filename: 'second.mp4',
+          contentType: 'video/mp4',
+        })
+        .expect(201);
+
+      const secondBody = second.body as MeetingResponseBody;
+      expect(secondBody.transcriptionStatus).toBeNull();
+      expect(secondBody.transcriptionText).toBeNull();
+      expect(secondBody.transcriptionUpdatedAt).toBeNull();
     });
 
     it('serializes concurrent re-uploads to the same meeting without orphaning a file', async () => {
