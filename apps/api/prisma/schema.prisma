@@ -8,6 +8,13 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TranscriptionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id               String    @id @default(uuid())
   email            String    @unique
@@ -22,19 +29,22 @@ model User {
 }
 
 model Meeting {
-  id               String    @id @default(uuid())
-  title            String
-  date             DateTime
-  participants     String[]
-  organizerId      String
-  organizer        User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now()) @updatedAt
-  fileOriginalName String?
-  filePath         String?
-  fileMimeType     String?
-  fileSize         Int?
-  fileUploadedAt   DateTime?
+  id                     String               @id @default(uuid())
+  title                  String
+  date                   DateTime
+  participants           String[]
+  organizerId            String
+  organizer              User                 @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @default(now()) @updatedAt
+  fileOriginalName       String?
+  filePath               String?
+  fileMimeType           String?
+  fileSize               Int?
+  fileUploadedAt         DateTime?
+  transcriptionStatus    TranscriptionStatus?
+  transcriptionText      String?
+  transcriptionUpdatedAt DateTime?
 
   @@index([organizerId])
 }
