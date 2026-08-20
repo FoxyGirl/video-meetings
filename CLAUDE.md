@@ -47,6 +47,16 @@ docker compose down          # stop it (add -v to also drop the data volume)
 
 `apps/api` connects to it via Prisma — see `apps/api/CLAUDE.md`'s "Database (Prisma)" section. The container also hosts a second database, `video_meetings_test`, used exclusively by `apps/api`'s e2e tests (created automatically on a fresh volume via `docker/postgres-initdb/`).
 
+## Local Whisper transcription
+
+`apps/api` transcribes uploaded meeting recordings locally via [`nodejs-whisper`](https://www.npmjs.com/package/nodejs-whisper) (Whisper "tiny" model, no cloud API) — see `apps/api/CLAUDE.md`'s "Meetings" section for the feature itself. Like Postgres and Playwright's browser binary, this needs setup outside of `npm install`:
+
+- **A C/C++ toolchain + CMake**, so `nodejs-whisper` can build its vendored `whisper.cpp` on first use (Linux: `sudo apt install build-essential cmake`; macOS: Xcode Command Line Tools + `brew install cmake`; Windows: MSYS2/MinGW-w64). This first build compiles whisper.cpp's whole example/test suite, not just the one binary this project needs — budget **5+ minutes and real RAM** for it, not just disk space; an interrupted build leaves the install broken until `cmake --build build --config Release` is re-run by hand inside `node_modules/nodejs-whisper/cpp/whisper.cpp/`.
+- **`ffmpeg` on `PATH`** (`apt install ffmpeg` / `brew install ffmpeg` / a Windows installer). `nodejs-whisper` shells out to whatever `ffmpeg` it finds — there's no way to point it at a specific binary.
+- The "tiny" model (`ggml-tiny.bin`, ~74 MB) downloads automatically to `apps/api/.whisper-models/` (gitignored, override with `WHISPER_MODEL_ROOT_PATH`) the first time a transcription actually runs — no manual download step today.
+
+`TRANSCRIPTION_ENABLED` (`apps/api/src/meetings/transcription/whisper.constants.ts`) defaults on; `apps/api/.env.test` turns it off for the bulk of the e2e suite (which uploads synthetic, non-media bytes) and the transcription-specific spec turns it back on for itself — see that file for why.
+
 ## Local test user
 
 For manually exercising auth-gated features (e.g. the shared meeting detail page) against the local dev stack, a seeded test user exists in the local Postgres `db` container:

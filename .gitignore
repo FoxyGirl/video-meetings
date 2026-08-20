@@ -18,6 +18,9 @@ build/
 # uploaded files (local disk storage, see apps/api/CLAUDE.md)
 apps/api/uploads/
 
+# downloaded local Whisper model weights (see apps/api/CLAUDE.md)
+apps/api/.whisper-models/
+
 # testing / coverage
 coverage/
 test-results/
