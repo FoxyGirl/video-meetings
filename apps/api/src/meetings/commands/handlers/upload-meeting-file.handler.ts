@@ -55,6 +55,12 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
               fileMimeType: file.mimetype,
               fileSize: file.size,
               fileUploadedAt: new Date(),
+              // A transcript is tied to one specific uploaded file — a new
+              // upload invalidates whatever transcription (if any) belonged
+              // to the file it's replacing.
+              transcriptionStatus: null,
+              transcriptionText: null,
+              transcriptionUpdatedAt: null,
             },
           });
 
