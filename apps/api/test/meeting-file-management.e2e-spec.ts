@@ -5,6 +5,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../prisma/generated/prisma/client';
 import { AppModule } from './../src/app.module';
 import { getUploadDir } from '../src/meetings/upload/file-upload.constants';
 
@@ -13,6 +15,10 @@ import { getUploadDir } from '../src/meetings/upload/file-upload.constants';
 const UPLOAD_DIR = getUploadDir();
 const NONEXISTENT_ID = '00000000-0000-0000-0000-000000000000';
 
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
+
 interface AuthResponseBody {
   accessToken: string;
 }
@@ -20,6 +26,9 @@ interface AuthResponseBody {
 interface MeetingResponseBody {
   id: string;
   filePath: string | null;
+  transcriptionStatus: string | null;
+  transcriptionText: string | null;
+  transcriptionUpdatedAt: string | null;
 }
 
 interface FileMetadataResponseBody {
@@ -98,6 +107,7 @@ describe('Meeting file metadata, download, and delete (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    await prisma.$disconnect();
     if (existsSync(UPLOAD_DIR)) {
       await rm(UPLOAD_DIR, { recursive: true, force: true });
     }
@@ -252,6 +262,31 @@ describe('Meeting file metadata, download, and delete (e2e)', () => {
         .get(`/meetings/${meetingId}/file`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
+    });
+
+    it('clears a previously-set transcription on delete', async () => {
+      const { accessToken } = await registerUser();
+      const meetingId = await createMeeting(accessToken);
+      await uploadFile(meetingId, accessToken);
+
+      await prisma.meeting.update({
+        where: { id: meetingId },
+        data: {
+          transcriptionStatus: 'COMPLETED',
+          transcriptionText: 'a previously completed transcript',
+          transcriptionUpdatedAt: new Date(),
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .delete(`/meetings/${meetingId}/file`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      const body = response.body as MeetingResponseBody;
+      expect(body.transcriptionStatus).toBeNull();
+      expect(body.transcriptionText).toBeNull();
+      expect(body.transcriptionUpdatedAt).toBeNull();
     });
 
     it('serializes a concurrent delete and re-upload without orphaning a file', async () => {

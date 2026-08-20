@@ -48,6 +48,9 @@ export class DeleteMeetingFileHandler implements ICommandHandler<DeleteMeetingFi
           fileMimeType: null,
           fileSize: null,
           fileUploadedAt: null,
+          transcriptionStatus: null,
+          transcriptionText: null,
+          transcriptionUpdatedAt: null,
         },
       });
 
