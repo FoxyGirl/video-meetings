@@ -59,6 +59,7 @@ It owns one seeded meeting ("QA Test Meeting") to check the detail page's organi
 ## Active feature plans
 
 - `docs/plan-user-profile-and-edit-page.md` (PRD: `docs/prd-user-profile-and-edit-page.md`; research: `docs/research-plan-user-profile-and-edit-page.md.md`) — user profile page and profile editing. Consult the research file before implementing any phase of this plan; it maps each phase onto this repo's existing CQRS/upload/HTTP-client patterns.
+- `docs/plan-transcribe-uploaded-meeting-files-with-local-whisper.md` (PRD: `docs/prd-transcribe-uploaded-meeting-files-with-local-whisper.md`; research: `docs/research-transcribe-uploaded-meeting-files-with-local-whisper.md`) — automatic local Whisper "tiny" transcription of a meeting's uploaded recording, with status/transcript display and a "Refresh Transcription" action. Consult the research file first: it resolves the runtime choice the plan left open and flags e2e fixtures that break under this feature.
 
 ## Keeping documentation in sync
 
