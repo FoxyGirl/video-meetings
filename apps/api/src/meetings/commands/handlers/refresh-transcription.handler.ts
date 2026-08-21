@@ -61,21 +61,39 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     // Same two-step UploadMeetingFileHandler uses: PENDING is its own write
     // (after the transaction above has committed) so the response already
     // reflects it, then the actual job is dispatched without awaiting it —
-    // fire-and-forget, per the plan's "Open technical decision".
-    const withPendingStatus = await this.prisma.meeting.update({
-      where: { id: meetingId },
+    // fire-and-forget, per the plan's "Open technical decision". Unlike
+    // Upload's own PENDING write, this one is a compare-and-set
+    // (updateMany keyed on id + filePath, not a plain update()) — the same
+    // guard TranscribeMeetingFileHandler's own PROCESSING/COMPLETED/FAILED
+    // writes use (#132): a delete (or replace) landing in the gap between
+    // the transaction above committing and this write already moved the
+    // meeting on to a different (or no) file, so blindly writing PENDING
+    // here would strand it in that status forever — the dispatched job
+    // below would just no-op against the stale filePath and never move it
+    // back out. Skip the dispatch too when that happens, since there'd be
+    // nothing for it to do.
+    const { count: claimed } = await this.prisma.meeting.updateMany({
+      where: { id: meetingId, filePath },
       data: { transcriptionStatus: 'PENDING' },
     });
 
-    this.commandBus
-      .execute(new TranscribeMeetingFileCommand(meetingId, filePath))
-      .catch((error: unknown) => {
-        console.error(
-          `[RefreshTranscriptionHandler] failed to dispatch transcription for meeting ${meetingId}:`,
-          error,
-        );
-      });
+    if (claimed > 0) {
+      this.commandBus
+        .execute(new TranscribeMeetingFileCommand(meetingId, filePath))
+        .catch((error: unknown) => {
+          console.error(
+            `[RefreshTranscriptionHandler] failed to dispatch transcription for meeting ${meetingId}:`,
+            error,
+          );
+        });
+    }
 
-    return withPendingStatus;
+    // Re-read rather than trust a locally-constructed response — the
+    // updateMany above may have no-opped (claimed === 0), in which case the
+    // true current row (whatever the superseding delete/replace left it as)
+    // is what the caller should see, not a fabricated PENDING.
+    return this.prisma.meeting.findUniqueOrThrow({
+      where: { id: meetingId },
+    });
   }
 }

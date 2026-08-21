@@ -45,7 +45,7 @@ interface FileMetadataResponseBody {
 
 interface MeetingResponseBody {
   id: string;
-  filePath: string;
+  filePath: string | null;
   transcriptionStatus: FileMetadataResponseBody['transcriptionStatus'];
 }
 
@@ -242,5 +242,46 @@ describe('Refresh Transcription (e2e)', () => {
     const resettled = await pollUntilSettled(meetingId, accessToken);
     expect(resettled.transcriptionStatus).toBe('COMPLETED');
     expect((resettled.transcriptionText ?? '').length).toBeGreaterThan(0);
+  });
+
+  it('never leaves transcriptionStatus stranded at PENDING when a delete races a refresh', async () => {
+    const { accessToken } = await registerUser();
+    const meetingId = await createMeeting(accessToken);
+    await uploadRealSpeech(meetingId, accessToken);
+    await pollUntilSettled(meetingId, accessToken);
+
+    const [refreshResponse, deleteResponse] = await Promise.all([
+      request(app.getHttpServer())
+        .post(`/meetings/${meetingId}/transcription/refresh`)
+        .set('Authorization', `Bearer ${accessToken}`),
+      request(app.getHttpServer())
+        .delete(`/meetings/${meetingId}/file`)
+        .set('Authorization', `Bearer ${accessToken}`),
+    ]);
+
+    // Whichever of the two took the row lock first: the delete always
+    // succeeds (its own SELECT ... FOR UPDATE always finds *some* file to
+    // delete — the file was uploaded and settled before the race started),
+    // while the refresh either succeeds against the pre-delete file (if it
+    // locked first) or gets 404 once the delete has already cleared
+    // filePath (if the delete locked first) — same either-order tolerance
+    // meeting-file-management.e2e-spec.ts's concurrent delete/re-upload
+    // test uses.
+    expect(deleteResponse.status).toBe(200);
+    expect([200, 404]).toContain(refreshResponse.status);
+
+    // Regardless of ordering, the final state must never be the "impossible"
+    // one a missing compare-and-set on the refresh's PENDING write would
+    // produce: transcriptionStatus PENDING with no file for anything to
+    // ever transcribe (and nothing left to move it out of that status).
+    const finalMeeting = (
+      await request(app.getHttpServer())
+        .get(`/meetings/${meetingId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+    ).body as MeetingResponseBody;
+
+    expect(finalMeeting.filePath).toBeNull();
+    expect(finalMeeting.transcriptionStatus).toBeNull();
   });
 });
