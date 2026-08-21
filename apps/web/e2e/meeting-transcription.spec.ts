@@ -62,7 +62,13 @@ test.describe('meeting transcription status and transcript', () => {
     await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
   });
 
-  test('organizer watches status progress to Completed with the transcript, and a non-organizer viewer sees the same', async ({
+  // Tagged @heavy so package.json's test:e2e script can run it in its own
+  // always-serial second pass — real, CPU-bound local Whisper inference
+  // here would otherwise starve other concurrently-running specs' timing
+  // if it ran in the default parallel pass (see playwright.config.ts and
+  // apps/web/CLAUDE.md's "Meeting transcription status and transcript"
+  // section for the full story).
+  test('organizer watches status progress to Completed with the transcript, and a non-organizer viewer sees the same @heavy', async ({
     page,
     request,
     browser,
