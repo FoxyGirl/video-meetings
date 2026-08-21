@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { MeetingsController } from './meetings.controller';
 import { CreateMeetingHandler } from './commands/handlers/create-meeting.handler';
 import { DeleteMeetingFileHandler } from './commands/handlers/delete-meeting-file.handler';
+import { TranscribeMeetingFileHandler } from './commands/handlers/transcribe-meeting-file.handler';
 import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-file.handler';
 import { GetMeetingFileHandler } from './queries/handlers/get-meeting-file.handler';
 import { GetMeetingsHandler } from './queries/handlers/get-meetings.handler';
@@ -15,6 +16,7 @@ const CommandHandlers = [
   CreateMeetingHandler,
   UploadMeetingFileHandler,
   DeleteMeetingFileHandler,
+  TranscribeMeetingFileHandler,
 ];
 const QueryHandlers = [
   GetMeetingsHandler,

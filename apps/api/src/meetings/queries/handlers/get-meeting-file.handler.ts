@@ -43,6 +43,8 @@ export class GetMeetingFileHandler implements IQueryHandler<GetMeetingFileQuery>
       fileMimeType: meeting.fileMimeType,
       fileSize: meeting.fileSize,
       fileUploadedAt: meeting.fileUploadedAt,
+      transcriptionStatus: meeting.transcriptionStatus,
+      transcriptionText: meeting.transcriptionText,
     };
   }
 }

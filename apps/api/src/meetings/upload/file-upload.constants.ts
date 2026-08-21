@@ -1,12 +1,33 @@
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 // A function, not a top-level const: every consumer calls this at the point
 // it actually needs the path (module init, per-request, per-upload) rather
 // than baking in whatever process.env looked like when this file happened
 // to be require()'d. Same footgun apps/api/CLAUDE.md documents for
 // JWT_SECRET, solved there via JwtModule.registerAsync's deferred read.
+//
+// Always resolved to an absolute path (UPLOAD_DIR itself may be relative,
+// as apps/api/.env.test's does) — the local Whisper transcription engine
+// (src/meetings/transcription/) shells out to whisper-cli via a library
+// that changes this whole process's cwd for the duration of that call, so
+// a relative path computed from this function anywhere else in the app
+// could otherwise resolve against the wrong directory if it raced against
+// a concurrent transcription job.
+//
+// The no-UPLOAD_DIR fallback is resolved once here, at module load — still
+// well before dotenv/config or any transcription job could possibly run —
+// rather than inside getUploadDir() itself: resolving a relative default
+// against process.cwd() *at call time* would reopen the same
+// wrong-directory race for exactly the one case (UPLOAD_DIR unset, this
+// repo's own documented default) the absolute-path fix above exists to
+// close, since a concurrent transcription job can hold cwd changed for as
+// long as its own inference call takes.
+const DEFAULT_UPLOAD_DIR = resolve('uploads');
+
 export function getUploadDir(): string {
-  return process.env.UPLOAD_DIR ?? join(process.cwd(), 'uploads');
+  return process.env.UPLOAD_DIR
+    ? resolve(process.env.UPLOAD_DIR)
+    : DEFAULT_UPLOAD_DIR;
 }
 
 // Unlike UPLOAD_DIR, this can't be made lazy the same way: multer's

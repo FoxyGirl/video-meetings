@@ -91,6 +91,8 @@ export class MeetingsController {
       fileMimeType: meeting.fileMimeType,
       fileSize: meeting.fileSize,
       fileUploadedAt: meeting.fileUploadedAt,
+      transcriptionStatus: meeting.transcriptionStatus,
+      transcriptionText: meeting.transcriptionText,
     };
   }
 
