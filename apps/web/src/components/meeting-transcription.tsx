@@ -140,6 +140,7 @@ export function MeetingTranscription({
         <Card.Title>Transcript</Card.Title>
         {isOrganizer ? (
           <Button
+            isDisabled={isInProgress}
             isPending={isRefreshing}
             size="sm"
             variant="secondary"
