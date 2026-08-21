@@ -154,7 +154,15 @@ export function MeetingTranscription({
     };
   }, [status, meetingId, onSessionExpired]);
 
-  if (status === null) {
+  // A null status means "no transcription run has ever started for this
+  // file yet" (e.g. transcription was disabled server-side at upload
+  // time, or this file predates the transcription migration) — not "no
+  // file exists" (the parent page never mounts this component in that
+  // case). The organizer still needs the Refresh button reachable here,
+  // since it's the only UI path to trigger a first run without
+  // re-uploading the file; a non-organizer has nothing to do with a
+  // status-less file, so they see nothing, same as before.
+  if (status === null && !isOrganizer) {
     return null;
   }
 
@@ -190,12 +198,18 @@ export function MeetingTranscription({
           </Alert>
         ) : null}
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">Status</span>
-          <Chip color={STATUS_COLOR[status]} size="sm">
-            <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
-          </Chip>
-        </div>
+        {status !== null ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Status</span>
+            <Chip color={STATUS_COLOR[status]} size="sm">
+              <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
+            </Chip>
+          </div>
+        ) : (
+          <p className="text-sm italic text-zinc-500 dark:text-zinc-500">
+            No transcription yet.
+          </p>
+        )}
 
         {isInProgress ? (
           <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
