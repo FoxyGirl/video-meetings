@@ -16,13 +16,18 @@ export default defineConfig({
   // compile without silently hiding a genuinely broken test, which would
   // still fail identically on the retry.
   retries: process.env.CI ? 2 : 1,
-  // This is the *default* run's worker count (see apps/web/package.json's
-  // `test:e2e` script for the actual two-pass invocation). It no longer
-  // needs to be forced to 1 locally: the one spec that needed isolation
-  // (meeting-transcription.spec.ts, real CPU-bound local Whisper
-  // inference) is tagged `@heavy` and run in its own, always-serial,
-  // second pass instead — see that script for why.
-  workers: process.env.CI ? 1 : undefined,
+  // Always serial, not just CI. Originally forced to 1 specifically for
+  // meeting-transcription.spec.ts's real, CPU-bound local Whisper "tiny"
+  // inference (which starves other concurrently-running specs' timing
+  // under default parallel workers) — a scoped two-pass alternative (tag
+  // that one spec, run everything else in parallel, then it alone
+  // afterward) was tried and reverted: on a memory-constrained dev machine
+  // (RAM shared with an editor, other dev servers, etc.), the "everything
+  // else, still parallel" pass is independently flaky from Chromium/memory
+  // pressure alone, unrelated to Whisper. Blanket serial is the version
+  // that's actually reliable here, same tradeoff apps/api's own e2e suite
+  // already makes (`--runInBand`) over Jest's default parallelism.
+  workers: 1,
   // Above the 5s default specifically for the same cold-compile reason —
   // an assertion racing a route's first-ever compile (e.g. toHaveURL right
   // after a client-side navigation to a not-yet-compiled route) needs more

@@ -62,13 +62,7 @@ test.describe('meeting transcription status and transcript', () => {
     await Promise.all(createdEmails.splice(0).map(deleteUserByEmail));
   });
 
-  // Tagged @heavy so package.json's test:e2e script can run it in its own
-  // always-serial second pass — real, CPU-bound local Whisper inference
-  // here would otherwise starve other concurrently-running specs' timing
-  // if it ran in the default parallel pass (see playwright.config.ts and
-  // apps/web/CLAUDE.md's "Meeting transcription status and transcript"
-  // section for the full story).
-  test('organizer watches status progress to Completed with the transcript, and a non-organizer viewer sees the same @heavy', async ({
+  test('organizer watches status progress to Completed with the transcript, and a non-organizer viewer sees the same', async ({
     page,
     request,
     browser,
@@ -119,16 +113,25 @@ test.describe('meeting transcription status and transcript', () => {
     }
   });
 
-  // Not tagged @heavy: a file that passes the accepted-type check but has
-  // no real media content fails fast at ffmpeg's decode step (no actual
-  // Whisper inference ever runs), same as
+  // A file that passes the accepted-type check but has no real media
+  // content fails fast at ffmpeg's decode step (no actual Whisper
+  // inference ever runs), same as
   // apps/api/test/meeting-file-transcription.e2e-spec.ts's own "ends in
-  // FAILED" case — so this doesn't need the isolated serial pass.
+  // FAILED" case.
   test('shows a failure indicator, visible to a non-organizer viewer too, when transcription fails', async ({
     page,
     request,
     browser,
   }) => {
+    // Playwright's default per-test timeout (30s) wraps the *entire* test
+    // body — meeting creation, login, upload, and both waits below all
+    // share that budget, not just the explicit `expect` timeouts. The
+    // ffmpeg decode failure itself is normally near-instant, but this
+    // still needs real headroom under load — same reasoning
+    // apps/api/test/meeting-file-transcription.e2e-spec.ts's own
+    // 120-attempt/1s-interval poll already applies to this exact scenario.
+    test.setTimeout(90_000);
+
     const { id } = await createMeeting(request);
     meetingIds.push(id);
 
@@ -144,7 +147,7 @@ test.describe('meeting transcription status and transcript', () => {
     await expect(page.getByText('Recording uploaded')).toBeVisible();
 
     await expect(page.getByText('Failed', { exact: true })).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     });
     await expect(page.getByText('Transcription failed.')).toBeVisible();
 
