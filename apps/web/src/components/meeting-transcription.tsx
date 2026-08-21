@@ -19,6 +19,11 @@ const STATUS_COLOR: Record<TranscriptionStatus, ChipVariants['color']> = {
 };
 
 const POLL_INTERVAL_MS = 3000;
+// After this many consecutive non-401 poll failures (a transient network
+// blip or a 500, say), surface a visible notice — polling itself keeps
+// retrying indefinitely since these should recover on their own, but a
+// real outage shouldn't stay silent forever.
+const POLL_FAILURE_WARNING_THRESHOLD = 3;
 
 interface MeetingTranscriptionProps {
   meetingId: string;
@@ -41,6 +46,7 @@ export function MeetingTranscription({
 }: MeetingTranscriptionProps) {
   const [status, setStatus] = useState(initialStatus);
   const [text, setText] = useState(initialText);
+  const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
 
   // Bounded to while a transcription job is actually in flight — stops
   // itself once status settles to COMPLETED/FAILED, so a finished
@@ -65,6 +71,7 @@ export function MeetingTranscription({
             clearInterval(interval);
             return;
           }
+          setConsecutivePollFailures(0);
           setStatus(file.transcriptionStatus);
           setText(file.transcriptionText);
         })
@@ -75,8 +82,12 @@ export function MeetingTranscription({
           if (error instanceof ApiError && error.status === 401) {
             clearInterval(interval);
             onSessionExpired();
+            return;
           }
-          // Any other failure is left to retry on the next tick.
+          // Any other failure keeps retrying on the next tick (transient
+          // network/API blips should recover on their own) — the growing
+          // count only drives the warning notice below, not a retry cap.
+          setConsecutivePollFailures((count) => count + 1);
         });
     }, POLL_INTERVAL_MS);
 
@@ -110,6 +121,19 @@ export function MeetingTranscription({
             <Spinner size="sm" />
             Transcribing the recording…
           </div>
+        ) : null}
+
+        {isInProgress &&
+        consecutivePollFailures >= POLL_FAILURE_WARNING_THRESHOLD ? (
+          <Alert status="warning">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>
+                Having trouble checking the transcription status. Still
+                retrying…
+              </Alert.Title>
+            </Alert.Content>
+          </Alert>
         ) : null}
 
         {status === 'COMPLETED' && text !== null ? (
