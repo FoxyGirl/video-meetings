@@ -323,6 +323,21 @@ export async function deleteMeetingFile(id: string): Promise<void> {
   }
 }
 
+// The caller is responsible for reflecting the resulting PENDING status
+// client-side (MeetingTranscription does this optimistically rather than
+// trusting this call's response body) — same "caller updates state, this
+// function only performs the request" convention as deleteMeetingFile.
+export async function refreshTranscription(id: string): Promise<void> {
+  try {
+    await http.post(`/meetings/${id}/transcription/refresh`);
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer exists, has no recording, or you are not its organizer.',
+    });
+  }
+}
+
 export async function uploadMeetingFile(
   id: string,
   file: File,
