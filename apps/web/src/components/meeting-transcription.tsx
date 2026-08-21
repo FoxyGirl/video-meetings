@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, Chip, Spinner, type ChipVariants } from '@heroui/react';
+import { Alert, Card, Chip, Spinner, type ChipVariants } from '@heroui/react';
 import { ApiError, getMeetingFile, type TranscriptionStatus } from '@/lib/api';
 
 const STATUS_LABEL: Record<TranscriptionStatus, string> = {
@@ -116,6 +116,15 @@ export function MeetingTranscription({
           <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
             {text}
           </p>
+        ) : null}
+
+        {status === 'FAILED' ? (
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Transcription failed.</Alert.Title>
+            </Alert.Content>
+          </Alert>
         ) : null}
       </Card.Content>
     </Card>
