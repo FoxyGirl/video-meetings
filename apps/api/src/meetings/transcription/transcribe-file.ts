@@ -1,5 +1,7 @@
-import { readFile, unlink } from 'node:fs/promises';
-import { extname } from 'node:path';
+import { copyFile, readFile, unlink } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { extname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { nodewhisper } from 'nodejs-whisper';
 import { getWhisperModelRootPath } from './whisper.constants';
 
@@ -13,25 +15,31 @@ import { getWhisperModelRootPath } from './whisper.constants';
 export async function transcribeFile(
   absoluteFilePath: string,
 ): Promise<string> {
-  const isAlreadyWav = extname(absoluteFilePath).toLowerCase() === '.wav';
+  // Transcribe a disposable copy, never the live upload. nodejs-whisper's
+  // own convertToWavType (utils.ts) doesn't just read whatever isn't
+  // already a valid 16kHz-mono-PCM WAV — for a file that's already .wav
+  // specifically, it re-encodes and renames the temp file OVER the input
+  // path, in place. Verified empirically: a real 44.1kHz stereo .wav
+  // upload (the common case, not an edge case) came back silently
+  // resampled to mono at the same path, with a different size/hash —
+  // exactly the kind of silent data loss a side effect of transcription
+  // must never cause. Working on a copy sidesteps this entirely, for
+  // every input type, not just .wav — the original upload is never
+  // touched by anything nodejs-whisper does.
+  const copyPath = join(
+    tmpdir(),
+    `${randomUUID()}${extname(absoluteFilePath)}`,
+  );
+  await copyFile(absoluteFilePath, copyPath);
 
-  // nodejs-whisper's own convertToWavType (utils.ts) writes a same-directory
-  // `<basename>.wav` sibling for anything that isn't already a valid WAV —
-  // a distinct file, safe for this wrapper to clean up afterwards. A file
-  // that *is* already `.wav` is either passed through unchanged or rewritten
-  // in place by that same conversion step, so there is no separate byproduct
-  // to delete in that case — critically, this must never delete
-  // absoluteFilePath itself, since for an already-.wav upload that path
-  // *is* the user's original file on disk (removeWavFileAfterTranscription,
-  // nodewhisper's own cleanup option, does exactly that and is deliberately
-  // not used here for this reason).
+  const isAlreadyWav = extname(copyPath).toLowerCase() === '.wav';
   const wavPath = isAlreadyWav
-    ? absoluteFilePath
-    : `${absoluteFilePath.slice(0, -extname(absoluteFilePath).length)}.wav`;
+    ? copyPath
+    : `${copyPath.slice(0, -extname(copyPath).length)}.wav`;
   const textOutputPath = `${wavPath}.txt`;
 
   try {
-    await nodewhisper(absoluteFilePath, {
+    await nodewhisper(copyPath, {
       modelName: 'tiny',
       autoDownloadModelName: 'tiny',
       modelRootPath: getWhisperModelRootPath(),
@@ -48,6 +56,7 @@ export async function transcribeFile(
     const text = await readFile(textOutputPath, 'utf-8');
     return text.trim();
   } finally {
+    await unlink(copyPath).catch(() => undefined);
     if (!isAlreadyWav) {
       await unlink(wavPath).catch(() => undefined);
     }
