@@ -13,8 +13,21 @@ import { resolve } from 'node:path';
 // a relative path computed from this function anywhere else in the app
 // could otherwise resolve against the wrong directory if it raced against
 // a concurrent transcription job.
+//
+// The no-UPLOAD_DIR fallback is resolved once here, at module load — still
+// well before dotenv/config or any transcription job could possibly run —
+// rather than inside getUploadDir() itself: resolving a relative default
+// against process.cwd() *at call time* would reopen the same
+// wrong-directory race for exactly the one case (UPLOAD_DIR unset, this
+// repo's own documented default) the absolute-path fix above exists to
+// close, since a concurrent transcription job can hold cwd changed for as
+// long as its own inference call takes.
+const DEFAULT_UPLOAD_DIR = resolve('uploads');
+
 export function getUploadDir(): string {
-  return resolve(process.env.UPLOAD_DIR ?? 'uploads');
+  return process.env.UPLOAD_DIR
+    ? resolve(process.env.UPLOAD_DIR)
+    : DEFAULT_UPLOAD_DIR;
 }
 
 // Unlike UPLOAD_DIR, this can't be made lazy the same way: multer's
