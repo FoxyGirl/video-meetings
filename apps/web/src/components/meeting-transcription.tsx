@@ -154,13 +154,12 @@ export function MeetingTranscription({
 
   return (
     <Card>
-      <Card.Header className="flex flex-row items-center justify-between">
+      <Card.Header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Card.Title>Transcript</Card.Title>
         {isOrganizer ? (
           <Button
             isDisabled={isInProgress}
             isPending={isRefreshing}
-            size="sm"
             variant="secondary"
             onPress={() => void handleRefresh()}
           >
