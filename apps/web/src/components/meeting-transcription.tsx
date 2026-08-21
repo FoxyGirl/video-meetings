@@ -177,7 +177,7 @@ export function MeetingTranscription({
             isDisabled={isInProgress}
             isPending={isRefreshing}
             variant="secondary"
-            onPress={() => void handleRefresh()}
+            onPress={handleRefresh}
           >
             {isRefreshing ? (
               <Spinner color="current" size="sm" />
