@@ -22,10 +22,22 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
       return;
     }
 
-    await this.prisma.meeting.update({
-      where: { id: meetingId },
+    // Same compare-and-set the COMPLETED/FAILED writes below use, not a
+    // plain update(): the findUnique read above and this write aren't
+    // atomic, so a delete or re-upload landing in that (narrow) gap could
+    // otherwise still flip transcriptionStatus to PROCESSING on a meeting
+    // whose filePath has already changed underneath it — stranding it
+    // showing "Processing" with no file, since the later guarded writes
+    // would then correctly no-op against the new filePath and never
+    // move it out of that state.
+    const { count: claimed } = await this.prisma.meeting.updateMany({
+      where: { id: meetingId, filePath },
       data: { transcriptionStatus: 'PROCESSING' },
     });
+
+    if (claimed === 0) {
+      return;
+    }
 
     try {
       // getUploadDir() is always absolute (see its own comment on why —
