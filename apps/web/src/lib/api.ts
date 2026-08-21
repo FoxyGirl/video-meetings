@@ -251,11 +251,20 @@ export async function getMeeting(id: string): Promise<Meeting> {
   }
 }
 
+// Mirrors the api's Prisma TranscriptionStatus enum.
+export type TranscriptionStatus =
+  'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
 export interface MeetingFileMetadata {
   fileOriginalName: string;
   fileMimeType: string;
   fileSize: number;
   fileUploadedAt: string;
+  // Independently nullable from the four fields above — a file can exist
+  // with no transcription state yet (e.g. transcription disabled, or the
+  // row predates the transcription migration).
+  transcriptionStatus: TranscriptionStatus | null;
+  transcriptionText: string | null;
 }
 
 // Resolves to null when the meeting has no stored file (404) rather than

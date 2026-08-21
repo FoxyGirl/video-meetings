@@ -7,6 +7,7 @@ import { Alert, Card, Spinner } from '@heroui/react';
 import { FileQuestion } from 'lucide-react';
 import { MeetingFileDisplay } from '@/components/meeting-file-display';
 import { MeetingFileUpload } from '@/components/meeting-file-upload';
+import { MeetingTranscription } from '@/components/meeting-transcription';
 import {
   ApiError,
   getMeeting,
@@ -184,13 +185,21 @@ export default function MeetingDetailPage() {
 
         {meeting && !isMeetingFileLoading ? (
           meetingFile ? (
-            <MeetingFileDisplay
-              file={meetingFile}
-              isOrganizer={isOrganizer}
-              meetingId={meeting.id}
-              onDeleted={() => setMeetingFile(null)}
-              onSessionExpired={handleSessionExpired}
-            />
+            <>
+              <MeetingFileDisplay
+                file={meetingFile}
+                isOrganizer={isOrganizer}
+                meetingId={meeting.id}
+                onDeleted={() => setMeetingFile(null)}
+                onSessionExpired={handleSessionExpired}
+              />
+              <MeetingTranscription
+                meetingId={meeting.id}
+                status={meetingFile.transcriptionStatus}
+                text={meetingFile.transcriptionText}
+                onSessionExpired={handleSessionExpired}
+              />
+            </>
           ) : isOrganizer ? (
             <MeetingFileUpload
               meetingId={meeting.id}
