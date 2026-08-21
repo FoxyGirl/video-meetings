@@ -118,4 +118,52 @@ test.describe('meeting transcription status and transcript', () => {
       await viewerContext.close();
     }
   });
+
+  // Not tagged @heavy: a file that passes the accepted-type check but has
+  // no real media content fails fast at ffmpeg's decode step (no actual
+  // Whisper inference ever runs), same as
+  // apps/api/test/meeting-file-transcription.e2e-spec.ts's own "ends in
+  // FAILED" case — so this doesn't need the isolated serial pass.
+  test('shows a failure indicator, visible to a non-organizer viewer too, when transcription fails', async ({
+    page,
+    request,
+    browser,
+  }) => {
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'not-real.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('not a real mp4'),
+    });
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('Recording uploaded')).toBeVisible();
+
+    await expect(page.getByText('Failed', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText('Transcription failed.')).toBeVisible();
+
+    const viewerEmail = `e2e-transcript-failed-viewer-${Date.now()}@video-meetings.local`;
+    createdEmails.push(viewerEmail);
+    await registerUserViaApi(request, viewerEmail);
+
+    const viewerContext = await browser.newContext();
+    try {
+      const viewerPage = await viewerContext.newPage();
+      await loginViaUi(viewerPage, viewerEmail);
+      await viewerPage.goto(`/meetings/${id}`);
+
+      await expect(
+        viewerPage.getByText('Failed', { exact: true }),
+      ).toBeVisible();
+      await expect(viewerPage.getByText('Transcription failed.')).toBeVisible();
+    } finally {
+      await viewerContext.close();
+    }
+  });
 });
