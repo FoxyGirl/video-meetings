@@ -113,6 +113,73 @@ test.describe('meeting transcription status and transcript', () => {
     }
   });
 
+  test('organizer refreshes a completed transcription and a non-organizer never sees the button', async ({
+    page,
+    request,
+    browser,
+  }) => {
+    // Two full transcription runs share this test's budget (initial upload
+    // + the refresh), same generous-timeout reasoning as the spec above.
+    test.setTimeout(TRANSCRIPTION_TIMEOUT_MS * 2 + 60_000);
+
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles(SHORT_SPEECH_FIXTURE);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('Recording uploaded')).toBeVisible();
+
+    await expect(page.getByText('Completed', { exact: true })).toBeVisible({
+      timeout: TRANSCRIPTION_TIMEOUT_MS,
+    });
+    await expect(page.getByText(/fellow Americans/i)).toBeVisible();
+
+    const refreshButton = page.getByRole('button', {
+      name: 'Refresh Transcription',
+    });
+    await expect(refreshButton).toBeEnabled();
+
+    await refreshButton.click();
+
+    // Reflected straight from the click, before this run's own polling has
+    // had a chance to run even once — a deterministic first paint, not a
+    // race against real transcription timing (same reasoning as the
+    // upload-side "Pending" assertion above).
+    await expect(page.getByText('Pending', { exact: true })).toBeVisible();
+    await expect(refreshButton).toBeDisabled();
+
+    await expect(page.getByText('Completed', { exact: true })).toBeVisible({
+      timeout: TRANSCRIPTION_TIMEOUT_MS,
+    });
+    await expect(page.getByText(/fellow Americans/i)).toBeVisible();
+    await expect(refreshButton).toBeEnabled();
+
+    const viewerEmail = `e2e-refresh-viewer-${Date.now()}@video-meetings.local`;
+    createdEmails.push(viewerEmail);
+    await registerUserViaApi(request, viewerEmail);
+
+    const viewerContext = await browser.newContext();
+    try {
+      const viewerPage = await viewerContext.newPage();
+      await loginViaUi(viewerPage, viewerEmail);
+      await viewerPage.goto(`/meetings/${id}`);
+
+      await expect(
+        viewerPage.getByText('Completed', { exact: true }),
+      ).toBeVisible();
+      await expect(
+        viewerPage.getByRole('button', { name: 'Refresh Transcription' }),
+      ).toHaveCount(0);
+    } finally {
+      await viewerContext.close();
+    }
+  });
+
   // A file that passes the accepted-type check but has no real media
   // content fails fast at ffmpeg's decode step (no actual Whisper
   // inference ever runs), same as
