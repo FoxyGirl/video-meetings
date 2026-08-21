@@ -74,6 +74,9 @@ export function MeetingTranscription({
       // on `status`, so moving it to PENDING here starts polling again).
       setText(null);
       setStatus('PENDING');
+      // A stale failure count from a previous, already-settled polling run
+      // shouldn't make this fresh run look like it's already struggling.
+      setConsecutivePollFailures(0);
     } finally {
       setIsRefreshing(false);
     }
