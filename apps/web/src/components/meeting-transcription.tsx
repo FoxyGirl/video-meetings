@@ -1,8 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Card, Chip, Spinner, type ChipVariants } from '@heroui/react';
-import { ApiError, getMeetingFile, type TranscriptionStatus } from '@/lib/api';
+import {
+  Alert,
+  Button,
+  Card,
+  Chip,
+  Spinner,
+  type ChipVariants,
+} from '@heroui/react';
+import { RefreshCw } from 'lucide-react';
+import {
+  ApiError,
+  getMeetingFile,
+  refreshTranscription,
+  type TranscriptionStatus,
+} from '@/lib/api';
 
 const STATUS_LABEL: Record<TranscriptionStatus, string> = {
   PENDING: 'Pending',
@@ -29,6 +42,7 @@ interface MeetingTranscriptionProps {
   meetingId: string;
   status: TranscriptionStatus | null;
   text: string | null;
+  isOrganizer: boolean;
   onSessionExpired: () => void;
 }
 
@@ -42,11 +56,28 @@ export function MeetingTranscription({
   meetingId,
   status: initialStatus,
   text: initialText,
+  isOrganizer,
   onSessionExpired,
 }: MeetingTranscriptionProps) {
   const [status, setStatus] = useState(initialStatus);
   const [text, setText] = useState(initialText);
   const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshTranscription(meetingId);
+      // Reflected locally rather than waiting for the next poll tick — the
+      // status/text useState pair is otherwise only ever updated by the
+      // polling effect below, which this also re-arms (its effect depends
+      // on `status`, so moving it to PENDING here starts polling again).
+      setText(null);
+      setStatus('PENDING');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Bounded to while a transcription job is actually in flight — stops
   // itself once status settles to COMPLETED/FAILED, so a finished
@@ -105,8 +136,23 @@ export function MeetingTranscription({
 
   return (
     <Card>
-      <Card.Header>
+      <Card.Header className="flex flex-row items-center justify-between">
         <Card.Title>Transcript</Card.Title>
+        {isOrganizer ? (
+          <Button
+            isPending={isRefreshing}
+            size="sm"
+            variant="secondary"
+            onPress={() => void handleRefresh()}
+          >
+            {isRefreshing ? (
+              <Spinner color="current" size="sm" />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+            Refresh Transcription
+          </Button>
+        ) : null}
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
         <div className="flex items-center gap-2">

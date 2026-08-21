@@ -197,6 +197,7 @@ export default function MeetingDetailPage() {
                 meetingId={meeting.id}
                 status={meetingFile.transcriptionStatus}
                 text={meetingFile.transcriptionText}
+                isOrganizer={isOrganizer}
                 onSessionExpired={handleSessionExpired}
               />
             </>
