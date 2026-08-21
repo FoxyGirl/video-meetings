@@ -69,13 +69,21 @@ export function MeetingTranscription({
     setIsRefreshing(true);
     setRefreshError(null);
     try {
-      await refreshTranscription(meetingId);
-      // Reflected locally rather than waiting for the next poll tick — the
-      // status/text useState pair is otherwise only ever updated by the
-      // polling effect below, which this also re-arms (its effect depends
-      // on `status`, so moving it to PENDING here starts polling again).
-      setText(null);
-      setStatus('PENDING');
+      const result = await refreshTranscription(meetingId);
+      // Reflected locally from the response rather than assumed/waiting
+      // for the next poll tick — the status/text useState pair is
+      // otherwise only ever updated by the polling effect below, which
+      // this also re-arms whenever the result actually is PENDING/
+      // PROCESSING (its effect depends on `status`). Using the response's
+      // real value (not a hardcoded 'PENDING') matters because the
+      // refresh can legitimately no-op server-side (e.g. a concurrent
+      // delete/replace already moved the meeting off the file this
+      // refresh was scoped to) — trusting a fabricated PENDING in that
+      // case would strand the UI showing "Transcribing…" forever, since
+      // polling would just see the file gone and stop without ever
+      // correcting it.
+      setText(result.transcriptionText);
+      setStatus(result.transcriptionStatus);
       // A stale failure count from a previous, already-settled polling run
       // shouldn't make this fresh run look like it's already struggling.
       setConsecutivePollFailures(0);
