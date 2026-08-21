@@ -112,10 +112,21 @@ export function MeetingTranscription({
           </div>
         ) : null}
 
-        {status === 'COMPLETED' && text ? (
-          <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-            {text}
-          </p>
+        {status === 'COMPLETED' && text !== null ? (
+          text.length > 0 ? (
+            <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+              {text}
+            </p>
+          ) : (
+            // Whisper can genuinely produce an empty transcript (e.g. a
+            // clip with no detectable speech) — an empty string here is
+            // "Completed" behaving correctly, not a still-loading or
+            // broken state, so it needs its own explicit message rather
+            // than silently rendering nothing.
+            <p className="text-sm italic text-zinc-500 dark:text-zinc-500">
+              No speech detected.
+            </p>
+          )
         ) : null}
 
         {status === 'FAILED' ? (
