@@ -63,9 +63,11 @@ export function MeetingTranscription({
   const [text, setText] = useState(initialText);
   const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setRefreshError(null);
     try {
       await refreshTranscription(meetingId);
       // Reflected locally rather than waiting for the next poll tick — the
@@ -77,6 +79,19 @@ export function MeetingTranscription({
       // A stale failure count from a previous, already-settled polling run
       // shouldn't make this fresh run look like it's already struggling.
       setConsecutivePollFailures(0);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      // The refresh request itself failed (network/auth) — the displayed
+      // status/text are left exactly as they were, since nothing on the
+      // server actually changed.
+      setRefreshError(
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to refresh transcription. Please try again.',
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -159,6 +174,15 @@ export function MeetingTranscription({
         ) : null}
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
+        {refreshError ? (
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>{refreshError}</Alert.Title>
+            </Alert.Content>
+          </Alert>
+        ) : null}
+
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">Status</span>
           <Chip color={STATUS_COLOR[status]} size="sm">
