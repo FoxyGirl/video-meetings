@@ -16,7 +16,15 @@ export default defineConfig({
   // compile without silently hiding a genuinely broken test, which would
   // still fail identically on the retry.
   retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : undefined,
+  // Always serial, not just CI — meeting-transcription.spec.ts runs a real,
+  // CPU-bound local Whisper "tiny" inference (nodejs-whisper's whisper.cpp
+  // binary). Under Playwright's default worker count (parallel across
+  // CPUs), that inference starves other concurrently-running tests'
+  // network/event-loop timing enough to blow unrelated tests' 30s timeouts
+  // (reproduced locally: flaky with default parallel workers, 68/68 clean
+  // with workers:1) — the same reason apps/api's own e2e suite already
+  // runs fully serial (`--runInBand`) instead of Jest's default parallelism.
+  workers: 1,
   // Above the 5s default specifically for the same cold-compile reason —
   // an assertion racing a route's first-ever compile (e.g. toHaveURL right
   // after a client-side navigation to a not-yet-compiled route) needs more
