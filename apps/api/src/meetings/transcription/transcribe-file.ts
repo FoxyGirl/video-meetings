@@ -1,6 +1,6 @@
 import { copyFile, readFile, unlink } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { extname, join } from 'node:path';
+import { extname, join, parse } from 'node:path';
 import { tmpdir } from 'node:os';
 import { nodewhisper } from 'nodejs-whisper';
 import { getWhisperModelRootPath } from './whisper.constants';
@@ -32,10 +32,19 @@ export async function transcribeFile(
   );
   await copyFile(absoluteFilePath, copyPath);
 
-  const isAlreadyWav = extname(copyPath).toLowerCase() === '.wav';
+  // path.parse()'s .dir/.name, not a manual slice(0, -ext.length): a
+  // string.slice with a negative length is a footgun the moment ext could
+  // ever be '' (no dot in the filename) — `-0 === 0` for slice's purposes,
+  // so slice(0, -0) silently becomes slice(0, 0), producing an empty
+  // string instead of the original path. Unreachable today (copyPath's
+  // extension always mirrors absoluteFilePath's, which always has one —
+  // multer-generated names + ACCEPTED_FILE_TYPES guarantee that), but not
+  // worth relying on that invariant holding forever for a plain string op.
+  const parsedCopyPath = parse(copyPath);
+  const isAlreadyWav = parsedCopyPath.ext.toLowerCase() === '.wav';
   const wavPath = isAlreadyWav
     ? copyPath
-    : `${copyPath.slice(0, -extname(copyPath).length)}.wav`;
+    : join(parsedCopyPath.dir, `${parsedCopyPath.name}.wav`);
   const textOutputPath = `${wavPath}.txt`;
 
   try {
