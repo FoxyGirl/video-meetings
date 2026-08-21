@@ -193,7 +193,10 @@ export default function MeetingDetailPage() {
                 onDeleted={() => setMeetingFile(null)}
                 onSessionExpired={handleSessionExpired}
               />
-              <MeetingTranscription status={meetingFile.transcriptionStatus} />
+              <MeetingTranscription
+                status={meetingFile.transcriptionStatus}
+                text={meetingFile.transcriptionText}
+              />
             </>
           ) : isOrganizer ? (
             <MeetingFileUpload

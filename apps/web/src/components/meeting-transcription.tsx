@@ -19,12 +19,16 @@ const STATUS_COLOR: Record<TranscriptionStatus, ChipVariants['color']> = {
 
 interface MeetingTranscriptionProps {
   status: TranscriptionStatus | null;
+  text: string | null;
 }
 
 // Renders next to MeetingFileDisplay whenever the meeting has a file — a
 // null status (transcription disabled, or the row predates the
 // transcription migration) renders nothing rather than an empty card.
-export function MeetingTranscription({ status }: MeetingTranscriptionProps) {
+export function MeetingTranscription({
+  status,
+  text,
+}: MeetingTranscriptionProps) {
   if (status === null) {
     return null;
   }
@@ -41,6 +45,12 @@ export function MeetingTranscription({ status }: MeetingTranscriptionProps) {
             <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
           </Chip>
         </div>
+
+        {status === 'COMPLETED' && text ? (
+          <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+            {text}
+          </p>
+        ) : null}
       </Card.Content>
     </Card>
   );
