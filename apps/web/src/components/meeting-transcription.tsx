@@ -1,8 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Card, Chip, Spinner, type ChipVariants } from '@heroui/react';
-import { ApiError, getMeetingFile, type TranscriptionStatus } from '@/lib/api';
+import {
+  Alert,
+  Button,
+  Card,
+  Chip,
+  Spinner,
+  type ChipVariants,
+} from '@heroui/react';
+import { RefreshCw } from 'lucide-react';
+import {
+  ApiError,
+  getMeetingFile,
+  refreshTranscription,
+  type TranscriptionStatus,
+} from '@/lib/api';
 
 const STATUS_LABEL: Record<TranscriptionStatus, string> = {
   PENDING: 'Pending',
@@ -29,6 +42,7 @@ interface MeetingTranscriptionProps {
   meetingId: string;
   status: TranscriptionStatus | null;
   text: string | null;
+  isOrganizer: boolean;
   onSessionExpired: () => void;
 }
 
@@ -42,11 +56,54 @@ export function MeetingTranscription({
   meetingId,
   status: initialStatus,
   text: initialText,
+  isOrganizer,
   onSessionExpired,
 }: MeetingTranscriptionProps) {
   const [status, setStatus] = useState(initialStatus);
   const [text, setText] = useState(initialText);
   const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setRefreshError(null);
+    try {
+      const result = await refreshTranscription(meetingId);
+      // Reflected locally from the response rather than assumed/waiting
+      // for the next poll tick — the status/text useState pair is
+      // otherwise only ever updated by the polling effect below, which
+      // this also re-arms whenever the result actually is PENDING/
+      // PROCESSING (its effect depends on `status`). Using the response's
+      // real value (not a hardcoded 'PENDING') matters because the
+      // refresh can legitimately no-op server-side (e.g. a concurrent
+      // delete/replace already moved the meeting off the file this
+      // refresh was scoped to) — trusting a fabricated PENDING in that
+      // case would strand the UI showing "Transcribing…" forever, since
+      // polling would just see the file gone and stop without ever
+      // correcting it.
+      setText(result.transcriptionText);
+      setStatus(result.transcriptionStatus);
+      // A stale failure count from a previous, already-settled polling run
+      // shouldn't make this fresh run look like it's already struggling.
+      setConsecutivePollFailures(0);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      // The refresh request itself failed (network/auth) — the displayed
+      // status/text are left exactly as they were, since nothing on the
+      // server actually changed.
+      setRefreshError(
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to refresh transcription. Please try again.',
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Bounded to while a transcription job is actually in flight — stops
   // itself once status settles to COMPLETED/FAILED, so a finished
@@ -97,7 +154,15 @@ export function MeetingTranscription({
     };
   }, [status, meetingId, onSessionExpired]);
 
-  if (status === null) {
+  // A null status means "no transcription run has ever started for this
+  // file yet" (e.g. transcription was disabled server-side at upload
+  // time, or this file predates the transcription migration) — not "no
+  // file exists" (the parent page never mounts this component in that
+  // case). The organizer still needs the Refresh button reachable here,
+  // since it's the only UI path to trigger a first run without
+  // re-uploading the file; a non-organizer has nothing to do with a
+  // status-less file, so they see nothing, same as before.
+  if (status === null && !isOrganizer) {
     return null;
   }
 
@@ -105,16 +170,46 @@ export function MeetingTranscription({
 
   return (
     <Card>
-      <Card.Header>
+      <Card.Header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Card.Title>Transcript</Card.Title>
+        {isOrganizer ? (
+          <Button
+            isDisabled={isInProgress}
+            isPending={isRefreshing}
+            variant="secondary"
+            onPress={handleRefresh}
+          >
+            {isRefreshing ? (
+              <Spinner color="current" size="sm" />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+            Refresh Transcription
+          </Button>
+        ) : null}
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">Status</span>
-          <Chip color={STATUS_COLOR[status]} size="sm">
-            <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
-          </Chip>
-        </div>
+        {refreshError ? (
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>{refreshError}</Alert.Title>
+            </Alert.Content>
+          </Alert>
+        ) : null}
+
+        {status !== null ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Status</span>
+            <Chip color={STATUS_COLOR[status]} size="sm">
+              <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
+            </Chip>
+          </div>
+        ) : (
+          <p className="text-sm italic text-zinc-500 dark:text-zinc-500">
+            No transcription yet.
+          </p>
+        )}
 
         {isInProgress ? (
           <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
