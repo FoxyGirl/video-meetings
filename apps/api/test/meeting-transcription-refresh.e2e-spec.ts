@@ -220,14 +220,14 @@ describe('Refresh Transcription (e2e)', () => {
     expect(firstSettled.transcriptionStatus).toBe('FAILED');
 
     // Swap in real audio bytes at the same stored path — a retry re-reads
-    // whatever is currently on disk for the meeting's filePath, it doesn't
+    // whatever is currently on disk for the file's filePath, it doesn't
     // re-upload, so this is what turns the retry into a success.
-    const meetingRow = await prisma.meeting.findUniqueOrThrow({
-      where: { id: meetingId },
+    const meetingFile = await prisma.meetingFile.findFirstOrThrow({
+      where: { meetingId },
     });
     await copyFile(
       SHORT_SPEECH_FIXTURE,
-      join(UPLOAD_DIR, meetingRow.filePath as string),
+      join(UPLOAD_DIR, meetingFile.filePath),
     );
 
     const refreshResponse = await request(app.getHttpServer())
