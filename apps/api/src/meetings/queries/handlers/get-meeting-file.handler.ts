@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   GetMeetingFileQuery,
-  MeetingFileRecord,
+  MeetingFileDownloadRecord,
 } from '../get-meeting-file.query';
 
 @QueryHandler(GetMeetingFileQuery)
@@ -12,9 +12,10 @@ export class GetMeetingFileHandler implements IQueryHandler<GetMeetingFileQuery>
 
   async execute({
     meetingId,
-  }: GetMeetingFileQuery): Promise<MeetingFileRecord> {
-    // Unscoped by organizer, same as GetMeetingHandler since Phase 1 — any
-    // authenticated user can read a meeting's file metadata/bytes.
+    fileId,
+  }: GetMeetingFileQuery): Promise<MeetingFileDownloadRecord> {
+    // Unscoped by organizer, same as before — any authenticated user can
+    // download a meeting's file.
     const meeting = await this.prisma.meeting.findUnique({
       where: { id: meetingId },
     });
@@ -23,25 +24,21 @@ export class GetMeetingFileHandler implements IQueryHandler<GetMeetingFileQuery>
       throw new NotFoundException('Meeting not found');
     }
 
-    // One row per meeting, this phase — the file's own columns are
-    // required (NOT NULL) on MeetingFile itself now, so no manual
-    // non-null narrowing is needed once a row is found.
-    const file = await this.prisma.meetingFile.findFirst({
-      where: { meetingId },
+    const file = await this.prisma.meetingFile.findUnique({
+      where: { id: fileId },
     });
 
-    if (!file) {
-      throw new NotFoundException('No file exists for this meeting');
+    // Scoped by both fileId and meetingId — a fileId that exists but
+    // belongs to a different meeting is treated the same as one that
+    // doesn't exist at all, rather than leaking cross-meeting existence.
+    if (!file || file.meetingId !== meetingId) {
+      throw new NotFoundException('File not found');
     }
 
     return {
-      fileOriginalName: file.originalName,
+      originalName: file.originalName,
       filePath: file.filePath,
-      fileMimeType: file.mimeType,
-      fileSize: file.size,
-      fileUploadedAt: file.uploadedAt,
-      transcriptionStatus: file.transcriptionStatus,
-      transcriptionText: file.transcriptionText,
+      mimeType: file.mimeType,
     };
   }
 }
