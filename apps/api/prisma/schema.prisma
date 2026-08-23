@@ -29,22 +29,33 @@ model User {
 }
 
 model Meeting {
+  id           String        @id @default(uuid())
+  title        String
+  date         DateTime
+  participants String[]
+  organizerId  String
+  organizer    User          @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  files        MeetingFile[]
+
+  @@index([organizerId])
+}
+
+model MeetingFile {
   id                     String               @id @default(uuid())
-  title                  String
-  date                   DateTime
-  participants           String[]
-  organizerId            String
-  organizer              User                 @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @default(now()) @updatedAt
-  fileOriginalName       String?
-  filePath               String?
-  fileMimeType           String?
-  fileSize               Int?
-  fileUploadedAt         DateTime?
+  meetingId              String
+  meeting                Meeting              @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  originalName           String
+  filePath               String
+  mimeType               String
+  size                   Int
+  uploadedAt             DateTime
   transcriptionStatus    TranscriptionStatus?
   transcriptionText      String?
   transcriptionUpdatedAt DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @default(now()) @updatedAt
 
-  @@index([organizerId])
+  @@index([meetingId])
 }

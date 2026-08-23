@@ -259,8 +259,8 @@ describe('Meeting file upload (e2e)', () => {
         (first.body as MeetingResponseBody).transcriptionStatus,
       ).toBeNull();
 
-      await prisma.meeting.update({
-        where: { id: meetingId },
+      await prisma.meetingFile.updateMany({
+        where: { meetingId },
         data: {
           transcriptionStatus: 'COMPLETED',
           transcriptionText: 'a previously completed transcript',

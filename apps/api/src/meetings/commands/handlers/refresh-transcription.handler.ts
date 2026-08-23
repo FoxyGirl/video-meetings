@@ -1,13 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { flattenMeetingFile } from '../../meeting-file-flatten.util';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import { RefreshTranscriptionCommand } from '../refresh-transcription.command';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 
 interface LockedMeetingRow {
   id: string;
-  filePath: string | null;
 }
 
 @CommandHandler(RefreshTranscriptionCommand)
@@ -22,19 +22,25 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     // DeleteMeetingFileHandler use: a non-organizer (or nonexistent meeting)
     // gets 404, not 403, and the row lock serializes this against a
     // concurrent upload/delete on the same meeting instead of racing on a
-    // stale filePath read.
-    const { updated, filePath } = await this.prisma.$transaction(async (tx) => {
-      const [meeting] = await tx.$queryRaw<LockedMeetingRow[]>`
-          SELECT "id", "filePath" FROM "Meeting"
+    // stale file read. Only "id" is selected here — the full row is fetched
+    // below via a type-checked Prisma call instead of a hand-typed raw-SQL
+    // shape.
+    const { meeting, file } = await this.prisma.$transaction(async (tx) => {
+      const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
+          SELECT "id" FROM "Meeting"
           WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
           FOR UPDATE
         `;
 
-      if (!meeting) {
+      if (!lockedMeeting) {
         throw new NotFoundException('Meeting not found');
       }
 
-      if (!meeting.filePath) {
+      const existingFile = await tx.meetingFile.findFirst({
+        where: { meetingId },
+      });
+
+      if (!existingFile) {
         throw new NotFoundException('No file exists for this meeting');
       }
 
@@ -42,8 +48,8 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
       // current run before starting over — same invalidation
       // UploadMeetingFileHandler/DeleteMeetingFileHandler already do on
       // these same three columns.
-      const result = await tx.meeting.update({
-        where: { id: meetingId },
+      const updatedFile = await tx.meetingFile.update({
+        where: { id: existingFile.id },
         data: {
           transcriptionStatus: null,
           transcriptionText: null,
@@ -51,11 +57,15 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
         },
       });
 
-      return { updated: result, filePath: meeting.filePath };
+      const meetingRow = await tx.meeting.findUniqueOrThrow({
+        where: { id: meetingId },
+      });
+
+      return { meeting: meetingRow, file: updatedFile };
     });
 
     if (!isTranscriptionEnabled()) {
-      return updated;
+      return flattenMeetingFile(meeting, file);
     }
 
     // Same two-step UploadMeetingFileHandler uses: PENDING is its own write
@@ -66,20 +76,21 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     // (updateMany keyed on id + filePath, not a plain update()) — the same
     // guard TranscribeMeetingFileHandler's own PROCESSING/COMPLETED/FAILED
     // writes use (#132): a delete (or replace) landing in the gap between
-    // the transaction above committing and this write already moved the
-    // meeting on to a different (or no) file, so blindly writing PENDING
-    // here would strand it in that status forever — the dispatched job
-    // below would just no-op against the stale filePath and never move it
-    // back out. Skip the dispatch too when that happens, since there'd be
-    // nothing for it to do.
-    const { count: claimed } = await this.prisma.meeting.updateMany({
-      where: { id: meetingId, filePath },
+    // the transaction above committing and this write already superseded
+    // this file row, so blindly writing PENDING here would strand it in
+    // that status forever — the dispatched job below would just no-op
+    // against the stale id and never move it back out. Skip the dispatch
+    // too when that happens, since there'd be nothing for it to do.
+    const { count: claimed } = await this.prisma.meetingFile.updateMany({
+      where: { id: file.id, filePath: file.filePath },
       data: { transcriptionStatus: 'PENDING' },
     });
 
     if (claimed > 0) {
       this.commandBus
-        .execute(new TranscribeMeetingFileCommand(meetingId, filePath))
+        .execute(
+          new TranscribeMeetingFileCommand(meetingId, file.id, file.filePath),
+        )
         .catch((error: unknown) => {
           console.error(
             `[RefreshTranscriptionHandler] failed to dispatch transcription for meeting ${meetingId}:`,
@@ -89,11 +100,17 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     }
 
     // Re-read rather than trust a locally-constructed response — the
-    // updateMany above may have no-opped (claimed === 0), in which case the
-    // true current row (whatever the superseding delete/replace left it as)
-    // is what the caller should see, not a fabricated PENDING.
-    return this.prisma.meeting.findUniqueOrThrow({
+    // updateMany above may have no-opped (claimed === 0, e.g. a concurrent
+    // delete removed this file row entirely), in which case the true
+    // current state (whatever the superseding delete/replace left it as,
+    // including no file at all) is what the caller should see, not a
+    // fabricated PENDING.
+    const currentMeeting = await this.prisma.meeting.findUniqueOrThrow({
       where: { id: meetingId },
+      include: { files: true },
     });
+    const { files, ...meetingFields } = currentMeeting;
+
+    return flattenMeetingFile(meetingFields, files[0] ?? null);
   }
 }

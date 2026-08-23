@@ -269,8 +269,8 @@ describe('Meeting file metadata, download, and delete (e2e)', () => {
       const meetingId = await createMeeting(accessToken);
       await uploadFile(meetingId, accessToken);
 
-      await prisma.meeting.update({
-        where: { id: meetingId },
+      await prisma.meetingFile.updateMany({
+        where: { meetingId },
         data: {
           transcriptionStatus: 'COMPLETED',
           transcriptionText: 'a previously completed transcript',

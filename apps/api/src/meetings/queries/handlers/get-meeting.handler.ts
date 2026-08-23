@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { flattenMeetingFile } from '../../meeting-file-flatten.util';
 import { GetMeetingQuery } from '../get-meeting.query';
 
 @QueryHandler(GetMeetingQuery)
@@ -10,12 +11,19 @@ export class GetMeetingHandler implements IQueryHandler<GetMeetingQuery> {
   async execute({ id }: GetMeetingQuery) {
     const meeting = await this.prisma.meeting.findUnique({
       where: { id },
+      include: { files: true },
     });
 
     if (!meeting) {
       throw new NotFoundException('Meeting not found');
     }
 
-    return meeting;
+    // File/transcription state moved onto its own MeetingFile row (Phase
+    // 1-multi-file-upload-drag-drop-fix), but this route's response shape
+    // must stay byte-for-byte unchanged — re-flatten the (at most one, this
+    // phase) file row back onto the old field names.
+    const { files, ...meetingFields } = meeting;
+
+    return flattenMeetingFile(meetingFields, files[0] ?? null);
   }
 }
