@@ -32,7 +32,7 @@ export function getUploadDir(): string {
 
 // Unlike UPLOAD_DIR, this can't be made lazy the same way: multer's
 // `limits.fileSize` must be a static value at Multer-instance construction
-// time (busboy reads it once, inside FileInterceptor's decorator — i.e. at
+// time (busboy reads it once, inside FilesInterceptor's decorator — i.e. at
 // meetings.controller.ts's module-load time), with no supported way to
 // defer it to request time short of a custom interceptor. In practice this
 // is safe today: main.ts's `import 'dotenv/config'` is the first line
@@ -41,6 +41,13 @@ export function getUploadDir(): string {
 // file — and therefore any module in this import graph — is required.
 export const MAX_UPLOAD_FILE_SIZE_BYTES =
   Number(process.env.MAX_UPLOAD_FILE_SIZE_BYTES) || 500 * 1024 * 1024;
+
+// Fixed for this iteration, not configurable per environment — see the PRD's
+// "Non-goals". Enforced authoritatively in UploadMeetingFileHandler (an
+// existing-count + incoming-batch check inside the same locked transaction
+// as the organizer check) and as FilesInterceptor's maxCount, since a single
+// request can never legitimately need more files than the cap allows.
+export const MAX_FILES_PER_MEETING = 10;
 
 // Extension -> declared MIME type. Mirrored in apps/web's client-side
 // validation (Phase 5) — keep both tables identical if either changes.

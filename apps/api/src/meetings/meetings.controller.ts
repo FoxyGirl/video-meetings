@@ -12,11 +12,11 @@ import {
   Req,
   Res,
   StreamableFile,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,8 +33,11 @@ import {
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
 import { buildAttachmentContentDisposition } from './upload/content-disposition';
-import { getUploadDir } from './upload/file-upload.constants';
-import { meetingFileUploadOptions } from './upload/multer.config';
+import {
+  MAX_FILES_PER_MEETING,
+  getUploadDir,
+} from './upload/file-upload.constants';
+import { meetingFilesUploadOptions } from './upload/multer.config';
 
 @Controller('meetings')
 @UseGuards(JwtAuthGuard)
@@ -67,16 +70,18 @@ export class MeetingsController {
     return this.queryBus.execute(new GetMeetingQuery(id));
   }
 
-  @Post(':id/file')
+  @Post(':id/files')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file', meetingFileUploadOptions))
-  uploadFile(
+  @UseInterceptors(
+    FilesInterceptor('files', MAX_FILES_PER_MEETING, meetingFilesUploadOptions),
+  )
+  uploadFiles(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() request: AuthenticatedRequest,
   ) {
     return this.commandBus.execute(
-      new UploadMeetingFileCommand(id, request.user.userId, file),
+      new UploadMeetingFileCommand(id, request.user.userId, files ?? []),
     );
   }
 
