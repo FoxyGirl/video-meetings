@@ -2,11 +2,14 @@ import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Meeting } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { flattenMeetingFile } from '../../meeting-file-flatten.util';
 import { getUploadDir } from '../../upload/file-upload.constants';
 import { DeleteMeetingFileCommand } from '../delete-meeting-file.command';
+
+interface LockedMeetingRow {
+  id: string;
+}
 
 @CommandHandler(DeleteMeetingFileCommand)
 export class DeleteMeetingFileHandler implements ICommandHandler<DeleteMeetingFileCommand> {
@@ -23,14 +26,16 @@ export class DeleteMeetingFileHandler implements ICommandHandler<DeleteMeetingFi
         // commits would clear the *new* file's metadata while unlinking the
         // *old* (already-replaced) path, orphaning the new file on disk.
         // Same ownership-check shape as UploadMeetingFileHandler otherwise:
-        // a non-organizer (or a nonexistent meeting) gets 404, not 403.
-        const [meetingRow] = await tx.$queryRaw<Meeting[]>`
-          SELECT * FROM "Meeting"
+        // a non-organizer (or a nonexistent meeting) gets 404, not 403. Only
+        // "id" is selected here — the full row is fetched below via a
+        // type-checked Prisma call instead of a hand-typed raw-SQL shape.
+        const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
+          SELECT "id" FROM "Meeting"
           WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
           FOR UPDATE
         `;
 
-        if (!meetingRow) {
+        if (!lockedMeeting) {
           throw new NotFoundException('Meeting not found');
         }
 
@@ -43,6 +48,10 @@ export class DeleteMeetingFileHandler implements ICommandHandler<DeleteMeetingFi
         }
 
         await tx.meetingFile.delete({ where: { id: existingFile.id } });
+
+        const meetingRow = await tx.meeting.findUniqueOrThrow({
+          where: { id: meetingId },
+        });
 
         return { meeting: meetingRow, deletedFile: existingFile };
       },
