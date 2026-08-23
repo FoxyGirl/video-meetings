@@ -22,10 +22,16 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
+import { DeleteMeetingFileByIdCommand } from './commands/delete-meeting-file-by-id.command';
 import { DeleteMeetingFileCommand } from './commands/delete-meeting-file.command';
+import { RefreshTranscriptionByIdCommand } from './commands/refresh-transcription-by-id.command';
 import { RefreshTranscriptionCommand } from './commands/refresh-transcription.command';
 import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import {
+  DownloadMeetingFileQuery,
+  MeetingFileDownloadRecord,
+} from './queries/download-meeting-file.query';
 import {
   GetMeetingFileQuery,
   MeetingFileRecord,
@@ -89,6 +95,52 @@ export class MeetingsController {
   @Get(':id/files')
   listFiles(@Param('id') id: string) {
     return this.queryBus.execute(new ListMeetingFilesQuery(id));
+  }
+
+  @Get(':id/files/:fileId/download')
+  async downloadFileById(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const file = await this.queryBus.execute<
+      DownloadMeetingFileQuery,
+      MeetingFileDownloadRecord
+    >(new DownloadMeetingFileQuery(id, fileId));
+
+    res.set({
+      'Content-Type': file.mimeType,
+      'Content-Disposition': buildAttachmentContentDisposition(
+        file.originalName,
+      ),
+    });
+
+    return new StreamableFile(
+      createReadStream(join(getUploadDir(), file.filePath)),
+    );
+  }
+
+  @Delete(':id/files/:fileId')
+  deleteFileById(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commandBus.execute(
+      new DeleteMeetingFileByIdCommand(id, fileId, request.user.userId),
+    );
+  }
+
+  @Post(':id/files/:fileId/transcription/refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshTranscriptionById(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commandBus.execute(
+      new RefreshTranscriptionByIdCommand(id, fileId, request.user.userId),
+    );
   }
 
   @Get(':id/file')
