@@ -1,11 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Meeting } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { flattenMeetingFile } from '../../meeting-file-flatten.util';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import { RefreshTranscriptionCommand } from '../refresh-transcription.command';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
+
+interface LockedMeetingRow {
+  id: string;
+}
 
 @CommandHandler(RefreshTranscriptionCommand)
 export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTranscriptionCommand> {
@@ -19,15 +22,17 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     // DeleteMeetingFileHandler use: a non-organizer (or nonexistent meeting)
     // gets 404, not 403, and the row lock serializes this against a
     // concurrent upload/delete on the same meeting instead of racing on a
-    // stale file read.
+    // stale file read. Only "id" is selected here — the full row is fetched
+    // below via a type-checked Prisma call instead of a hand-typed raw-SQL
+    // shape.
     const { meeting, file } = await this.prisma.$transaction(async (tx) => {
-      const [meetingRow] = await tx.$queryRaw<Meeting[]>`
-          SELECT * FROM "Meeting"
+      const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
+          SELECT "id" FROM "Meeting"
           WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
           FOR UPDATE
         `;
 
-      if (!meetingRow) {
+      if (!lockedMeeting) {
         throw new NotFoundException('Meeting not found');
       }
 
@@ -50,6 +55,10 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
           transcriptionText: null,
           transcriptionUpdatedAt: null,
         },
+      });
+
+      const meetingRow = await tx.meeting.findUniqueOrThrow({
+        where: { id: meetingId },
       });
 
       return { meeting: meetingRow, file: updatedFile };
