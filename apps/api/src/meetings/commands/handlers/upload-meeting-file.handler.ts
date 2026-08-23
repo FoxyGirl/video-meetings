@@ -2,7 +2,6 @@ import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Meeting } from '../../../../prisma/generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { flattenMeetingFile } from '../../meeting-file-flatten.util';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
@@ -10,6 +9,10 @@ import { getUploadDir } from '../../upload/file-upload.constants';
 import { validateFileType } from '../../upload/validate-file-type';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
+
+interface LockedMeetingRow {
+  id: string;
+}
 
 @CommandHandler(UploadMeetingFileCommand)
 export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFileCommand> {
@@ -34,13 +37,17 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
           // blocks here until this one commits, instead of both reading the
           // same "old" file row and racing on which file gets orphaned.
           // Same ownership shape GetMeetingHandler used before Phase 1.
-          const [meetingRow] = await tx.$queryRaw<Meeting[]>`
-            SELECT * FROM "Meeting"
+          // Only "id" is selected here — the raw query's only job is proving
+          // the row exists, is owned by this organizer, and taking the lock;
+          // the full row is fetched below via a type-checked Prisma call
+          // instead of trusting a hand-typed raw-SQL shape.
+          const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
+            SELECT "id" FROM "Meeting"
             WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
             FOR UPDATE
           `;
 
-          if (!meetingRow) {
+          if (!lockedMeeting) {
             throw new NotFoundException('Meeting not found');
           }
 
@@ -71,6 +78,10 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
               size: file.size,
               uploadedAt: new Date(),
             },
+          });
+
+          const meetingRow = await tx.meeting.findUniqueOrThrow({
+            where: { id: meetingId },
           });
 
           return {
