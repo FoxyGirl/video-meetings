@@ -197,4 +197,53 @@ describe('Meeting file transcription (e2e)', () => {
 
     expect(settled.transcriptionStatus).toBe('FAILED');
   });
+
+  it('transcribes every file in a batch upload independently, one never affecting another', async () => {
+    const { accessToken } = await registerUser();
+    const meetingId = await createMeeting(accessToken);
+
+    const uploadResponse = await request(app.getHttpServer())
+      .post(`/meetings/${meetingId}/files`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .attach('files', SHORT_SPEECH_FIXTURE, {
+        filename: 'real-speech.mp3',
+        contentType: 'audio/mpeg',
+      })
+      .attach('files', Buffer.from('not a real mp4'), {
+        filename: 'not-real.mp4',
+        contentType: 'video/mp4',
+      })
+      .expect(201);
+
+    const [realFile, fakeFile] = (
+      uploadResponse.body as UploadBatchResponseBody
+    ).accepted;
+    expect(realFile.originalName).toBe('real-speech.mp3');
+    expect(fakeFile.originalName).toBe('not-real.mp4');
+
+    const [realSettled, fakeSettled] = await Promise.all([
+      pollUntilSettled(meetingId, realFile.id, accessToken),
+      pollUntilSettled(meetingId, fakeFile.id, accessToken),
+    ]);
+
+    // Each file's own job reached its own independent outcome — the real
+    // speech clip transcribed successfully, the fake one failed, and
+    // neither's status/text leaked onto the other's row.
+    expect(realSettled.transcriptionStatus).toBe('COMPLETED');
+    expect((realSettled.transcriptionText ?? '').length).toBeGreaterThan(0);
+    expect(fakeSettled.transcriptionStatus).toBe('FAILED');
+    expect(fakeSettled.transcriptionText).toBeNull();
+
+    // Refreshing only the failed file must not touch the completed one.
+    await request(app.getHttpServer())
+      .post(`/meetings/${meetingId}/files/${fakeFile.id}/transcription/refresh`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const realAfterRefresh = await getFile(meetingId, realFile.id, accessToken);
+    expect(realAfterRefresh.transcriptionStatus).toBe('COMPLETED');
+    expect(realAfterRefresh.transcriptionText).toBe(
+      realSettled.transcriptionText,
+    );
+  });
 });
