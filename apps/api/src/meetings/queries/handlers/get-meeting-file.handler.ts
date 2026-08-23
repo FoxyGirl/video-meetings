@@ -23,28 +23,25 @@ export class GetMeetingFileHandler implements IQueryHandler<GetMeetingFileQuery>
       throw new NotFoundException('Meeting not found');
     }
 
-    // All five file columns are always written together (UploadMeetingFileHandler)
-    // and cleared together (DeleteMeetingFileHandler), so a non-null filePath
-    // guarantees the rest are non-null too — narrow the Prisma-nullable shape
-    // down to MeetingFileRecord accordingly.
-    if (
-      !meeting.filePath ||
-      !meeting.fileOriginalName ||
-      !meeting.fileMimeType ||
-      meeting.fileSize == null ||
-      !meeting.fileUploadedAt
-    ) {
+    // One row per meeting, this phase — the file's own columns are
+    // required (NOT NULL) on MeetingFile itself now, so no manual
+    // non-null narrowing is needed once a row is found.
+    const file = await this.prisma.meetingFile.findFirst({
+      where: { meetingId },
+    });
+
+    if (!file) {
       throw new NotFoundException('No file exists for this meeting');
     }
 
     return {
-      fileOriginalName: meeting.fileOriginalName,
-      filePath: meeting.filePath,
-      fileMimeType: meeting.fileMimeType,
-      fileSize: meeting.fileSize,
-      fileUploadedAt: meeting.fileUploadedAt,
-      transcriptionStatus: meeting.transcriptionStatus,
-      transcriptionText: meeting.transcriptionText,
+      fileOriginalName: file.originalName,
+      filePath: file.filePath,
+      fileMimeType: file.mimeType,
+      fileSize: file.size,
+      fileUploadedAt: file.uploadedAt,
+      transcriptionStatus: file.transcriptionStatus,
+      transcriptionText: file.transcriptionText,
     };
   }
 }
