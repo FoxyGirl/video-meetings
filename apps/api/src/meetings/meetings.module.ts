@@ -11,6 +11,7 @@ import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-fil
 import { GetMeetingFileHandler } from './queries/handlers/get-meeting-file.handler';
 import { GetMeetingsHandler } from './queries/handlers/get-meetings.handler';
 import { GetMeetingHandler } from './queries/handlers/get-meeting.handler';
+import { ListMeetingFilesHandler } from './queries/handlers/list-meeting-files.handler';
 import { getUploadDir } from './upload/file-upload.constants';
 
 const CommandHandlers = [
@@ -24,6 +25,7 @@ const QueryHandlers = [
   GetMeetingsHandler,
   GetMeetingHandler,
   GetMeetingFileHandler,
+  ListMeetingFilesHandler,
 ];
 
 @Module({

@@ -32,6 +32,7 @@ import {
 } from './queries/get-meeting-file.query';
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
+import { ListMeetingFilesQuery } from './queries/list-meeting-files.query';
 import { buildAttachmentContentDisposition } from './upload/content-disposition';
 import {
   MAX_FILES_PER_MEETING,
@@ -83,6 +84,11 @@ export class MeetingsController {
     return this.commandBus.execute(
       new UploadMeetingFileCommand(id, request.user.userId, files ?? []),
     );
+  }
+
+  @Get(':id/files')
+  listFiles(@Param('id') id: string) {
+    return this.queryBus.execute(new ListMeetingFilesQuery(id));
   }
 
   @Get(':id/file')
