@@ -195,6 +195,7 @@ export default function MeetingDetailPage() {
               />
               <MeetingTranscription
                 meetingId={meeting.id}
+                fileId={meetingFile.id}
                 status={meetingFile.transcriptionStatus}
                 text={meetingFile.transcriptionText}
                 isOrganizer={isOrganizer}

@@ -36,7 +36,7 @@ export function MeetingFileDisplay({
     setIsDownloading(true);
     setDownloadError(null);
     try {
-      await downloadMeetingFile(meetingId, file.fileOriginalName);
+      await downloadMeetingFile(meetingId, file.id, file.originalName);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         onSessionExpired();
@@ -66,7 +66,7 @@ export function MeetingFileDisplay({
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      await deleteMeetingFile(meetingId);
+      await deleteMeetingFile(meetingId, file.id);
       setIsDeleteOpen(false);
       onDeleted();
     } catch (error) {
@@ -89,15 +89,15 @@ export function MeetingFileDisplay({
       <Card.Header>
         <Card.Title>Recording</Card.Title>
         <Card.Description className="break-all">
-          {file.fileOriginalName}
+          {file.originalName}
         </Card.Description>
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
           <dt className="font-medium text-foreground">Size</dt>
-          <dd>{formatFileSize(file.fileSize)}</dd>
+          <dd>{formatFileSize(file.size)}</dd>
           <dt className="font-medium text-foreground">Uploaded</dt>
-          <dd>{new Date(file.fileUploadedAt).toLocaleString()}</dd>
+          <dd>{new Date(file.uploadedAt).toLocaleString()}</dd>
         </dl>
 
         {downloadError ? (
@@ -145,8 +145,8 @@ export function MeetingFileDisplay({
                     <AlertDialog.Body className="flex flex-col gap-4">
                       <p>
                         This will permanently delete{' '}
-                        <strong>{file.fileOriginalName}</strong>. This action
-                        cannot be undone.
+                        <strong>{file.originalName}</strong>. This action cannot
+                        be undone.
                       </p>
                       {deleteError ? (
                         <Alert status="danger">
