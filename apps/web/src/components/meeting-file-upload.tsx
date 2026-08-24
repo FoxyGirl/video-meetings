@@ -16,7 +16,11 @@ import {
   type MeetingFileMetadata,
   type UploadBatchResult,
 } from '@/lib/api';
-import { ACCEPTED_FILE_TYPES, validateFile } from '@/lib/file-types';
+import {
+  ACCEPTED_FILE_TYPES,
+  MAX_FILES_PER_MEETING,
+  validateFile,
+} from '@/lib/file-types';
 
 interface StagedFile {
   file: File;
@@ -50,8 +54,31 @@ export function MeetingFileUpload({
   const dragCounter = useRef(0);
 
   const applySelectedFiles = (selected: File[]) => {
+    // The server's FilesInterceptor caps a single multipart request at
+    // MAX_FILES_PER_MEETING parts under the `files` field (Multer's own
+    // maxCount) — sending more than that in one request isn't reported as
+    // a per-file rejection, Multer rejects the whole request before the
+    // handler ever runs. Only client-valid files count toward that count
+    // (files with an error below are never sent), so once that many are
+    // seen, every valid file after it is staged as client-rejected too,
+    // the same way a validateFile failure is, instead of being silently
+    // sent anyway and blowing up the whole batch.
+    let validCount = 0;
     setStagedFiles(
-      selected.map((file) => ({ file, error: validateFile(file) })),
+      selected.map((file) => {
+        const error = validateFile(file);
+        if (error) {
+          return { file, error };
+        }
+        validCount += 1;
+        if (validCount > MAX_FILES_PER_MEETING) {
+          return {
+            file,
+            error: `Only ${MAX_FILES_PER_MEETING} files can be uploaded at once. Upload the rest in a separate batch.`,
+          };
+        }
+        return { file, error: null };
+      }),
     );
     setDropError(null);
     setUploadError(null);
