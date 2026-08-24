@@ -17,6 +17,10 @@ export const ACCEPTED_FILE_TYPES: Readonly<Record<string, string>> = {
 // overridden per environment there.
 export const MAX_UPLOAD_FILE_SIZE_BYTES = 500 * 1024 * 1024;
 
+// Mirrors the server's MAX_FILES_PER_MEETING (apps/api's
+// file-upload.constants.ts) — fixed, not env-configurable on either side.
+export const MAX_FILES_PER_MEETING = 10;
+
 export function formatBytes(bytes: number): string {
   return `${Math.round(bytes / (1024 * 1024))} MB`;
 }
