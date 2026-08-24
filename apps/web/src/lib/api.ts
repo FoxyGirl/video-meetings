@@ -268,20 +268,45 @@ export interface MeetingFileMetadata {
   transcriptionText: string | null;
 }
 
+// A meeting can have several files transcribing at once, each with its own
+// MeetingTranscription instance polling this on the same 3s cadence — since
+// they're all mounted together from the same files.map in page.tsx, their
+// ticks land in the same window far more often than not. Coalescing
+// concurrent calls for the same meeting id into one shared in-flight
+// request/response avoids sending N identical requests per tick for what's
+// always the same full-list payload.
+const inFlightListMeetingFiles = new Map<
+  string,
+  Promise<MeetingFileMetadata[]>
+>();
+
 // Lists every file stored on the meeting, ordered by upload time — open to
 // any authenticated user, same access rule the old single-file metadata
 // endpoint used.
 export async function listMeetingFiles(
   id: string,
 ): Promise<MeetingFileMetadata[]> {
-  try {
-    const res = await http.get<MeetingFileMetadata[]>(`/meetings/${id}/files`);
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
+  const inFlight = inFlightListMeetingFiles.get(id);
+  if (inFlight) {
+    return inFlight;
   }
+
+  const request = (async () => {
+    try {
+      const res = await http.get<MeetingFileMetadata[]>(
+        `/meetings/${id}/files`,
+      );
+      return res.data;
+    } catch (error) {
+      throw toApiError(error, {
+        401: 'Your session has expired. Please sign in again.',
+      });
+    } finally {
+      inFlightListMeetingFiles.delete(id);
+    }
+  })();
+  inFlightListMeetingFiles.set(id, request);
+  return request;
 }
 
 // Downloads via a Bearer-authenticated GET rather than a plain <a href> —
