@@ -40,6 +40,7 @@ const POLL_FAILURE_WARNING_THRESHOLD = 3;
 
 interface MeetingTranscriptionProps {
   meetingId: string;
+  fileId: string;
   status: TranscriptionStatus | null;
   text: string | null;
   isOrganizer: boolean;
@@ -54,6 +55,7 @@ interface MeetingTranscriptionProps {
 // progress.
 export function MeetingTranscription({
   meetingId,
+  fileId,
   status: initialStatus,
   text: initialText,
   isOrganizer,
@@ -69,7 +71,7 @@ export function MeetingTranscription({
     setIsRefreshing(true);
     setRefreshError(null);
     try {
-      const result = await refreshTranscription(meetingId);
+      const result = await refreshTranscription(meetingId, fileId);
       // Reflected locally from the response rather than assumed/waiting
       // for the next poll tick — the status/text useState pair is
       // otherwise only ever updated by the polling effect below, which

@@ -36,14 +36,18 @@ interface AuthResponseBody {
   accessToken: string;
 }
 
-interface FileMetadataResponseBody {
-  transcriptionStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null;
+type TranscriptionStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+interface MeetingFileMetadataBody {
+  id: string;
+  originalName: string;
+  transcriptionStatus: TranscriptionStatus | null;
   transcriptionText: string | null;
 }
 
-interface MeetingResponseBody {
-  id: string;
-  transcriptionStatus: FileMetadataResponseBody['transcriptionStatus'];
+interface UploadBatchResponseBody {
+  accepted: MeetingFileMetadataBody[];
+  rejected: { originalName: string; reason: string }[];
 }
 
 describe('Meeting file transcription (e2e)', () => {
@@ -75,33 +79,74 @@ describe('Meeting file transcription (e2e)', () => {
     return (response.body as { id: string }).id;
   }
 
+  async function uploadFile(
+    meetingId: string,
+    token: string,
+    options: { path?: string; buffer?: Buffer; filename: string },
+  ): Promise<MeetingFileMetadataBody> {
+    const req = request(app.getHttpServer())
+      .post(`/meetings/${meetingId}/files`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await (
+      options.path
+        ? req.attach('files', options.path, {
+            filename: options.filename,
+            contentType: 'audio/mpeg',
+          })
+        : req.attach('files', options.buffer as Buffer, {
+            filename: options.filename,
+            contentType: 'video/mp4',
+          })
+    ).expect(201);
+
+    return (response.body as UploadBatchResponseBody).accepted[0];
+  }
+
+  async function getFile(
+    meetingId: string,
+    fileId: string,
+    token: string,
+  ): Promise<MeetingFileMetadataBody> {
+    const response = await request(app.getHttpServer())
+      .get(`/meetings/${meetingId}/files`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const files = response.body as MeetingFileMetadataBody[];
+    const file = files.find((f) => f.id === fileId);
+
+    if (!file) {
+      throw new Error(`File ${fileId} not found on meeting ${meetingId}`);
+    }
+
+    return file;
+  }
+
   // Bounded poll, not a fixed sleep: real inference time varies with
   // whatever else is running on the host, but this must not hang forever
   // if a regression leaves the status stuck.
   async function pollUntilSettled(
     meetingId: string,
+    fileId: string,
     token: string,
     { maxAttempts = 120, intervalMs = 1000 } = {},
-  ): Promise<FileMetadataResponseBody> {
+  ): Promise<MeetingFileMetadataBody> {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const response = await request(app.getHttpServer())
-        .get(`/meetings/${meetingId}/file`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+      const file = await getFile(meetingId, fileId, token);
 
-      const body = response.body as FileMetadataResponseBody;
       if (
-        body.transcriptionStatus === 'COMPLETED' ||
-        body.transcriptionStatus === 'FAILED'
+        file.transcriptionStatus === 'COMPLETED' ||
+        file.transcriptionStatus === 'FAILED'
       ) {
-        return body;
+        return file;
       }
 
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
 
     throw new Error(
-      `Transcription for meeting ${meetingId} did not settle within ${maxAttempts * intervalMs}ms`,
+      `Transcription for file ${fileId} did not settle within ${maxAttempts * intervalMs}ms`,
     );
   }
 
@@ -125,20 +170,14 @@ describe('Meeting file transcription (e2e)', () => {
     const { accessToken } = await registerUser();
     const meetingId = await createMeeting(accessToken);
 
-    const uploadResponse = await request(app.getHttpServer())
-      .post(`/meetings/${meetingId}/file`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', SHORT_SPEECH_FIXTURE, {
-        filename: 'short-speech.mp3',
-        contentType: 'audio/mpeg',
-      })
-      .expect(201);
+    const uploaded = await uploadFile(meetingId, accessToken, {
+      path: SHORT_SPEECH_FIXTURE,
+      filename: 'short-speech.mp3',
+    });
 
-    expect(
-      (uploadResponse.body as MeetingResponseBody).transcriptionStatus,
-    ).toBe('PENDING');
+    expect(uploaded.transcriptionStatus).toBe('PENDING');
 
-    const settled = await pollUntilSettled(meetingId, accessToken);
+    const settled = await pollUntilSettled(meetingId, uploaded.id, accessToken);
 
     expect(settled.transcriptionStatus).toBe('COMPLETED');
     expect(settled.transcriptionText).toEqual(expect.any(String));
@@ -149,17 +188,62 @@ describe('Meeting file transcription (e2e)', () => {
     const { accessToken } = await registerUser();
     const meetingId = await createMeeting(accessToken);
 
-    await request(app.getHttpServer())
-      .post(`/meetings/${meetingId}/file`)
+    const uploaded = await uploadFile(meetingId, accessToken, {
+      buffer: Buffer.from('not a real mp4'),
+      filename: 'not-real.mp4',
+    });
+
+    const settled = await pollUntilSettled(meetingId, uploaded.id, accessToken);
+
+    expect(settled.transcriptionStatus).toBe('FAILED');
+  });
+
+  it('transcribes every file in a batch upload independently, one never affecting another', async () => {
+    const { accessToken } = await registerUser();
+    const meetingId = await createMeeting(accessToken);
+
+    const uploadResponse = await request(app.getHttpServer())
+      .post(`/meetings/${meetingId}/files`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .attach('file', Buffer.from('not a real mp4'), {
+      .attach('files', SHORT_SPEECH_FIXTURE, {
+        filename: 'real-speech.mp3',
+        contentType: 'audio/mpeg',
+      })
+      .attach('files', Buffer.from('not a real mp4'), {
         filename: 'not-real.mp4',
         contentType: 'video/mp4',
       })
       .expect(201);
 
-    const settled = await pollUntilSettled(meetingId, accessToken);
+    const [realFile, fakeFile] = (
+      uploadResponse.body as UploadBatchResponseBody
+    ).accepted;
+    expect(realFile.originalName).toBe('real-speech.mp3');
+    expect(fakeFile.originalName).toBe('not-real.mp4');
 
-    expect(settled.transcriptionStatus).toBe('FAILED');
+    const [realSettled, fakeSettled] = await Promise.all([
+      pollUntilSettled(meetingId, realFile.id, accessToken),
+      pollUntilSettled(meetingId, fakeFile.id, accessToken),
+    ]);
+
+    // Each file's own job reached its own independent outcome — the real
+    // speech clip transcribed successfully, the fake one failed, and
+    // neither's status/text leaked onto the other's row.
+    expect(realSettled.transcriptionStatus).toBe('COMPLETED');
+    expect((realSettled.transcriptionText ?? '').length).toBeGreaterThan(0);
+    expect(fakeSettled.transcriptionStatus).toBe('FAILED');
+    expect(fakeSettled.transcriptionText).toBeNull();
+
+    // Refreshing only the failed file must not touch the completed one.
+    await request(app.getHttpServer())
+      .post(`/meetings/${meetingId}/files/${fakeFile.id}/transcription/refresh`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const realAfterRefresh = await getFile(meetingId, realFile.id, accessToken);
+    expect(realAfterRefresh.transcriptionStatus).toBe('COMPLETED');
+    expect(realAfterRefresh.transcriptionText).toBe(
+      realSettled.transcriptionText,
+    );
   });
 });

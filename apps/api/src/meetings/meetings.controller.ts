@@ -12,11 +12,11 @@ import {
   Req,
   Res,
   StreamableFile,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -28,13 +28,17 @@ import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import {
   GetMeetingFileQuery,
-  MeetingFileRecord,
+  MeetingFileDownloadRecord,
 } from './queries/get-meeting-file.query';
 import { GetMeetingQuery } from './queries/get-meeting.query';
 import { GetMeetingsQuery } from './queries/get-meetings.query';
+import { ListMeetingFilesQuery } from './queries/list-meeting-files.query';
 import { buildAttachmentContentDisposition } from './upload/content-disposition';
-import { getUploadDir } from './upload/file-upload.constants';
-import { meetingFileUploadOptions } from './upload/multer.config';
+import {
+  MAX_FILES_PER_MEETING,
+  getUploadDir,
+} from './upload/file-upload.constants';
+import { meetingFilesUploadOptions } from './upload/multer.config';
 
 @Controller('meetings')
 @UseGuards(JwtAuthGuard)
@@ -67,73 +71,69 @@ export class MeetingsController {
     return this.queryBus.execute(new GetMeetingQuery(id));
   }
 
-  @Post(':id/file')
+  @Post(':id/files')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file', meetingFileUploadOptions))
-  uploadFile(
+  @UseInterceptors(
+    FilesInterceptor('files', MAX_FILES_PER_MEETING, meetingFilesUploadOptions),
+  )
+  uploadFiles(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() request: AuthenticatedRequest,
   ) {
     return this.commandBus.execute(
-      new UploadMeetingFileCommand(id, request.user.userId, file),
+      new UploadMeetingFileCommand(id, request.user.userId, files ?? []),
     );
   }
 
-  @Get(':id/file')
-  async getFileMetadata(@Param('id') id: string) {
-    const meeting = await this.queryBus.execute<
-      GetMeetingFileQuery,
-      MeetingFileRecord
-    >(new GetMeetingFileQuery(id));
-
-    return {
-      fileOriginalName: meeting.fileOriginalName,
-      fileMimeType: meeting.fileMimeType,
-      fileSize: meeting.fileSize,
-      fileUploadedAt: meeting.fileUploadedAt,
-      transcriptionStatus: meeting.transcriptionStatus,
-      transcriptionText: meeting.transcriptionText,
-    };
+  @Get(':id/files')
+  listFiles(@Param('id') id: string) {
+    return this.queryBus.execute(new ListMeetingFilesQuery(id));
   }
 
-  @Get(':id/file/download')
+  @Get(':id/files/:fileId/download')
   async downloadFile(
     @Param('id') id: string,
+    @Param('fileId') fileId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const meeting = await this.queryBus.execute<
+    const file = await this.queryBus.execute<
       GetMeetingFileQuery,
-      MeetingFileRecord
-    >(new GetMeetingFileQuery(id));
+      MeetingFileDownloadRecord
+    >(new GetMeetingFileQuery(id, fileId));
 
     res.set({
-      'Content-Type': meeting.fileMimeType,
+      'Content-Type': file.mimeType,
       'Content-Disposition': buildAttachmentContentDisposition(
-        meeting.fileOriginalName,
+        file.originalName,
       ),
     });
 
     return new StreamableFile(
-      createReadStream(join(getUploadDir(), meeting.filePath)),
+      createReadStream(join(getUploadDir(), file.filePath)),
     );
   }
 
-  @Delete(':id/file')
-  deleteFile(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
-    return this.commandBus.execute(
-      new DeleteMeetingFileCommand(id, request.user.userId),
-    );
-  }
-
-  @Post(':id/transcription/refresh')
-  @HttpCode(HttpStatus.OK)
-  refreshTranscription(
+  @Delete(':id/files/:fileId')
+  deleteFile(
     @Param('id') id: string,
+    @Param('fileId') fileId: string,
     @Req() request: AuthenticatedRequest,
   ) {
     return this.commandBus.execute(
-      new RefreshTranscriptionCommand(id, request.user.userId),
+      new DeleteMeetingFileCommand(id, fileId, request.user.userId),
+    );
+  }
+
+  @Post(':id/files/:fileId/transcription/refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshTranscription(
+    @Param('id') id: string,
+    @Param('fileId') fileId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commandBus.execute(
+      new RefreshTranscriptionCommand(id, fileId, request.user.userId),
     );
   }
 }

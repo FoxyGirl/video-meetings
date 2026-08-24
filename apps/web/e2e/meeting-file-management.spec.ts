@@ -35,10 +35,10 @@ async function createMeetingWithFile(
   }
   const { id } = (await createRes.json()) as { id: string };
 
-  const uploadRes = await request.post(`${API_URL}/meetings/${id}/file`, {
+  const uploadRes = await request.post(`${API_URL}/meetings/${id}/files`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     multipart: {
-      file: {
+      files: {
         name: 'test-recording.mp3',
         mimeType: 'audio/mpeg',
         buffer: await fs.readFile(VALID_FIXTURE),

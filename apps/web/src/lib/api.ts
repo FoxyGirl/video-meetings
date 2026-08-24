@@ -256,48 +256,59 @@ export type TranscriptionStatus =
   'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 export interface MeetingFileMetadata {
-  fileOriginalName: string;
-  fileMimeType: string;
-  fileSize: number;
-  fileUploadedAt: string;
-  // Independently nullable from the four fields above — a file can exist
-  // with no transcription state yet (e.g. transcription disabled, or the
-  // row predates the transcription migration).
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+  // Independently nullable from the fields above — a file can exist with
+  // no transcription state yet (e.g. transcription disabled, or the row
+  // predates the transcription migration).
   transcriptionStatus: TranscriptionStatus | null;
   transcriptionText: string | null;
 }
 
-// Resolves to null when the meeting has no stored file (404) rather than
-// throwing — callers only need to distinguish "no file yet" from a real
-// error, and by the time this is called the meeting's own existence has
-// already been confirmed via getMeeting.
-export async function getMeetingFile(
+// Lists every file stored on the meeting, ordered by upload time — open to
+// any authenticated user, same access rule the old single-file metadata
+// endpoint used.
+export async function listMeetingFiles(
   id: string,
-): Promise<MeetingFileMetadata | null> {
+): Promise<MeetingFileMetadata[]> {
   try {
-    const res = await http.get<MeetingFileMetadata>(`/meetings/${id}/file`);
+    const res = await http.get<MeetingFileMetadata[]>(`/meetings/${id}/files`);
     return res.data;
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return null;
-    }
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
     });
   }
 }
 
+// The UI still treats a meeting as having at most one recording, so this
+// resolves to the first (oldest) stored file, or null if none exists yet —
+// unlike the old single-file endpoint, a meeting with no files is a normal
+// 200 with an empty list, not a 404, so there's no error case to swallow
+// here.
+export async function getMeetingFile(
+  id: string,
+): Promise<MeetingFileMetadata | null> {
+  const files = await listMeetingFiles(id);
+  return files[0] ?? null;
+}
+
 // Downloads via a Bearer-authenticated GET rather than a plain <a href> —
 // browsers don't attach custom headers to normal navigations, so the bytes
 // are fetched as a blob and saved through a short-lived object URL instead.
 export async function downloadMeetingFile(
-  id: string,
+  meetingId: string,
+  fileId: string,
   fileName: string,
 ): Promise<void> {
   try {
-    const res = await http.get<Blob>(`/meetings/${id}/file/download`, {
-      responseType: 'blob',
-    });
+    const res = await http.get<Blob>(
+      `/meetings/${meetingId}/files/${fileId}/download`,
+      { responseType: 'blob' },
+    );
     const url = URL.createObjectURL(res.data);
     const link = document.createElement('a');
     link.href = url;
@@ -312,9 +323,12 @@ export async function downloadMeetingFile(
   }
 }
 
-export async function deleteMeetingFile(id: string): Promise<void> {
+export async function deleteMeetingFile(
+  meetingId: string,
+  fileId: string,
+): Promise<void> {
   try {
-    await http.delete(`/meetings/${id}/file`);
+    await http.delete(`/meetings/${meetingId}/files/${fileId}`);
   } catch (error) {
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
@@ -335,15 +349,16 @@ export interface RefreshTranscriptionResult {
 // returns whatever the true current state actually is instead of a
 // fabricated PENDING — the caller needs that same value, not a guess, to
 // avoid getting stuck showing "PENDING" for a run that was never actually
-// dispatched. The raw response carries the full Meeting row (including
-// internal fields like filePath); only the two transcription fields are
+// dispatched. The response is the file's own metadata now (file-scoped
+// route), not a whole Meeting row; only the two transcription fields are
 // picked out here, mirroring MeetingFileMetadata's shape.
 export async function refreshTranscription(
-  id: string,
+  meetingId: string,
+  fileId: string,
 ): Promise<RefreshTranscriptionResult> {
   try {
     const res = await http.post<RefreshTranscriptionResult>(
-      `/meetings/${id}/transcription/refresh`,
+      `/meetings/${meetingId}/files/${fileId}/transcription/refresh`,
     );
     return {
       transcriptionStatus: res.data.transcriptionStatus,
@@ -357,18 +372,25 @@ export async function refreshTranscription(
   }
 }
 
+interface UploadBatchResult {
+  accepted: MeetingFileMetadata[];
+  rejected: { originalName: string; reason: string }[];
+}
+
 export async function uploadMeetingFile(
   id: string,
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<MeetingFileMetadata> {
   const form = new FormData();
-  // Field name must match the server's FileInterceptor('file', ...).
-  form.append('file', file);
+  // Field name must match the server's FilesInterceptor('files', ...) — the
+  // endpoint accepts a batch even though this call always sends exactly
+  // one file, matching the UI's current single-recording model.
+  form.append('files', file);
 
   try {
-    const res = await http.post<MeetingFileMetadata>(
-      `/meetings/${id}/file`,
+    const res = await http.post<UploadBatchResult>(
+      `/meetings/${id}/files`,
       form,
       {
         onUploadProgress: (event) => {
@@ -380,8 +402,23 @@ export async function uploadMeetingFile(
         },
       },
     );
-    return res.data;
+    const [accepted] = res.data.accepted;
+    if (accepted) {
+      return accepted;
+    }
+    // The request itself succeeded (2xx — a batch upload reports per-file
+    // outcomes in the body instead of failing the whole request), but the
+    // one file sent here was rejected. Surface its own specific reason the
+    // same way a genuine 400 response would.
+    const [rejection] = res.data.rejected;
+    throw new ApiError(
+      rejection?.reason ?? 'Upload failed. Please try again.',
+      400,
+    );
   } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
       404: 'This meeting no longer exists or you are not its organizer.',
