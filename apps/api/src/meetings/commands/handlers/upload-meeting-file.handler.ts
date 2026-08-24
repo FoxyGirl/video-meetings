@@ -8,7 +8,10 @@ import {
   toMeetingFileMetadata,
 } from '../../meeting-file.types';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
-import { MAX_FILES_PER_MEETING } from '../../upload/file-upload.constants';
+import {
+  MAX_FILES_PER_MEETING,
+  MAX_UPLOAD_FILE_SIZE_BYTES,
+} from '../../upload/file-upload.constants';
 import { validateFileType } from '../../upload/validate-file-type';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
@@ -43,18 +46,25 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
       throw new BadRequestException('No files were provided.');
     }
 
-    // Per-file type validation up front — a pure check against the
-    // multer-provided originalname/mimetype, no DB state needed. Unlike the
-    // old single-file route, meetingFilesUploadOptions has no fileFilter of
-    // its own (see its own comment), so this is the first point any file in
-    // the batch is actually validated; a rejection here never aborts the
-    // rest of the batch.
+    // Per-file type + size validation up front — pure checks against the
+    // multer-provided originalname/mimetype/size, no DB state needed. Unlike
+    // the old single-file route, meetingFilesUploadOptions has no
+    // fileFilter of its own (see its own comment) and its limits.fileSize is
+    // deliberately looser than MAX_UPLOAD_FILE_SIZE_BYTES (see that
+    // constant's own comment), so this is the first point any file in the
+    // batch is actually validated against the real per-file rules; a
+    // rejection here never aborts the rest of the batch.
     const rejected: RejectedFile[] = [];
     const typeValid: Express.Multer.File[] = [];
 
     for (const file of files) {
       try {
         validateFileType(file.originalname, file.mimetype);
+        if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+          throw new BadRequestException(
+            `File exceeds the maximum size of ${Math.round(MAX_UPLOAD_FILE_SIZE_BYTES / (1024 * 1024))} MB.`,
+          );
+        }
         typeValid.push(file);
       } catch (error) {
         rejected.push({

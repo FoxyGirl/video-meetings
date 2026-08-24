@@ -190,6 +190,40 @@ describe('Meeting multi-file upload (e2e)', () => {
       expect(files[0].originalName).toBe('good.mp4');
     });
 
+    it('persists only the within-limit file from a mixed valid/oversized batch, reporting the oversized one individually', async () => {
+      const { accessToken } = await registerUser();
+      const meetingId = await createMeeting(accessToken);
+      // .env.test lowers MAX_UPLOAD_FILE_SIZE_BYTES to 1 MB specifically so
+      // this can trip the real per-file limit without allocating hundreds
+      // of MB — see that file's own comment. 1.5 MB stays comfortably under
+      // Multer's own (looser) MULTER_FILE_SIZE_HARD_LIMIT_BYTES ceiling, so
+      // it streams to disk fully and reaches the handler's authoritative
+      // check instead of aborting the whole request.
+      const OVERSIZED_BYTES = 1.5 * 1024 * 1024;
+
+      const response = await uploadRequest(meetingId, accessToken)
+        .attach('files', Buffer.from('a real video'), {
+          filename: 'good.mp4',
+          contentType: 'video/mp4',
+        })
+        .attach('files', Buffer.alloc(OVERSIZED_BYTES), {
+          filename: 'too-big.mp4',
+          contentType: 'video/mp4',
+        })
+        .expect(201);
+
+      const body = response.body as UploadBatchResponseBody;
+      expect(body.accepted).toHaveLength(1);
+      expect(body.accepted[0].originalName).toBe('good.mp4');
+      expect(body.rejected).toHaveLength(1);
+      expect(body.rejected[0].originalName).toBe('too-big.mp4');
+      expect(body.rejected[0].reason).toContain('exceeds the maximum size');
+
+      const files = await listFiles(meetingId, accessToken);
+      expect(files).toHaveLength(1);
+      expect(files[0].originalName).toBe('good.mp4');
+    });
+
     it('rejects an upload past the 10-file cap and leaves the count at 10', async () => {
       const { accessToken } = await registerUser();
       const meetingId = await createMeeting(accessToken);

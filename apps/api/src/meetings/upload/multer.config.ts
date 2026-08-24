@@ -3,7 +3,7 @@ import { extname } from 'node:path';
 import { diskStorage } from 'multer';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import {
-  MAX_UPLOAD_FILE_SIZE_BYTES,
+  MULTER_FILE_SIZE_HARD_LIMIT_BYTES,
   getUploadDir,
 } from './file-upload.constants';
 
@@ -27,7 +27,11 @@ const storage = diskStorage({
 // whole request), so every file is written to disk unconditionally here and
 // type-validated authoritatively, per file, in UploadMeetingFileHandler,
 // which also cleans up the on-disk bytes for whichever files it rejects.
+//
+// limits.fileSize uses the looser MULTER_FILE_SIZE_HARD_LIMIT_BYTES, not the
+// real per-file cap — see that constant's own comment for why the real cap
+// is instead enforced (batch-tolerantly) in UploadMeetingFileHandler.
 export const meetingFilesUploadOptions: MulterOptions = {
   storage,
-  limits: { fileSize: MAX_UPLOAD_FILE_SIZE_BYTES },
+  limits: { fileSize: MULTER_FILE_SIZE_HARD_LIMIT_BYTES },
 };

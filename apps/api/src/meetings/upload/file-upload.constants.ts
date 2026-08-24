@@ -42,6 +42,24 @@ export function getUploadDir(): string {
 export const MAX_UPLOAD_FILE_SIZE_BYTES =
   Number(process.env.MAX_UPLOAD_FILE_SIZE_BYTES) || 500 * 1024 * 1024;
 
+// Multer/busboy's own limits.fileSize can't be made batch-tolerant the way
+// validateFileType is: once a file's streamed bytes exceed it, Multer aborts
+// the *entire* multipart request immediately (there's no equivalent of
+// fileFilter's callback(null, false) for a mid-stream size violation), so it
+// can never reject just the one oversized file while letting the rest of a
+// batch through. Setting it to MAX_UPLOAD_FILE_SIZE_BYTES itself would mean
+// any single oversized file in a batch fails every other (valid) file in the
+// same request too — the PRD's "wrong type/too large" mixed-batch scenario
+// requires the too-large file to be reported individually instead. This
+// constant is deliberately looser: a generous multiple of the real per-file
+// limit, so a moderately-oversized file (the realistic, tested case) still
+// completes streaming to disk and reaches UploadMeetingFileHandler's own
+// authoritative per-file size check (batch-tolerant, same as
+// validateFileType) instead of aborting the whole request — only a truly
+// extreme single file trips this ceiling, which is an acceptable DoS
+// backstop to fail the whole request over.
+export const MULTER_FILE_SIZE_HARD_LIMIT_BYTES = MAX_UPLOAD_FILE_SIZE_BYTES * 4;
+
 // Fixed for this iteration, not configurable per environment — see the PRD's
 // "Non-goals". Enforced authoritatively in UploadMeetingFileHandler (an
 // existing-count + incoming-batch check inside the same locked transaction
