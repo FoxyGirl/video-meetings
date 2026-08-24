@@ -93,6 +93,10 @@ test.describe('meeting transcription status and transcript', () => {
     await expect(page.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
+    // The transcript starts collapsed behind a toggle (see
+    // "a completed transcript starts collapsed..." below) — expand it
+    // before asserting on its text.
+    await page.getByRole('button', { name: 'Show transcript' }).click();
     await expect(page.getByText(/fellow Americans/i)).toBeVisible();
 
     const viewerEmail = `e2e-transcript-viewer-${Date.now()}@video-meetings.local`;
@@ -108,6 +112,10 @@ test.describe('meeting transcription status and transcript', () => {
       await expect(
         viewerPage.getByText('Completed', { exact: true }),
       ).toBeVisible();
+      // A separate MeetingTranscription instance (this viewer's own page),
+      // so it starts collapsed too regardless of the organizer's toggle
+      // state above.
+      await viewerPage.getByRole('button', { name: 'Show transcript' }).click();
       await expect(viewerPage.getByText(/fellow Americans/i)).toBeVisible();
     } finally {
       await viewerContext.close();
@@ -138,6 +146,10 @@ test.describe('meeting transcription status and transcript', () => {
     await expect(page.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
+    // Expand once — the toggle state is local to this MeetingTranscription
+    // instance and isn't reset by a refresh (the component never remounts),
+    // so it stays expanded through the second "Completed" below too.
+    await page.getByRole('button', { name: 'Show transcript' }).click();
     await expect(page.getByText(/fellow Americans/i)).toBeVisible();
 
     const refreshButton = page.getByRole('button', {
