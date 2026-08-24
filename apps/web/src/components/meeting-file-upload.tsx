@@ -276,9 +276,9 @@ export function MeetingFileUpload({
             className="flex flex-col gap-1 text-sm"
             data-testid="staged-file-list"
           >
-            {stagedFiles.map(({ file, error }) => (
+            {stagedFiles.map(({ file, error }, index) => (
               <li
-                key={file.name}
+                key={`${index}-${file.name}`}
                 className={
                   error
                     ? 'text-red-600 dark:text-red-400'
@@ -337,9 +337,9 @@ export function MeetingFileUpload({
                 {file.originalName} uploaded successfully
               </li>
             ))}
-            {batchResult.rejected.map((rejection) => (
+            {batchResult.rejected.map((rejection, index) => (
               <li
-                key={rejection.originalName}
+                key={`${index}-${rejection.originalName}`}
                 className="flex items-center gap-2 text-red-600 dark:text-red-400"
               >
                 <XCircle size={16} />
