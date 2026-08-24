@@ -9,17 +9,23 @@ import {
   Spinner,
   toast,
 } from '@heroui/react';
-import { Upload } from 'lucide-react';
+import { CheckCircle2, Upload, XCircle } from 'lucide-react';
 import {
   ApiError,
-  uploadMeetingFile,
+  uploadMeetingFiles,
   type MeetingFileMetadata,
+  type UploadBatchResult,
 } from '@/lib/api';
 import { ACCEPTED_FILE_TYPES, validateFile } from '@/lib/file-types';
 
+interface StagedFile {
+  file: File;
+  error: string | null;
+}
+
 interface MeetingFileUploadProps {
   meetingId: string;
-  onUploaded: (metadata: MeetingFileMetadata) => void;
+  onUploaded: (files: MeetingFileMetadata[]) => void;
   onSessionExpired: () => void;
 }
 
@@ -28,9 +34,12 @@ export function MeetingFileUpload({
   onUploaded,
   onSessionExpired,
 }: MeetingFileUploadProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
+  const [dropError, setDropError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [batchResult, setBatchResult] = useState<UploadBatchResult | null>(
+    null,
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -40,14 +49,17 @@ export function MeetingFileUpload({
   // input or hint text nested inside the zone.
   const dragCounter = useRef(0);
 
-  const applySelectedFile = (selected: File | null) => {
-    setFile(selected);
+  const applySelectedFiles = (selected: File[]) => {
+    setStagedFiles(
+      selected.map((file) => ({ file, error: validateFile(file) })),
+    );
+    setDropError(null);
     setUploadError(null);
-    setValidationError(selected ? validateFile(selected) : null);
+    setBatchResult(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    applySelectedFile(e.target.files?.[0] ?? null);
+    applySelectedFiles(Array.from(e.target.files ?? []));
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
@@ -86,31 +98,90 @@ export function MeetingFileUpload({
     }
 
     const { files } = e.dataTransfer;
-    if (files.length !== 1) {
-      setFile(null);
+    if (files.length === 0) {
+      setStagedFiles([]);
       setUploadError(null);
-      setValidationError(
-        files.length === 0
-          ? 'No file detected in the drop. Please drop a single file.'
-          : 'Please drop a single file.',
+      setBatchResult(null);
+      setDropError(
+        'No files detected in the drop. Please drop one or more files.',
       );
       return;
     }
-    applySelectedFile(files[0]);
+    applySelectedFiles(Array.from(files));
   };
 
   const handleUpload = async () => {
-    if (!file || validationError) {
+    const validFiles = stagedFiles
+      .filter((staged) => !staged.error)
+      .map((staged) => staged.file);
+    const clientRejected = stagedFiles
+      .filter((staged) => staged.error)
+      .map((staged) => ({
+        originalName: staged.file.name,
+        reason: staged.error as string,
+      }));
+
+    // Nothing staged passed client-side validation — nothing worth a round
+    // trip, but the rejections still deserve the same per-file feedback a
+    // server response would give.
+    if (validFiles.length === 0) {
+      setBatchResult({ accepted: [], rejected: clientRejected });
+      setStagedFiles([]);
       return;
     }
 
     setIsUploading(true);
     setUploadError(null);
+    setBatchResult(null);
     setProgress(0);
     try {
-      const metadata = await uploadMeetingFile(meetingId, file, setProgress);
-      onUploaded(metadata);
-      toast.success('Recording uploaded', { description: file.name });
+      const result = await uploadMeetingFiles(
+        meetingId,
+        validFiles,
+        setProgress,
+      );
+      const combined: UploadBatchResult = {
+        accepted: result.accepted,
+        rejected: [...clientRejected, ...result.rejected],
+      };
+      setBatchResult(combined);
+      setStagedFiles([]);
+      if (combined.accepted.length > 0) {
+        onUploaded(combined.accepted);
+      }
+      // One combined toast (not just the inline list, and not one toast per
+      // outcome) — accepting even one file in this batch can push the
+      // meeting to the 10-file cap, which unmounts this whole card on the
+      // very next render (the page only renders it below the cap), so a
+      // rejection reason shown only inline would vanish before anyone
+      // could read it; a second, separate toast risks the toast library
+      // replacing the first before it's seen.
+      if (combined.accepted.length > 0 || combined.rejected.length > 0) {
+        const acceptedSummary =
+          combined.accepted.length === 1
+            ? 'Recording uploaded'
+            : combined.accepted.length > 1
+              ? `${combined.accepted.length} recordings uploaded`
+              : null;
+        const rejectedSummary =
+          combined.rejected.length === 1
+            ? 'One file was rejected'
+            : combined.rejected.length > 1
+              ? `${combined.rejected.length} files were rejected`
+              : null;
+        const title = [acceptedSummary, rejectedSummary]
+          .filter((part): part is string => part !== null)
+          .join(', ');
+        const description = [
+          ...combined.accepted.map((file) => file.originalName),
+          ...combined.rejected.map(
+            (rejection) => `${rejection.originalName}: ${rejection.reason}`,
+          ),
+        ].join('; ');
+        const notify =
+          combined.rejected.length > 0 ? toast.danger : toast.success;
+        notify(title, { description });
+      }
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         onSessionExpired();
@@ -126,12 +197,14 @@ export function MeetingFileUpload({
     }
   };
 
+  const hasUploadableFile = stagedFiles.some((staged) => !staged.error);
+
   return (
     <Card>
       <Card.Header>
         <Card.Title>Upload a recording</Card.Title>
         <Card.Description>
-          This meeting doesn’t have a stored recording yet.
+          Upload one or more meeting recordings.
         </Card.Description>
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
@@ -153,21 +226,42 @@ export function MeetingFileUpload({
             accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
             className="block w-full text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 dark:text-zinc-400 dark:file:bg-indigo-950 dark:file:text-indigo-300 dark:hover:file:bg-indigo-900"
             disabled={isUploading}
+            multiple
             type="file"
             onChange={handleFileChange}
           />
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            or drag and drop a file here
+            or drag and drop one or more files here
           </p>
         </div>
 
-        {validationError ? (
+        {dropError ? (
           <Alert status="danger">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>{validationError}</Alert.Title>
+              <Alert.Title>{dropError}</Alert.Title>
             </Alert.Content>
           </Alert>
+        ) : null}
+
+        {stagedFiles.length > 0 ? (
+          <ul
+            className="flex flex-col gap-1 text-sm"
+            data-testid="staged-file-list"
+          >
+            {stagedFiles.map(({ file, error }) => (
+              <li
+                key={file.name}
+                className={
+                  error
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-zinc-600 dark:text-zinc-400'
+                }
+              >
+                {error ? `${file.name}: ${error}` : file.name}
+              </li>
+            ))}
+          </ul>
         ) : null}
 
         {uploadError ? (
@@ -190,7 +284,7 @@ export function MeetingFileUpload({
 
         <Button
           fullWidth
-          isDisabled={!file || !!validationError}
+          isDisabled={stagedFiles.length === 0 || !hasUploadableFile}
           isPending={isUploading}
           onPress={handleUpload}
         >
@@ -201,6 +295,32 @@ export function MeetingFileUpload({
           )}
           {isUploading ? 'Uploading…' : 'Upload'}
         </Button>
+
+        {batchResult ? (
+          <ul
+            className="flex flex-col gap-1 text-sm"
+            data-testid="upload-batch-result"
+          >
+            {batchResult.accepted.map((file) => (
+              <li
+                key={file.id}
+                className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"
+              >
+                <CheckCircle2 size={16} />
+                {file.originalName} uploaded successfully
+              </li>
+            ))}
+            {batchResult.rejected.map((rejection) => (
+              <li
+                key={rejection.originalName}
+                className="flex items-center gap-2 text-red-600 dark:text-red-400"
+              >
+                <XCircle size={16} />
+                {rejection.originalName}: {rejection.reason}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </Card.Content>
     </Card>
   );
