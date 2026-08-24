@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Chip,
+  Disclosure,
   Spinner,
   type ChipVariants,
 } from '@heroui/react';
@@ -66,6 +67,10 @@ export function MeetingTranscription({
   const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  // Collapsed by default whenever a transcript exists — local to this one
+  // instance, so expanding one file's transcript never affects another
+  // file's MeetingTranscription (each is its own component instance).
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -239,20 +244,36 @@ export function MeetingTranscription({
         ) : null}
 
         {status === 'COMPLETED' && text !== null ? (
-          text.length > 0 ? (
-            <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-              {text}
-            </p>
-          ) : (
-            // Whisper can genuinely produce an empty transcript (e.g. a
-            // clip with no detectable speech) — an empty string here is
-            // "Completed" behaving correctly, not a still-loading or
-            // broken state, so it needs its own explicit message rather
-            // than silently rendering nothing.
-            <p className="text-sm italic text-zinc-500 dark:text-zinc-500">
-              No speech detected.
-            </p>
-          )
+          // Only the transcript text itself collapses — the status chip,
+          // spinner, Refresh button, and Failed alert above/below this are
+          // all outside the Disclosure and stay visible regardless.
+          <Disclosure isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+            <Disclosure.Heading>
+              <Button slot="trigger" variant="ghost">
+                {isExpanded ? 'Hide transcript' : 'Show transcript'}
+                <Disclosure.Indicator />
+              </Button>
+            </Disclosure.Heading>
+            <Disclosure.Content>
+              <Disclosure.Body>
+                {text.length > 0 ? (
+                  <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+                    {text}
+                  </p>
+                ) : (
+                  // Whisper can genuinely produce an empty transcript (e.g.
+                  // a clip with no detectable speech) — an empty string
+                  // here is "Completed" behaving correctly, not a
+                  // still-loading or broken state, so it needs its own
+                  // explicit message rather than silently rendering
+                  // nothing.
+                  <p className="text-sm italic text-zinc-500 dark:text-zinc-500">
+                    No speech detected.
+                  </p>
+                )}
+              </Disclosure.Body>
+            </Disclosure.Content>
+          </Disclosure>
         ) : null}
 
         {status === 'FAILED' ? (
