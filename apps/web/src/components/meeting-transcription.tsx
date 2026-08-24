@@ -12,7 +12,7 @@ import {
 import { RefreshCw } from 'lucide-react';
 import {
   ApiError,
-  getMeetingFile,
+  listMeetingFiles,
   refreshTranscription,
   type TranscriptionStatus,
 } from '@/lib/api';
@@ -118,14 +118,19 @@ export function MeetingTranscription({
     let cancelled = false;
 
     const interval = setInterval(() => {
-      getMeetingFile(meetingId)
-        .then((file) => {
+      listMeetingFiles(meetingId)
+        .then((files) => {
           if (cancelled) {
             return;
           }
-          // A null result (file deleted mid-poll) just stops polling —
-          // the page's own delete flow already handles un-rendering this
-          // component when it's the organizer doing the deleting.
+          // A meeting can hold up to 10 files now, so this has to find its
+          // own fileId in the list rather than assume files[0] — otherwise
+          // a meeting with more than one file would silently poll (and
+          // display) some other file's status. A missing result (this file
+          // deleted mid-poll) just stops polling — the page's own delete
+          // flow already handles un-rendering this component when it's the
+          // organizer doing the deleting.
+          const file = files.find((f) => f.id === fileId) ?? null;
           if (file === null) {
             clearInterval(interval);
             return;
@@ -154,7 +159,7 @@ export function MeetingTranscription({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [status, meetingId, onSessionExpired]);
+  }, [status, meetingId, fileId, onSessionExpired]);
 
   // A null status means "no transcription run has ever started for this
   // file yet" (e.g. transcription was disabled server-side at upload

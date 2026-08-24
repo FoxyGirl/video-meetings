@@ -158,8 +158,8 @@ export async function uploadAvatar(
 // same reasoning as downloadMeetingFile: the browser won't attach custom
 // headers to a plain <img src>, so the bytes come back as a Blob and the
 // caller renders it via an object URL instead. Resolves null on a 404
-// ("no avatar yet"), same convention as getMeetingFile, rather than
-// throwing — callers should fall back to the initials placeholder.
+// ("no avatar yet") rather than throwing — callers should fall back to the
+// initials placeholder.
 export async function getAvatarBlob(): Promise<Blob | null> {
   try {
     const res = await http.get<Blob>('/users/me/avatar', {
@@ -268,32 +268,45 @@ export interface MeetingFileMetadata {
   transcriptionText: string | null;
 }
 
+// A meeting can have several files transcribing at once, each with its own
+// MeetingTranscription instance polling this on the same 3s cadence — since
+// they're all mounted together from the same files.map in page.tsx, their
+// ticks land in the same window far more often than not. Coalescing
+// concurrent calls for the same meeting id into one shared in-flight
+// request/response avoids sending N identical requests per tick for what's
+// always the same full-list payload.
+const inFlightListMeetingFiles = new Map<
+  string,
+  Promise<MeetingFileMetadata[]>
+>();
+
 // Lists every file stored on the meeting, ordered by upload time — open to
 // any authenticated user, same access rule the old single-file metadata
 // endpoint used.
 export async function listMeetingFiles(
   id: string,
 ): Promise<MeetingFileMetadata[]> {
-  try {
-    const res = await http.get<MeetingFileMetadata[]>(`/meetings/${id}/files`);
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
+  const inFlight = inFlightListMeetingFiles.get(id);
+  if (inFlight) {
+    return inFlight;
   }
-}
 
-// The UI still treats a meeting as having at most one recording, so this
-// resolves to the first (oldest) stored file, or null if none exists yet —
-// unlike the old single-file endpoint, a meeting with no files is a normal
-// 200 with an empty list, not a 404, so there's no error case to swallow
-// here.
-export async function getMeetingFile(
-  id: string,
-): Promise<MeetingFileMetadata | null> {
-  const files = await listMeetingFiles(id);
-  return files[0] ?? null;
+  const request = (async () => {
+    try {
+      const res = await http.get<MeetingFileMetadata[]>(
+        `/meetings/${id}/files`,
+      );
+      return res.data;
+    } catch (error) {
+      throw toApiError(error, {
+        401: 'Your session has expired. Please sign in again.',
+      });
+    } finally {
+      inFlightListMeetingFiles.delete(id);
+    }
+  })();
+  inFlightListMeetingFiles.set(id, request);
+  return request;
 }
 
 // Downloads via a Bearer-authenticated GET rather than a plain <a href> —
@@ -372,21 +385,27 @@ export async function refreshTranscription(
   }
 }
 
-interface UploadBatchResult {
+export interface UploadBatchResult {
   accepted: MeetingFileMetadata[];
   rejected: { originalName: string; reason: string }[];
 }
 
-export async function uploadMeetingFile(
+// Sends every file in one multipart request (field name `files`, repeated —
+// matches the server's FilesInterceptor('files', MAX_FILES_PER_MEETING,
+// ...)) and returns the full per-file outcome rather than unwrapping to a
+// single file: a batch response is always a 2xx with accepted/rejected
+// arrays, even when every file was rejected (e.g. the 10-file cap), so
+// there's no single "the request failed" case to throw for here — that's
+// left to the caller to render per file.
+export async function uploadMeetingFiles(
   id: string,
-  file: File,
+  files: File[],
   onProgress?: (percent: number) => void,
-): Promise<MeetingFileMetadata> {
+): Promise<UploadBatchResult> {
   const form = new FormData();
-  // Field name must match the server's FilesInterceptor('files', ...) — the
-  // endpoint accepts a batch even though this call always sends exactly
-  // one file, matching the UI's current single-recording model.
-  form.append('files', file);
+  for (const file of files) {
+    form.append('files', file);
+  }
 
   try {
     const res = await http.post<UploadBatchResult>(
@@ -402,23 +421,8 @@ export async function uploadMeetingFile(
         },
       },
     );
-    const [accepted] = res.data.accepted;
-    if (accepted) {
-      return accepted;
-    }
-    // The request itself succeeded (2xx — a batch upload reports per-file
-    // outcomes in the body instead of failing the whole request), but the
-    // one file sent here was rejected. Surface its own specific reason the
-    // same way a genuine 400 response would.
-    const [rejection] = res.data.rejected;
-    throw new ApiError(
-      rejection?.reason ?? 'Upload failed. Please try again.',
-      400,
-    );
+    return res.data;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
       404: 'This meeting no longer exists or you are not its organizer.',

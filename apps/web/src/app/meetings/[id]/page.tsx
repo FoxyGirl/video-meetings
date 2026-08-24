@@ -11,11 +11,12 @@ import { MeetingTranscription } from '@/components/meeting-transcription';
 import {
   ApiError,
   getMeeting,
-  getMeetingFile,
+  listMeetingFiles,
   type Meeting,
   type MeetingFileMetadata,
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { MAX_FILES_PER_MEETING } from '@/lib/file-types';
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,10 +24,8 @@ export default function MeetingDetailPage() {
   const { auth, userId, isLoading, logout } = useAuth();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [meetingError, setMeetingError] = useState<string | null>(null);
-  const [meetingFile, setMeetingFile] = useState<MeetingFileMetadata | null>(
-    null,
-  );
-  const [isMeetingFileLoading, setIsMeetingFileLoading] = useState(true);
+  const [files, setFiles] = useState<MeetingFileMetadata[]>([]);
+  const [isFilesLoading, setIsFilesLoading] = useState(true);
   const isMeetingLoading = meeting === null && meetingError === null;
 
   const handleSessionExpired = useCallback(() => {
@@ -72,9 +71,9 @@ export default function MeetingDetailPage() {
             ? error.message
             : 'Failed to load this meeting. Please try again.',
         );
-        // There will never be a meeting to fetch a file for, so this
+        // There will never be a meeting to fetch files for, so this
         // otherwise never resolves out of its initial loading state.
-        setIsMeetingFileLoading(false);
+        setIsFilesLoading(false);
       });
 
     return () => {
@@ -89,10 +88,10 @@ export default function MeetingDetailPage() {
 
     let cancelled = false;
 
-    getMeetingFile(meeting.id)
+    listMeetingFiles(meeting.id)
       .then((data) => {
         if (!cancelled) {
-          setMeetingFile(data);
+          setFiles(data);
         }
       })
       .catch((error: unknown) => {
@@ -105,7 +104,7 @@ export default function MeetingDetailPage() {
       })
       .finally(() => {
         if (!cancelled) {
-          setIsMeetingFileLoading(false);
+          setIsFilesLoading(false);
         }
       });
 
@@ -113,6 +112,14 @@ export default function MeetingDetailPage() {
       cancelled = true;
     };
   }, [meeting, auth, handleSessionExpired]);
+
+  const handleFileDeleted = (fileId: string) => {
+    setFiles((prev) => prev.filter((file) => file.id !== fileId));
+  };
+
+  const handleFilesUploaded = (uploaded: MeetingFileMetadata[]) => {
+    setFiles((prev) => [...prev, ...uploaded]);
+  };
 
   if (isLoading || !auth) {
     return (
@@ -123,6 +130,7 @@ export default function MeetingDetailPage() {
   }
 
   const isOrganizer = meeting !== null && meeting.organizerId === userId;
+  const isBelowFileCap = files.length < MAX_FILES_PER_MEETING;
 
   return (
     <div className="flex flex-1 flex-col bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
@@ -183,44 +191,54 @@ export default function MeetingDetailPage() {
           )}
         </div>
 
-        {meeting && !isMeetingFileLoading ? (
-          meetingFile ? (
-            <>
-              <MeetingFileDisplay
-                file={meetingFile}
-                isOrganizer={isOrganizer}
-                meetingId={meeting.id}
-                onDeleted={() => setMeetingFile(null)}
-                onSessionExpired={handleSessionExpired}
-              />
-              <MeetingTranscription
-                meetingId={meeting.id}
-                fileId={meetingFile.id}
-                status={meetingFile.transcriptionStatus}
-                text={meetingFile.transcriptionText}
-                isOrganizer={isOrganizer}
-                onSessionExpired={handleSessionExpired}
-              />
-            </>
-          ) : isOrganizer ? (
-            <MeetingFileUpload
-              meetingId={meeting.id}
-              onSessionExpired={handleSessionExpired}
-              onUploaded={setMeetingFile}
-            />
-          ) : (
-            <Card>
-              <Card.Content className="flex flex-col items-center gap-2 py-8 text-center">
-                <FileQuestion
-                  className="text-zinc-400 dark:text-zinc-600"
-                  size={32}
+        {meeting && !isFilesLoading ? (
+          <>
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className="flex flex-col gap-6"
+                data-testid={`meeting-file-${file.id}`}
+              >
+                <MeetingFileDisplay
+                  file={file}
+                  isOrganizer={isOrganizer}
+                  meetingId={meeting.id}
+                  onDeleted={() => handleFileDeleted(file.id)}
+                  onSessionExpired={handleSessionExpired}
                 />
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  No recording yet.
-                </p>
-              </Card.Content>
-            </Card>
-          )
+                <MeetingTranscription
+                  fileId={file.id}
+                  isOrganizer={isOrganizer}
+                  meetingId={meeting.id}
+                  status={file.transcriptionStatus}
+                  text={file.transcriptionText}
+                  onSessionExpired={handleSessionExpired}
+                />
+              </div>
+            ))}
+
+            {isOrganizer && isBelowFileCap ? (
+              <MeetingFileUpload
+                meetingId={meeting.id}
+                onSessionExpired={handleSessionExpired}
+                onUploaded={handleFilesUploaded}
+              />
+            ) : null}
+
+            {files.length === 0 && !isOrganizer ? (
+              <Card>
+                <Card.Content className="flex flex-col items-center gap-2 py-8 text-center">
+                  <FileQuestion
+                    className="text-zinc-400 dark:text-zinc-600"
+                    size={32}
+                  />
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    No recording yet.
+                  </p>
+                </Card.Content>
+              </Card>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

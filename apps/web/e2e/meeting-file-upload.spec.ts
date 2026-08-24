@@ -19,19 +19,23 @@ import { loginViaUi } from './ui-helpers';
 const VALID_FIXTURE = path.join(__dirname, 'fixtures', 'test-recording.mp3');
 const INVALID_FIXTURE = path.join(__dirname, 'fixtures', 'invalid-file.txt');
 const DROP_ZONE = '[data-testid="upload-drop-zone"]';
+const VALID_BYTES = fs.readFileSync(VALID_FIXTURE);
 
 // Real OS drag-and-drop isn't something Playwright can simulate directly, so
 // each helper below builds an in-browser DataTransfer (backed by actual file
 // bytes read from disk) and dispatches the corresponding drag event against
 // it — this exercises the same DataTransfer-reading code path the app uses,
-// unlike faking it via setInputFiles on the hidden <input>.
+// unlike faking it via setInputFiles on the hidden <input>. `name` lets a
+// caller give two entries built from the same underlying fixture distinct
+// filenames, needed for multi-file batches where each entry must look like
+// a genuinely different upload.
 async function buildDataTransfer(
   page: Page,
-  files: { path: string; mimeType: string }[],
+  files: { path: string; mimeType: string; name?: string }[],
 ) {
-  const payload = files.map(({ path: filePath, mimeType }) => ({
+  const payload = files.map(({ path: filePath, mimeType, name }) => ({
     bytes: [...fs.readFileSync(filePath)],
-    name: path.basename(filePath),
+    name: name ?? path.basename(filePath),
     mimeType,
   }));
   return page.evaluateHandle((entries) => {
@@ -48,7 +52,7 @@ async function buildDataTransfer(
 
 async function dropFiles(
   page: Page,
-  files: { path: string; mimeType: string }[],
+  files: { path: string; mimeType: string; name?: string }[],
 ) {
   const dataTransfer = await buildDataTransfer(page, files);
   await page.dispatchEvent(DROP_ZONE, 'drop', { dataTransfer });
@@ -79,6 +83,29 @@ async function createMeeting(
   }
   const { id } = (await res.json()) as { id: string };
   return { id, title };
+}
+
+// Seeds a single file directly through the API (multipart, same as
+// meeting-file-management.spec.ts's createMeetingWithFile) — used to get a
+// meeting to a known file count before exercising the UI, without a slow
+// batch of UI-driven uploads.
+async function uploadFileViaApi(
+  request: APIRequestContext,
+  meetingId: string,
+  accessToken: string,
+  name: string,
+) {
+  const res = await request.post(`${API_URL}/meetings/${meetingId}/files`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    multipart: {
+      files: { name, mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+    },
+  });
+  if (!res.ok()) {
+    throw new Error(
+      `Failed to seed test file via API: ${res.status()} ${await res.text()}`,
+    );
+  }
 }
 
 test.describe('meeting file upload control', () => {
@@ -115,8 +142,13 @@ test.describe('meeting file upload control', () => {
 
     await expect(page.getByText('Recording uploaded')).toBeVisible();
     await expect(
+      page.getByText('test-recording.mp3 uploaded successfully'),
+    ).toBeVisible();
+    // Below the 10-file cap, the upload control stays put instead of being
+    // replaced by the file it just accepted.
+    await expect(
       page.getByRole('heading', { name: 'Upload a recording' }),
-    ).not.toBeVisible();
+    ).toBeVisible();
   });
 
   test('rejects an invalid file type with a specific message', async ({
@@ -176,6 +208,8 @@ test.describe('meeting file upload control', () => {
     await expect(dropZone).not.toHaveClass(/border-indigo-500/);
   });
 
+  // Regression check: a single file dropped onto the zone still uploads
+  // successfully now that the zone also accepts multiple files at once.
   test('uploads a valid recording dropped onto the zone', async ({
     page,
     request,
@@ -193,11 +227,11 @@ test.describe('meeting file upload control', () => {
 
     await expect(page.getByText('Recording uploaded')).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Upload a recording' }),
-    ).not.toBeVisible();
+      page.getByText('test-recording.mp3 uploaded successfully'),
+    ).toBeVisible();
   });
 
-  test('rejects a dropped invalid file type with the same message as the click flow', async ({
+  test('uploads several files selected at once and all appear in the file list', async ({
     page,
     request,
   }) => {
@@ -207,13 +241,25 @@ test.describe('meeting file upload control', () => {
     await loginViaUi(page, TEST_USER_EMAIL);
     await page.goto(`/meetings/${id}`);
 
-    await dropFiles(page, [{ path: INVALID_FIXTURE, mimeType: 'text/plain' }]);
+    await page.locator('input[type="file"]').setInputFiles([
+      { name: 'recording-a.mp3', mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+      { name: 'recording-b.mp3', mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+    ]);
+    await page.getByRole('button', { name: 'Upload' }).click();
 
-    await expect(page.getByText(/Unsupported file type/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Upload' })).toBeDisabled();
+    await expect(page.getByText('2 recordings uploaded')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Recording', exact: true }),
+    ).toHaveCount(2);
+    await expect(
+      page.getByText('recording-a.mp3', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('recording-b.mp3', { exact: true }),
+    ).toBeVisible();
   });
 
-  test('rejects dropping multiple files with a single-file message', async ({
+  test('uploads multiple files dropped onto the zone at once', async ({
     page,
     request,
   }) => {
@@ -224,12 +270,107 @@ test.describe('meeting file upload control', () => {
     await page.goto(`/meetings/${id}`);
 
     await dropFiles(page, [
-      { path: VALID_FIXTURE, mimeType: 'audio/mpeg' },
-      { path: INVALID_FIXTURE, mimeType: 'text/plain' },
+      { path: VALID_FIXTURE, mimeType: 'audio/mpeg', name: 'dropped-a.mp3' },
+      { path: VALID_FIXTURE, mimeType: 'audio/mpeg', name: 'dropped-b.mp3' },
     ]);
+    await expect(page.getByRole('button', { name: 'Upload' })).toBeEnabled();
 
-    await expect(page.getByText('Please drop a single file.')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Upload' })).toBeDisabled();
+    await page.getByRole('button', { name: 'Upload' }).click();
+
+    await expect(page.getByText('2 recordings uploaded')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Recording', exact: true }),
+    ).toHaveCount(2);
+    await expect(
+      page.getByText('dropped-a.mp3', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('dropped-b.mp3', { exact: true }),
+    ).toBeVisible();
+  });
+
+  test('a mixed valid/invalid batch shows one success and one file-specific error', async ({
+    page,
+    request,
+  }) => {
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    await page.locator('input[type="file"]').setInputFiles([
+      { name: 'good.mp3', mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+      {
+        name: 'bad.txt',
+        mimeType: 'text/plain',
+        buffer: fs.readFileSync(INVALID_FIXTURE),
+      },
+    ]);
+    // The invalid file is caught by client-side validation immediately,
+    // before the Upload click.
+    await expect(
+      page
+        .getByTestId('staged-file-list')
+        .getByText(/bad\.txt: Unsupported file type/),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Upload' }).click();
+
+    const batchResult = page.getByTestId('upload-batch-result');
+    await expect(
+      batchResult.getByText('good.mp3 uploaded successfully'),
+    ).toBeVisible();
+    await expect(
+      batchResult.getByText(/bad\.txt: Unsupported file type/),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Recording', exact: true }),
+    ).toHaveCount(1);
+  });
+
+  test('uploading past the 10-file cap accepts what fits and rejects the rest', async ({
+    page,
+    request,
+  }) => {
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
+    for (let i = 1; i <= 9; i += 1) {
+      await uploadFileViaApi(request, id, accessToken, `seed-${i}.mp3`);
+    }
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    await expect(
+      page.getByRole('heading', { name: 'Recording', exact: true }),
+    ).toHaveCount(9);
+
+    // 9 existing + 2 more in one batch = 11 requested; only 1 more fits.
+    await page.locator('input[type="file"]').setInputFiles([
+      { name: 'tenth.mp3', mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+      { name: 'eleventh.mp3', mimeType: 'audio/mpeg', buffer: VALID_BYTES },
+    ]);
+    await page.getByRole('button', { name: 'Upload' }).click();
+
+    // Accepting tenth.mp3 brings the meeting to the 10-file cap, which
+    // un-renders the whole upload card (and its inline batch feedback) on
+    // the very next render — the toast (rendered outside the card) is what's
+    // asserted on instead, same as a real user would still see it.
+    await expect(
+      page.getByText('Recording uploaded, One file was rejected'),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/eleventh\.mp3:.*maximum of 10 files/),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Recording', exact: true }),
+    ).toHaveCount(10);
+    // At the cap, the upload control no longer renders.
+    await expect(
+      page.getByRole('heading', { name: 'Upload a recording' }),
+    ).not.toBeVisible();
   });
 
   test('rejects dropping non-file drag data with a clear message', async ({
@@ -249,7 +390,7 @@ test.describe('meeting file upload control', () => {
     });
     await page.dispatchEvent(DROP_ZONE, 'drop', { dataTransfer });
 
-    await expect(page.getByText(/No file detected in the drop/)).toBeVisible();
+    await expect(page.getByText(/No files detected in the drop/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Upload' })).toBeDisabled();
   });
 });
