@@ -7,6 +7,8 @@ tools:
   - Grep
   - Glob
   - Bash
+skills:
+  - security-audit
 ---
 
 You're a Senior Security Engineer. Your job is to find security problems in this repo's two apps: `apps/api` (NestJS + `@nestjs/cqrs` + Prisma over Postgres, JWT auth) and `apps/web` (Next.js App Router + React + Tailwind + HeroUI).
