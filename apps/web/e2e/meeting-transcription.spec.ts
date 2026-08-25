@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import {
@@ -92,6 +93,10 @@ test.describe('meeting transcription status and transcript', () => {
     await expect(page.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
+    // The transcript starts collapsed behind a toggle (see
+    // "a completed transcript starts collapsed..." below) — expand it
+    // before asserting on its text.
+    await page.getByRole('button', { name: 'Show transcript' }).click();
     await expect(page.getByText(/fellow Americans/i)).toBeVisible();
 
     const viewerEmail = `e2e-transcript-viewer-${Date.now()}@video-meetings.local`;
@@ -107,6 +112,10 @@ test.describe('meeting transcription status and transcript', () => {
       await expect(
         viewerPage.getByText('Completed', { exact: true }),
       ).toBeVisible();
+      // A separate MeetingTranscription instance (this viewer's own page),
+      // so it starts collapsed too regardless of the organizer's toggle
+      // state above.
+      await viewerPage.getByRole('button', { name: 'Show transcript' }).click();
       await expect(viewerPage.getByText(/fellow Americans/i)).toBeVisible();
     } finally {
       await viewerContext.close();
@@ -137,6 +146,10 @@ test.describe('meeting transcription status and transcript', () => {
     await expect(page.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
+    // Expand once — the toggle state is local to this MeetingTranscription
+    // instance and isn't reset by a refresh (the component never remounts),
+    // so it stays expanded through the second "Completed" below too.
+    await page.getByRole('button', { name: 'Show transcript' }).click();
     await expect(page.getByText(/fellow Americans/i)).toBeVisible();
 
     const refreshButton = page.getByRole('button', {
@@ -235,5 +248,65 @@ test.describe('meeting transcription status and transcript', () => {
     } finally {
       await viewerContext.close();
     }
+  });
+
+  test('a completed transcript starts collapsed and expands independently per file', async ({
+    page,
+    request,
+  }) => {
+    // Two files transcribing share this test's budget — local Whisper only
+    // runs one job at a time, so the second file's run doesn't start until
+    // the first finishes (same doubled-budget reasoning as the refresh test
+    // above).
+    test.setTimeout(TRANSCRIPTION_TIMEOUT_MS * 2 + 60_000);
+
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const speechBytes = fs.readFileSync(SHORT_SPEECH_FIXTURE);
+    await page.locator('input[type="file"]').setInputFiles([
+      { name: 'speech-a.mp3', mimeType: 'audio/mpeg', buffer: speechBytes },
+      { name: 'speech-b.mp3', mimeType: 'audio/mpeg', buffer: speechBytes },
+    ]);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('2 recordings uploaded')).toBeVisible();
+
+    await expect(page.getByText('Completed', { exact: true })).toHaveCount(2, {
+      timeout: TRANSCRIPTION_TIMEOUT_MS * 2,
+    });
+
+    const fileA = page
+      .locator('[data-testid^="meeting-file-"]')
+      .filter({ hasText: 'speech-a.mp3' });
+    const fileB = page
+      .locator('[data-testid^="meeting-file-"]')
+      .filter({ hasText: 'speech-b.mp3' });
+
+    // Collapsed by default: the transcript text isn't on screen yet, but
+    // the toggle to reveal it is.
+    await expect(fileA.getByText(/fellow Americans/i)).not.toBeVisible();
+    await expect(fileB.getByText(/fellow Americans/i)).not.toBeVisible();
+    await expect(
+      fileA.getByRole('button', { name: 'Show transcript' }),
+    ).toBeVisible();
+    await expect(
+      fileB.getByRole('button', { name: 'Show transcript' }),
+    ).toBeVisible();
+
+    await fileA.getByRole('button', { name: 'Show transcript' }).click();
+    await expect(fileA.getByText(/fellow Americans/i)).toBeVisible();
+    // Expanding file A's transcript leaves file B collapsed.
+    await expect(fileB.getByText(/fellow Americans/i)).not.toBeVisible();
+
+    await fileB.getByRole('button', { name: 'Show transcript' }).click();
+    await expect(fileB.getByText(/fellow Americans/i)).toBeVisible();
+
+    // Collapsing file A afterward doesn't affect file B.
+    await fileA.getByRole('button', { name: 'Hide transcript' }).click();
+    await expect(fileA.getByText(/fellow Americans/i)).not.toBeVisible();
+    await expect(fileB.getByText(/fellow Americans/i)).toBeVisible();
   });
 });
