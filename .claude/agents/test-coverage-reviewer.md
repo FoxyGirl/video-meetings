@@ -1,7 +1,7 @@
 ---
 name: test-coverage-reviewer
 description: Reviews apps/api and apps/web for test coverage gaps. Call them when you need to check whether new or changed code has adequate tests before committing — missing unit/e2e specs, untested edge cases and error paths, or assertions that don't actually exercise the behavior they claim to. Provides recommendations for closing any gaps found.
-model: opus
+model: sonnet
 tools:
   - Read
   - Grep
