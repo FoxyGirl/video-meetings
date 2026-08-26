@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import {
   API_URL,
@@ -10,6 +11,11 @@ import {
   seedMeetingSummary,
 } from './api-helpers';
 import { loginViaUi } from './ui-helpers';
+
+// Synthetic bytes, same fixture meeting-file-upload.spec.ts uses for its own
+// upload-flow tests — fine here too, since this test only cares that the
+// summary card appears once a file exists, not that transcription succeeds.
+const VALID_FIXTURE = path.join(__dirname, 'fixtures', 'test-recording.mp3');
 
 async function createMeeting(
   request: APIRequestContext,
@@ -125,6 +131,34 @@ test.describe('meeting summary, action items, and decisions', () => {
     const summary = page.getByTestId('meeting-summary');
     await expect(summary.getByText('No action items found.')).toBeVisible();
     await expect(summary.getByText('No decisions found.')).toBeVisible();
+  });
+
+  test("the summary card appears after uploading the meeting's first file, with no reload", async ({
+    page,
+    request,
+  }) => {
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    // A meeting with zero files renders no summary card at all — this is
+    // what regressed: MeetingSummary used to mount right here (seeded from
+    // an empty files list) and then get permanently stuck, since it never
+    // re-synced to the page's own files state after the upload below and
+    // its own polling never started for an empty file set. It must not
+    // mount until there's a file to seed it correctly.
+    await expect(page.getByText('Meeting Summary')).not.toBeVisible();
+
+    await page.locator('input[type="file"]').setInputFiles(VALID_FIXTURE);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByText('Recording uploaded')).toBeVisible();
+
+    // No page.reload() anywhere in this test — the card has to show up on
+    // its own once the file exists.
+    const summary = page.getByTestId('meeting-summary');
+    await expect(summary.getByText('Meeting Summary')).toBeVisible();
   });
 
   test('shows a not-yet-available state while a file is still transcribing', async ({
