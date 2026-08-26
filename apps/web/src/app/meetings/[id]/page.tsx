@@ -194,18 +194,20 @@ export default function MeetingDetailPage() {
 
         {meeting && !isFilesLoading ? (
           <>
-            <MeetingSummary
-              actionItems={meeting.actionItems}
-              decisions={meeting.decisions}
-              files={files}
-              isOrganizer={isOrganizer}
-              meetingId={meeting.id}
-              summaryIsPartial={meeting.summaryIsPartial}
-              summaryStatus={meeting.summaryStatus}
-              summaryText={meeting.summaryText}
-              onRefreshed={setMeeting}
-              onSessionExpired={handleSessionExpired}
-            />
+            {files.length > 0 ? (
+              <MeetingSummary
+                actionItems={meeting.actionItems}
+                decisions={meeting.decisions}
+                files={files}
+                isOrganizer={isOrganizer}
+                meetingId={meeting.id}
+                summaryIsPartial={meeting.summaryIsPartial}
+                summaryStatus={meeting.summaryStatus}
+                summaryText={meeting.summaryText}
+                onRefreshed={setMeeting}
+                onSessionExpired={handleSessionExpired}
+              />
+            ) : null}
 
             {files.map((file) => (
               <div
