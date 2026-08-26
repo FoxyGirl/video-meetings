@@ -19,16 +19,20 @@ export class GenerateMeetingSummaryHandler implements ICommandHandler<GenerateMe
 
     // A Meeting has no natural version stamp the way a MeetingFile's
     // filePath acts as one for TranscribeMeetingFileHandler's
-    // compare-and-set, so this guard keys off summaryStatus itself. Prisma's
-    // `not` filter on a nullable field is null-safe (also matches NULL,
-    // unlike raw SQL's three-valued logic), so this claims a meeting
-    // generating its summary for the very first time too (summaryStatus
+    // compare-and-set, so this guard keys off summaryStatus itself. Unlike
+    // Prisma's `equals`/plain filters, `not` on a nullable column compiles
+    // to a raw SQL `<>`, which never matches NULL (three-valued logic) — the
+    // explicit `summaryStatus: null` branch below is what lets this claim a
+    // meeting generating its summary for the very first time (summaryStatus
     // still null). Two sibling files finishing near-simultaneously can each
     // independently dispatch this command (maybeTriggerMeetingSummary is
     // safe to call redundantly) — only one concurrent run can win this
     // claim; the other sees claimed === 0 and no-ops.
     const { count: claimed } = await this.prisma.meeting.updateMany({
-      where: { id: meetingId, summaryStatus: { not: 'PROCESSING' } },
+      where: {
+        id: meetingId,
+        OR: [{ summaryStatus: null }, { summaryStatus: { not: 'PROCESSING' } }],
+      },
       data: { summaryStatus: 'PROCESSING' },
     });
 
