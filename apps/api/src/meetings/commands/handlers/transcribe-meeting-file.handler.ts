@@ -1,13 +1,17 @@
 import { join } from 'node:path';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { getUploadDir } from '../../upload/file-upload.constants';
 import { transcribeFile } from '../../transcription/transcribe-file';
+import { maybeTriggerMeetingSummary } from '../../summary/maybe-trigger-meeting-summary';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 
 @CommandHandler(TranscribeMeetingFileCommand)
 export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeMeetingFileCommand> {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   async execute({ meetingId, fileId, filePath }: TranscribeMeetingFileCommand) {
     // Same lookup shape GetMeetingFileHandler uses (findUnique by id).
@@ -53,24 +57,45 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
       // it no longer matches, this is a stale result from a superseded
       // run, so drop it silently rather than overwriting whatever the
       // newer run (or the delete) already wrote.
-      await this.prisma.meetingFile.updateMany({
-        where: { id: fileId, filePath },
-        data: {
-          transcriptionStatus: 'COMPLETED',
-          transcriptionText: text,
-          transcriptionUpdatedAt: new Date(),
-        },
-      });
+      const { count: completedCount } =
+        await this.prisma.meetingFile.updateMany({
+          where: { id: fileId, filePath },
+          data: {
+            transcriptionStatus: 'COMPLETED',
+            transcriptionText: text,
+            transcriptionUpdatedAt: new Date(),
+          },
+        });
+
+      // Only worth checking "is every sibling file now terminal?" once this
+      // write actually landed — a count of 0 means this was itself a stale,
+      // superseded write (see the compare-and-set comment above), so there's
+      // nothing new here that could complete the meeting's file set.
+      if (completedCount > 0) {
+        await maybeTriggerMeetingSummary(
+          this.prisma,
+          this.commandBus,
+          meetingId,
+        );
+      }
     } catch (error) {
       console.error(
         `[TranscribeMeetingFileHandler] meeting ${meetingId}, file ${fileId}:`,
         error,
       );
 
-      await this.prisma.meetingFile.updateMany({
+      const { count: failedCount } = await this.prisma.meetingFile.updateMany({
         where: { id: fileId, filePath },
         data: { transcriptionStatus: 'FAILED' },
       });
+
+      if (failedCount > 0) {
+        await maybeTriggerMeetingSummary(
+          this.prisma,
+          this.commandBus,
+          meetingId,
+        );
+      }
     }
   }
 }
