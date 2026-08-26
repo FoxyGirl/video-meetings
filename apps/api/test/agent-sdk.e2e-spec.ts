@@ -10,7 +10,8 @@ const describeIfApiKeyPresent = process.env.ANTHROPIC_API_KEY
   : describe.skip;
 
 describeIfApiKeyPresent('Agent SDK (e2e)', () => {
-  it('gets a real response back from Claude via the Agent SDK', async () => {
+  // it needs additional money
+  it.skip('gets a real response back from Claude via the Agent SDK', async () => {
     let result: string | undefined;
 
     for await (const message of query({
