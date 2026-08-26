@@ -79,6 +79,7 @@ model ActionItem {
   meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   description String
   assignee    String?
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 
@@ -90,6 +91,7 @@ model Decision {
   meetingId   String
   meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   description String
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 

@@ -17,8 +17,12 @@ export class GetMeetingHandler implements IQueryHandler<GetMeetingQuery> {
       where: { id },
       include: {
         files: true,
-        actionItems: { orderBy: { createdAt: 'asc' } },
-        decisions: { orderBy: { createdAt: 'asc' } },
+        // order (not createdAt) preserves the LLM's original list order —
+        // every row from one generation run's createMany call shares an
+        // identical createdAt, since Postgres evaluates now() once per
+        // transaction.
+        actionItems: { orderBy: { order: 'asc' } },
+        decisions: { orderBy: { order: 'asc' } },
       },
     });
 

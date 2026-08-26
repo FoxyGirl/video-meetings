@@ -82,21 +82,28 @@ export class GenerateMeetingSummaryHandler implements ICommandHandler<GenerateMe
         await tx.actionItem.deleteMany({ where: { meetingId } });
         await tx.decision.deleteMany({ where: { meetingId } });
 
+        // Stamped explicitly from each array's index, not left to
+        // createdAt: Postgres evaluates now() once per transaction, so every
+        // row from one createMany call would otherwise get an identical
+        // createdAt with no reliable tiebreaker — order preserves the LLM's
+        // original list order across reads.
         if (result.actionItems.length > 0) {
           await tx.actionItem.createMany({
-            data: result.actionItems.map((item) => ({
+            data: result.actionItems.map((item, order) => ({
               meetingId,
               description: item.description,
               assignee: item.assignee ?? null,
+              order,
             })),
           });
         }
 
         if (result.decisions.length > 0) {
           await tx.decision.createMany({
-            data: result.decisions.map((description) => ({
+            data: result.decisions.map((description, order) => ({
               meetingId,
               description,
+              order,
             })),
           });
         }
