@@ -278,6 +278,15 @@ export function MeetingSummary({
 
         {status === 'COMPLETED' ? (
           <>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">
+                Status
+              </span>
+              <Chip color={STATUS_COLOR.COMPLETED} size="sm">
+                <Chip.Label>{STATUS_LABEL.COMPLETED}</Chip.Label>
+              </Chip>
+            </div>
+
             {isPartial ? (
               <Alert status="warning">
                 <Alert.Indicator />
