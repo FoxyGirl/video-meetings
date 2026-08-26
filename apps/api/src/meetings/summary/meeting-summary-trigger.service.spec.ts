@@ -117,4 +117,35 @@ describe('MeetingSummaryTriggerService', () => {
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });
+
+  it('logs, rather than throws, when the trigger read itself rejects', async () => {
+    findMany.mockImplementation(() => Promise.reject(new Error('db down')));
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+
+    // Callers in the request path (Upload/Delete/RefreshTranscription/
+    // RefreshMeetingSummary handlers) await this directly and return its
+    // result as part of the HTTP response — a transient DB error re-checking
+    // the trigger must never fail an otherwise-successful primary write.
+    await expect(service.maybeTrigger(MEETING_ID)).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it('logs, rather than throws, when the PENDING/token write itself rejects', async () => {
+    findMany.mockResolvedValue([buildFile('COMPLETED')]);
+    updateMany.mockImplementation(() => Promise.reject(new Error('db down')));
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+
+    await expect(service.maybeTrigger(MEETING_ID)).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
 });
