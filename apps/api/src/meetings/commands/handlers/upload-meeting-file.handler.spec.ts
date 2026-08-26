@@ -3,7 +3,6 @@ import { NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
-import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { MAX_FILES_PER_MEETING } from '../../upload/file-upload.constants';
 import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
 import { UploadMeetingFileHandler } from './upload-meeting-file.handler';
@@ -46,7 +45,6 @@ describe('UploadMeetingFileHandler', () => {
       data: { originalName: string; filePath: string };
     }) => Promise<unknown>
   >;
-  let maybeTrigger: jest.Mock<(meetingId: string) => Promise<void>>;
   let handler: UploadMeetingFileHandler;
 
   function setLockedMeeting(summaryText: string | null) {
@@ -73,7 +71,6 @@ describe('UploadMeetingFileHandler', () => {
           transcriptionUpdatedAt: null,
         }),
     );
-    maybeTrigger = jest.fn(() => Promise.resolve());
 
     const tx = {
       $queryRaw: queryRaw,
@@ -85,14 +82,10 @@ describe('UploadMeetingFileHandler', () => {
         callback(tx),
     } as unknown as PrismaService;
 
-    handler = new UploadMeetingFileHandler(
-      prisma,
-      {} as unknown as CommandBus,
-      { maybeTrigger } as unknown as MeetingSummaryTriggerService,
-    );
+    handler = new UploadMeetingFileHandler(prisma, {} as unknown as CommandBus);
   });
 
-  it('does not clear the summary when the meeting has none yet, but still re-checks the trigger', async () => {
+  it('does not clear the summary when the meeting has none yet', async () => {
     setLockedMeeting(null);
 
     await handler.execute(
@@ -102,10 +95,9 @@ describe('UploadMeetingFileHandler', () => {
     );
 
     expect(mockedClearMeetingSummary).not.toHaveBeenCalled();
-    expect(maybeTrigger).toHaveBeenCalledWith(MEETING_ID);
   });
 
-  it('clears the summary and re-checks the trigger when the meeting already has a non-empty one', async () => {
+  it('clears the summary when the meeting already has a non-empty one', async () => {
     setLockedMeeting('An existing summary.');
 
     await handler.execute(
@@ -118,10 +110,9 @@ describe('UploadMeetingFileHandler', () => {
       expect.anything(),
       MEETING_ID,
     );
-    expect(maybeTrigger).toHaveBeenCalledWith(MEETING_ID);
   });
 
-  it('does not clear the summary or re-check the trigger when the whole batch is rejected (no file actually added)', async () => {
+  it('does not clear the summary when the whole batch is rejected (no file actually added)', async () => {
     setLockedMeeting('An existing summary.');
     // Meeting already at the cap — every type-valid file gets pushed into
     // capRejected instead of created, so nothing about the file set changes.
@@ -134,7 +125,6 @@ describe('UploadMeetingFileHandler', () => {
     );
 
     expect(mockedClearMeetingSummary).not.toHaveBeenCalled();
-    expect(maybeTrigger).not.toHaveBeenCalled();
   });
 
   it('throws 404 for a non-organizer/nonexistent meeting without touching the summary', async () => {
@@ -149,6 +139,5 @@ describe('UploadMeetingFileHandler', () => {
     ).rejects.toThrow(NotFoundException);
 
     expect(mockedClearMeetingSummary).not.toHaveBeenCalled();
-    expect(maybeTrigger).not.toHaveBeenCalled();
   });
 });

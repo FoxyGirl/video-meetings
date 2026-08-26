@@ -3,7 +3,6 @@ import { NotFoundException } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
-import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { RefreshTranscriptionCommand } from '../refresh-transcription.command';
 import { RefreshTranscriptionHandler } from './refresh-transcription.handler';
 
@@ -56,7 +55,6 @@ describe('RefreshTranscriptionHandler', () => {
   >;
   let findUnique: jest.Mock<() => Promise<FileRow>>;
   let updateMock: jest.Mock<() => Promise<FileRow>>;
-  let maybeTrigger: jest.Mock<(meetingId: string) => Promise<void>>;
   let handler: RefreshTranscriptionHandler;
 
   function setLockedMeeting(summaryText: string | null) {
@@ -71,7 +69,6 @@ describe('RefreshTranscriptionHandler', () => {
       Promise.resolve({ ...buildFile(), transcriptionStatus: 'FAILED' }),
     );
     updateMock = jest.fn(() => Promise.resolve(buildFile()));
-    maybeTrigger = jest.fn(() => Promise.resolve());
 
     const tx = {
       $queryRaw: queryRaw,
@@ -86,11 +83,10 @@ describe('RefreshTranscriptionHandler', () => {
     handler = new RefreshTranscriptionHandler(
       prisma,
       {} as unknown as CommandBus,
-      { maybeTrigger } as unknown as MeetingSummaryTriggerService,
     );
   });
 
-  it('does not clear the summary when the meeting has none yet, but still re-checks the trigger', async () => {
+  it('does not clear the summary when the meeting has none yet', async () => {
     setLockedMeeting(null);
 
     await handler.execute(
@@ -98,10 +94,9 @@ describe('RefreshTranscriptionHandler', () => {
     );
 
     expect(mockedClearMeetingSummary).not.toHaveBeenCalled();
-    expect(maybeTrigger).toHaveBeenCalledWith(MEETING_ID);
   });
 
-  it('clears the summary and re-checks the trigger when the meeting already has a non-empty one', async () => {
+  it('clears the summary when the meeting already has a non-empty one', async () => {
     setLockedMeeting('An existing summary.');
 
     await handler.execute(
@@ -112,7 +107,6 @@ describe('RefreshTranscriptionHandler', () => {
       expect.anything(),
       MEETING_ID,
     );
-    expect(maybeTrigger).toHaveBeenCalledWith(MEETING_ID);
   });
 
   it('throws 404 for a non-organizer/nonexistent meeting without touching the summary', async () => {
@@ -125,6 +119,5 @@ describe('RefreshTranscriptionHandler', () => {
     ).rejects.toThrow(NotFoundException);
 
     expect(mockedClearMeetingSummary).not.toHaveBeenCalled();
-    expect(maybeTrigger).not.toHaveBeenCalled();
   });
 });

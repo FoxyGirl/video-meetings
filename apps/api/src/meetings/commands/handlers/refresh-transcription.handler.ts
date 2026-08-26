@@ -3,7 +3,6 @@ import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { toMeetingFileMetadata } from '../../meeting-file.types';
 import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
-import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import { RefreshTranscriptionCommand } from '../refresh-transcription.command';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
@@ -18,7 +17,6 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
   constructor(
     private readonly prisma: PrismaService,
     private readonly commandBus: CommandBus,
-    private readonly meetingSummaryTrigger: MeetingSummaryTriggerService,
   ) {}
 
   async execute({
@@ -72,11 +70,14 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
       return refreshedFile;
     });
 
-    // Re-runs the same "all files terminal, at least one completed" check
-    // the transcription trigger uses. Resetting this file's own status to
-    // null means it can't itself satisfy that check, but a sibling file's
-    // state may already have made the meeting eligible.
-    await this.meetingSummaryTrigger.maybeTrigger(meetingId);
+    // No maybeTrigger() re-check here, unlike Delete: this file's own
+    // transcriptionStatus was just reset to null above (PENDING isn't
+    // written until below), so the "all files terminal" check would always
+    // see this meeting as not-yet-resolved regardless of any sibling file's
+    // state — checking now can never do anything. TranscribeMeetingFileHandler
+    // already calls maybeTrigger() itself once this file's re-transcription
+    // reaches a terminal state, which is what actually re-triggers
+    // generation once the refresh resolves.
 
     if (!isTranscriptionEnabled()) {
       return toMeetingFileMetadata(file);

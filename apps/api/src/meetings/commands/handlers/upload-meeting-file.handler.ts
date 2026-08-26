@@ -8,7 +8,6 @@ import {
   toMeetingFileMetadata,
 } from '../../meeting-file.types';
 import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
-import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import {
   MAX_FILES_PER_MEETING,
@@ -38,7 +37,6 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
   constructor(
     private readonly prisma: PrismaService,
     private readonly commandBus: CommandBus,
-    private readonly meetingSummaryTrigger: MeetingSummaryTriggerService,
   ) {}
 
   async execute({
@@ -168,15 +166,14 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
         .map((file) => unlink(file.path).catch(() => undefined)),
     );
 
-    if (createdFiles.length > 0) {
-      // Re-runs the same "all files terminal, at least one completed"
-      // check the transcription trigger uses. A newly created file starts
-      // out non-terminal (or, with transcription disabled, never resolves
-      // at all), so in practice this only matters when the meeting's
-      // remaining files were already all-terminal before this upload — but
-      // it's the same call every file-change handler makes, regardless.
-      await this.meetingSummaryTrigger.maybeTrigger(meetingId);
-    }
+    // No maybeTrigger() re-check here, unlike Delete/RefreshTranscription:
+    // every newly created MeetingFile row starts with transcriptionStatus
+    // null (PENDING isn't written until below), so the "all files terminal"
+    // check would always see this meeting as not-yet-resolved regardless of
+    // any sibling file's state — checking now can never do anything.
+    // TranscribeMeetingFileHandler already calls maybeTrigger() itself once
+    // this file's own transcription reaches a terminal state, which is what
+    // actually re-triggers generation once the upload resolves.
 
     if (!isTranscriptionEnabled() || createdFiles.length === 0) {
       return { accepted: createdFiles.map(toMeetingFileMetadata), rejected };
