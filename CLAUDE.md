@@ -68,7 +68,7 @@ It owns one seeded meeting ("QA Test Meeting") to check the detail page's organi
 
 ## Active feature plans
 
-- `docs/plan-meeting-summary-action-items-and-decisions.md` (PRD: `docs/prd-meeting-summary-action-items-and-decisions.md`; research: `docs/research-meeting-summary-action-items-and-decisions.md`) — meeting-level summary, action items, and decisions generated via an external LLM once all of a meeting's files finish transcribing, with status display and a "Refresh Summary" action. Consult the research file first: it recommends reusing the already-installed `@anthropic-ai/claude-agent-sdk` (`outputFormat: { type: 'json_schema' }`) and mirrors the existing per-file transcription trigger/compare-and-set pattern at the meeting level.
+- `docs/plan-meeting-summary-action-items-and-decisions.md` (PRD: `docs/prd-meeting-summary-action-items-and-decisions.md`; research: `docs/research-meeting-summary-action-items-and-decisions.md`) — meeting-level summary, action items, and decisions generated via an external LLM once all of a meeting's files finish transcribing, with status display and a "Refresh Summary" action. Consult the research file first: it recommends the Gemini API's free tier (`@google/genai`, `responseSchema`) over the paid Anthropic API, and mirrors the existing per-file transcription trigger/compare-and-set pattern at the meeting level.
 
 ## Keeping documentation in sync
 
