@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { MeetingsController } from './meetings.controller';
 import { CreateMeetingHandler } from './commands/handlers/create-meeting.handler';
 import { DeleteMeetingFileHandler } from './commands/handlers/delete-meeting-file.handler';
+import { GenerateMeetingSummaryHandler } from './commands/handlers/generate-meeting-summary.handler';
 import { RefreshTranscriptionHandler } from './commands/handlers/refresh-transcription.handler';
 import { TranscribeMeetingFileHandler } from './commands/handlers/transcribe-meeting-file.handler';
 import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-file.handler';
@@ -12,6 +13,7 @@ import { GetMeetingFileHandler } from './queries/handlers/get-meeting-file.handl
 import { GetMeetingsHandler } from './queries/handlers/get-meetings.handler';
 import { GetMeetingHandler } from './queries/handlers/get-meeting.handler';
 import { ListMeetingFilesHandler } from './queries/handlers/list-meeting-files.handler';
+import { MeetingSummaryTriggerService } from './summary/meeting-summary-trigger.service';
 import { getUploadDir } from './upload/file-upload.constants';
 
 const CommandHandlers = [
@@ -20,6 +22,7 @@ const CommandHandlers = [
   DeleteMeetingFileHandler,
   TranscribeMeetingFileHandler,
   RefreshTranscriptionHandler,
+  GenerateMeetingSummaryHandler,
 ];
 const QueryHandlers = [
   GetMeetingsHandler,
@@ -31,7 +34,11 @@ const QueryHandlers = [
 @Module({
   imports: [CqrsModule, AuthModule],
   controllers: [MeetingsController],
-  providers: [...CommandHandlers, ...QueryHandlers],
+  providers: [
+    ...CommandHandlers,
+    ...QueryHandlers,
+    MeetingSummaryTriggerService,
+  ],
 })
 export class MeetingsModule implements OnModuleInit {
   onModuleInit() {
