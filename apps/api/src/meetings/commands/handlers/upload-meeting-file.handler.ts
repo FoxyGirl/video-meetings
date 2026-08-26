@@ -7,6 +7,8 @@ import {
   MeetingFileMetadata,
   toMeetingFileMetadata,
 } from '../../meeting-file.types';
+import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
+import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import {
   MAX_FILES_PER_MEETING,
@@ -18,6 +20,7 @@ import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
 
 interface LockedMeetingRow {
   id: string;
+  summaryText: string | null;
 }
 
 interface RejectedFile {
@@ -35,6 +38,7 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
   constructor(
     private readonly prisma: PrismaService,
     private readonly commandBus: CommandBus,
+    private readonly meetingSummaryTrigger: MeetingSummaryTriggerService,
   ) {}
 
   async execute({
@@ -84,7 +88,7 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
           // serializes here instead of both reading the same "existing
           // count" and together overshooting the cap.
           const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
-            SELECT "id" FROM "Meeting"
+            SELECT "id", "summaryText" FROM "Meeting"
             WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
             FOR UPDATE
           `;
@@ -121,6 +125,15 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
             );
           }
 
+          // Adding a file changes the transcript set the existing summary
+          // was built from — same reset RefreshMeetingSummaryHandler
+          // performs, but only when a file was actually added (a batch that
+          // was entirely type/size/cap-rejected changes nothing) and there's
+          // a non-empty summary to invalidate.
+          if (created.length > 0 && lockedMeeting.summaryText !== null) {
+            await clearMeetingSummary(tx, meetingId);
+          }
+
           return { createdFiles: created, capRejected: overCap };
         },
       ));
@@ -154,6 +167,16 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
         .filter((file) => !acceptedPaths.has(file.filename))
         .map((file) => unlink(file.path).catch(() => undefined)),
     );
+
+    if (createdFiles.length > 0) {
+      // Re-runs the same "all files terminal, at least one completed"
+      // check the transcription trigger uses. A newly created file starts
+      // out non-terminal (or, with transcription disabled, never resolves
+      // at all), so in practice this only matters when the meeting's
+      // remaining files were already all-terminal before this upload — but
+      // it's the same call every file-change handler makes, regardless.
+      await this.meetingSummaryTrigger.maybeTrigger(meetingId);
+    }
 
     if (!isTranscriptionEnabled() || createdFiles.length === 0) {
       return { accepted: createdFiles.map(toMeetingFileMetadata), rejected };

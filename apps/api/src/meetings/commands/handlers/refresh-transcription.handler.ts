@@ -2,12 +2,15 @@ import { NotFoundException } from '@nestjs/common';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { toMeetingFileMetadata } from '../../meeting-file.types';
+import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
+import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import { RefreshTranscriptionCommand } from '../refresh-transcription.command';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 
 interface LockedMeetingRow {
   id: string;
+  summaryText: string | null;
 }
 
 @CommandHandler(RefreshTranscriptionCommand)
@@ -15,6 +18,7 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
   constructor(
     private readonly prisma: PrismaService,
     private readonly commandBus: CommandBus,
+    private readonly meetingSummaryTrigger: MeetingSummaryTriggerService,
   ) {}
 
   async execute({
@@ -28,7 +32,7 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
     // never touches any other file's row, on this meeting or another.
     const file = await this.prisma.$transaction(async (tx) => {
       const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
-        SELECT "id" FROM "Meeting"
+        SELECT "id", "summaryText" FROM "Meeting"
         WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
         FOR UPDATE
       `;
@@ -48,7 +52,7 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
       // A refresh discards whatever transcript (if any) belongs to the
       // current run before starting over — same invalidation upload/delete
       // already achieve on these same three columns.
-      return tx.meetingFile.update({
+      const refreshedFile = await tx.meetingFile.update({
         where: { id: existingFile.id },
         data: {
           transcriptionStatus: null,
@@ -56,7 +60,23 @@ export class RefreshTranscriptionHandler implements ICommandHandler<RefreshTrans
           transcriptionUpdatedAt: null,
         },
       });
+
+      // Re-transcribing this file changes the transcript set the existing
+      // summary was built from — same reset RefreshMeetingSummaryHandler
+      // performs, but only when there's actually a non-empty summary to
+      // invalidate.
+      if (lockedMeeting.summaryText !== null) {
+        await clearMeetingSummary(tx, meetingId);
+      }
+
+      return refreshedFile;
     });
+
+    // Re-runs the same "all files terminal, at least one completed" check
+    // the transcription trigger uses. Resetting this file's own status to
+    // null means it can't itself satisfy that check, but a sibling file's
+    // state may already have made the meeting eligible.
+    await this.meetingSummaryTrigger.maybeTrigger(meetingId);
 
     if (!isTranscriptionEnabled()) {
       return toMeetingFileMetadata(file);
