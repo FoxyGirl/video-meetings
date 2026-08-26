@@ -55,7 +55,7 @@ describe('MeetingSummaryTriggerService', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('writes PENDING and dispatches generation once all files are terminal with at least one completed', async () => {
+  it('writes PENDING with a fresh token and dispatches generation once all files are terminal with at least one completed', async () => {
     findMany.mockResolvedValue([buildFile('COMPLETED'), buildFile('FAILED')]);
 
     await service.maybeTrigger(MEETING_ID);
@@ -65,11 +65,34 @@ describe('MeetingSummaryTriggerService', () => {
         id: MEETING_ID,
         OR: [{ summaryStatus: null }, { summaryStatus: { not: 'PROCESSING' } }],
       },
-      data: { summaryStatus: 'PENDING' },
+      data: {
+        summaryStatus: 'PENDING',
+        summaryGenerationToken: expect.any(String),
+      },
     });
+
+    const dispatchedToken = (
+      updateMany.mock.calls[0][0] as {
+        data: { summaryGenerationToken: string };
+      }
+    ).data.summaryGenerationToken;
     expect(execute).toHaveBeenCalledWith(
-      new GenerateMeetingSummaryCommand(MEETING_ID),
+      new GenerateMeetingSummaryCommand(MEETING_ID, dispatchedToken),
     );
+  });
+
+  it('stamps a different token on each call', async () => {
+    findMany.mockResolvedValue([buildFile('COMPLETED')]);
+
+    await service.maybeTrigger(MEETING_ID);
+    await service.maybeTrigger(MEETING_ID);
+
+    const [firstToken, secondToken] = updateMany.mock.calls.map(
+      (call) =>
+        (call[0] as { data: { summaryGenerationToken: string } }).data
+          .summaryGenerationToken,
+    );
+    expect(firstToken).not.toBe(secondToken);
   });
 
   it('triggers for a meeting with only one, completed file', async () => {

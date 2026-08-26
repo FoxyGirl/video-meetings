@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -38,23 +39,33 @@ export class MeetingSummaryTriggerService {
       return;
     }
 
+    // A fresh token per trigger call, stamped alongside PENDING, is what
+    // GenerateMeetingSummaryHandler's writes later compare-and-set against —
+    // if a refresh/invalidation clears it (or a later trigger overwrites it)
+    // before this run's writes land, they'll target a token the row no
+    // longer carries and silently no-op instead of clobbering newer results.
+    const token = randomUUID();
+
     // Written synchronously so a client polling right after this fires can
     // observe an intermediate "Pending" state, same as
     // UploadMeetingFileHandler writes transcriptionStatus: 'PENDING' before
     // dispatching TranscribeMeetingFileCommand. Guarded the same null-safe
     // way GenerateMeetingSummaryHandler's own PROCESSING claim is (Prisma's
     // `not` filter never matches NULL) so this never disturbs a run that
-    // already claimed PROCESSING.
+    // already claimed PROCESSING — in that case the token/status are left
+    // untouched, and the redundant dispatch below carries a token the row
+    // will never carry, so it harmlessly no-ops instead of racing the
+    // in-flight run.
     await this.prisma.meeting.updateMany({
       where: {
         id: meetingId,
         OR: [{ summaryStatus: null }, { summaryStatus: { not: 'PROCESSING' } }],
       },
-      data: { summaryStatus: 'PENDING' },
+      data: { summaryStatus: 'PENDING', summaryGenerationToken: token },
     });
 
     this.commandBus
-      .execute(new GenerateMeetingSummaryCommand(meetingId))
+      .execute(new GenerateMeetingSummaryCommand(meetingId, token))
       .catch((error: unknown) => {
         console.error(
           `[MeetingSummaryTriggerService] failed to dispatch summary generation for meeting ${meetingId}:`,
