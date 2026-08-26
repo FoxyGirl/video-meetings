@@ -13,6 +13,7 @@ import { GetMeetingFileHandler } from './queries/handlers/get-meeting-file.handl
 import { GetMeetingsHandler } from './queries/handlers/get-meetings.handler';
 import { GetMeetingHandler } from './queries/handlers/get-meeting.handler';
 import { ListMeetingFilesHandler } from './queries/handlers/list-meeting-files.handler';
+import { MeetingSummaryTriggerService } from './summary/meeting-summary-trigger.service';
 import { getUploadDir } from './upload/file-upload.constants';
 
 const CommandHandlers = [
@@ -33,7 +34,11 @@ const QueryHandlers = [
 @Module({
   imports: [CqrsModule, AuthModule],
   controllers: [MeetingsController],
-  providers: [...CommandHandlers, ...QueryHandlers],
+  providers: [
+    ...CommandHandlers,
+    ...QueryHandlers,
+    MeetingSummaryTriggerService,
+  ],
 })
 export class MeetingsModule implements OnModuleInit {
   onModuleInit() {

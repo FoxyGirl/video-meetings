@@ -1,16 +1,16 @@
 import { join } from 'node:path';
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { getUploadDir } from '../../upload/file-upload.constants';
 import { transcribeFile } from '../../transcription/transcribe-file';
-import { maybeTriggerMeetingSummary } from '../../summary/maybe-trigger-meeting-summary';
+import { MeetingSummaryTriggerService } from '../../summary/meeting-summary-trigger.service';
 import { TranscribeMeetingFileCommand } from '../transcribe-meeting-file.command';
 
 @CommandHandler(TranscribeMeetingFileCommand)
 export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeMeetingFileCommand> {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly commandBus: CommandBus,
+    private readonly meetingSummaryTrigger: MeetingSummaryTriggerService,
   ) {}
 
   async execute({ meetingId, fileId, filePath }: TranscribeMeetingFileCommand) {
@@ -72,11 +72,7 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
       // superseded write (see the compare-and-set comment above), so there's
       // nothing new here that could complete the meeting's file set.
       if (completedCount > 0) {
-        await maybeTriggerMeetingSummary(
-          this.prisma,
-          this.commandBus,
-          meetingId,
-        );
+        await this.meetingSummaryTrigger.maybeTrigger(meetingId);
       }
     } catch (error) {
       console.error(
@@ -90,11 +86,7 @@ export class TranscribeMeetingFileHandler implements ICommandHandler<TranscribeM
       });
 
       if (failedCount > 0) {
-        await maybeTriggerMeetingSummary(
-          this.prisma,
-          this.commandBus,
-          meetingId,
-        );
+        await this.meetingSummaryTrigger.maybeTrigger(meetingId);
       }
     }
   }
