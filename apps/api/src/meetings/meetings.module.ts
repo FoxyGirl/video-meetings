@@ -6,6 +6,7 @@ import { MeetingsController } from './meetings.controller';
 import { CreateMeetingHandler } from './commands/handlers/create-meeting.handler';
 import { DeleteMeetingFileHandler } from './commands/handlers/delete-meeting-file.handler';
 import { GenerateMeetingSummaryHandler } from './commands/handlers/generate-meeting-summary.handler';
+import { RefreshMeetingSummaryHandler } from './commands/handlers/refresh-meeting-summary.handler';
 import { RefreshTranscriptionHandler } from './commands/handlers/refresh-transcription.handler';
 import { TranscribeMeetingFileHandler } from './commands/handlers/transcribe-meeting-file.handler';
 import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-file.handler';
@@ -23,6 +24,7 @@ const CommandHandlers = [
   TranscribeMeetingFileHandler,
   RefreshTranscriptionHandler,
   GenerateMeetingSummaryHandler,
+  RefreshMeetingSummaryHandler,
 ];
 const QueryHandlers = [
   GetMeetingsHandler,

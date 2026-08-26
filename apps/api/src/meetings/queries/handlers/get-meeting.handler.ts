@@ -38,8 +38,18 @@ export class GetMeetingHandler implements IQueryHandler<GetMeetingQuery> {
     // columns already, so they pass through meetingFields untouched.
     const { files, actionItems, decisions, ...meetingFields } = meeting;
 
+    // summaryGenerationToken is deliberately excluded from the response —
+    // an internal compare-and-set correlation detail (see
+    // GenerateMeetingSummaryHandler), not something a client needs, same as
+    // MeetingFile's own filePath is excluded from MeetingFileMetadata.
+    const { summaryGenerationToken, ...flattened } = flattenMeetingFile(
+      meetingFields,
+      files[0] ?? null,
+    );
+    void summaryGenerationToken;
+
     return {
-      ...flattenMeetingFile(meetingFields, files[0] ?? null),
+      ...flattened,
       actionItems: actionItems.map(toActionItemMetadata),
       decisions: decisions.map(toDecisionMetadata),
     };

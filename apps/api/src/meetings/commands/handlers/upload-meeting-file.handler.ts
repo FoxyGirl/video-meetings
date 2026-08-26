@@ -7,6 +7,7 @@ import {
   MeetingFileMetadata,
   toMeetingFileMetadata,
 } from '../../meeting-file.types';
+import { clearMeetingSummary } from '../../summary/clear-meeting-summary';
 import { isTranscriptionEnabled } from '../../transcription/whisper.constants';
 import {
   MAX_FILES_PER_MEETING,
@@ -18,6 +19,7 @@ import { UploadMeetingFileCommand } from '../upload-meeting-file.command';
 
 interface LockedMeetingRow {
   id: string;
+  summaryText: string | null;
 }
 
 interface RejectedFile {
@@ -84,7 +86,7 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
           // serializes here instead of both reading the same "existing
           // count" and together overshooting the cap.
           const [lockedMeeting] = await tx.$queryRaw<LockedMeetingRow[]>`
-            SELECT "id" FROM "Meeting"
+            SELECT "id", "summaryText" FROM "Meeting"
             WHERE "id" = ${meetingId} AND "organizerId" = ${organizerId}
             FOR UPDATE
           `;
@@ -121,6 +123,15 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
             );
           }
 
+          // Adding a file changes the transcript set the existing summary
+          // was built from — same reset RefreshMeetingSummaryHandler
+          // performs, but only when a file was actually added (a batch that
+          // was entirely type/size/cap-rejected changes nothing) and there's
+          // a non-empty summary to invalidate.
+          if (created.length > 0 && lockedMeeting.summaryText !== null) {
+            await clearMeetingSummary(tx, meetingId);
+          }
+
           return { createdFiles: created, capRejected: overCap };
         },
       ));
@@ -154,6 +165,15 @@ export class UploadMeetingFileHandler implements ICommandHandler<UploadMeetingFi
         .filter((file) => !acceptedPaths.has(file.filename))
         .map((file) => unlink(file.path).catch(() => undefined)),
     );
+
+    // No maybeTrigger() re-check here, unlike Delete/RefreshTranscription:
+    // every newly created MeetingFile row starts with transcriptionStatus
+    // null (PENDING isn't written until below), so the "all files terminal"
+    // check would always see this meeting as not-yet-resolved regardless of
+    // any sibling file's state — checking now can never do anything.
+    // TranscribeMeetingFileHandler already calls maybeTrigger() itself once
+    // this file's own transcription reaches a terminal state, which is what
+    // actually re-triggers generation once the upload resolves.
 
     if (!isTranscriptionEnabled() || createdFiles.length === 0) {
       return { accepted: createdFiles.map(toMeetingFileMetadata), rejected };
