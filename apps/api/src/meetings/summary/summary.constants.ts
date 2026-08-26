@@ -22,4 +22,8 @@ export function getGeminiApiKey(): string {
 // A current free-tier Flash-class model — more than capable of a
 // single-shot summarize-and-extract task like this one (see
 // docs/research-meeting-summary-action-items-and-decisions.md).
-export const GEMINI_MODEL = 'gemini-2.5-flash';
+// gemini-2.5-flash was retired for new users (confirmed 2026-08-26: every
+// real call returned a 404 "no longer available to new users" from the
+// Gemini API itself, which is why every generation attempt was silently
+// ending in FAILED) — Google's own error pointed at this replacement.
+export const GEMINI_MODEL = 'gemini-3.6-flash';
