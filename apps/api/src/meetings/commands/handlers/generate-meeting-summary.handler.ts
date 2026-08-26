@@ -63,9 +63,11 @@ export class GenerateMeetingSummaryHandler implements ICommandHandler<GenerateMe
       // which is reserved for an actual failed attempt. Guarded by the same
       // token compare-and-set as the claim above: if a refresh/invalidation
       // has since superseded this run, its own reset already owns the row.
+      // Also nulls the token itself, same as clearMeetingSummary — this run
+      // is done, so nothing should still compare-and-set against it.
       await this.prisma.meeting.updateMany({
         where: { id: meetingId, summaryGenerationToken: token },
-        data: { summaryStatus: null },
+        data: { summaryStatus: null, summaryGenerationToken: null },
       });
       return;
     }
@@ -146,10 +148,12 @@ export class GenerateMeetingSummaryHandler implements ICommandHandler<GenerateMe
       // behavior TranscribeMeetingFileHandler gives an existing transcript.
       // Guarded by the same token compare-and-set as the claim above: if a
       // refresh/invalidation has since superseded this run, this stale
-      // failure must not stamp FAILED over the newer run's own status.
+      // failure must not stamp FAILED over the newer run's own status. Also
+      // nulls the token itself, same as clearMeetingSummary — this run is
+      // done, so nothing should still compare-and-set against it.
       await this.prisma.meeting.updateMany({
         where: { id: meetingId, summaryGenerationToken: token },
-        data: { summaryStatus: 'FAILED' },
+        data: { summaryStatus: 'FAILED', summaryGenerationToken: null },
       });
     }
   }
