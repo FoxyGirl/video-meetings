@@ -230,40 +230,29 @@ export function MeetingSummary({
           </Alert>
         ) : null}
 
+        {status !== null ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Status</span>
+            <Chip color={STATUS_COLOR[status]} size="sm">
+              <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
+            </Chip>
+          </div>
+        ) : null}
+
         {status === 'PENDING' || status === 'PROCESSING' ? (
-          <>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">
-                Status
-              </span>
-              <Chip color={STATUS_COLOR[status]} size="sm">
-                <Chip.Label>{STATUS_LABEL[status]}</Chip.Label>
-              </Chip>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <Spinner size="sm" />
-              Generating summary…
-            </div>
-          </>
+          <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <Spinner size="sm" />
+            Generating summary…
+          </div>
         ) : null}
 
         {status === 'FAILED' ? (
-          <>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">
-                Status
-              </span>
-              <Chip color={STATUS_COLOR.FAILED} size="sm">
-                <Chip.Label>{STATUS_LABEL.FAILED}</Chip.Label>
-              </Chip>
-            </div>
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>Summary generation failed.</Alert.Title>
-              </Alert.Content>
-            </Alert>
-          </>
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Summary generation failed.</Alert.Title>
+            </Alert.Content>
+          </Alert>
         ) : null}
 
         {status === null ? (
@@ -278,15 +267,6 @@ export function MeetingSummary({
 
         {status === 'COMPLETED' ? (
           <>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">
-                Status
-              </span>
-              <Chip color={STATUS_COLOR.COMPLETED} size="sm">
-                <Chip.Label>{STATUS_LABEL.COMPLETED}</Chip.Label>
-              </Chip>
-            </div>
-
             {isPartial ? (
               <Alert status="warning">
                 <Alert.Indicator />
