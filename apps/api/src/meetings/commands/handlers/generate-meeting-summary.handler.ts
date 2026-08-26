@@ -40,26 +40,31 @@ export class GenerateMeetingSummaryHandler implements ICommandHandler<GenerateMe
       return;
     }
 
-    try {
-      const files = await this.prisma.meetingFile.findMany({
-        where: { meetingId },
-        orderBy: { uploadedAt: 'asc' },
+    const files = await this.prisma.meetingFile.findMany({
+      where: { meetingId },
+      orderBy: { uploadedAt: 'asc' },
+    });
+
+    const completedFiles = files.filter(
+      (file) => file.transcriptionStatus === 'COMPLETED',
+    );
+
+    if (completedFiles.length === 0) {
+      // The trigger (maybeTriggerMeetingSummary) only dispatches once at
+      // least one sibling file is COMPLETED, but a concurrent file change
+      // (e.g. a delete racing this dispatch) between that check and this
+      // read can in principle leave none. There was nothing to summarize —
+      // that's not a generation failure, so this resets back to "not yet
+      // applicable" (null) rather than routing through the generic FAILED
+      // path below, which is reserved for an actual failed attempt.
+      await this.prisma.meeting.update({
+        where: { id: meetingId },
+        data: { summaryStatus: null },
       });
+      return;
+    }
 
-      const completedFiles = files.filter(
-        (file) => file.transcriptionStatus === 'COMPLETED',
-      );
-
-      if (completedFiles.length === 0) {
-        // The trigger (maybeTriggerMeetingSummary) only dispatches once at
-        // least one sibling file is COMPLETED, but a concurrent file change
-        // between that check and this read could in principle leave none —
-        // treated the same as any other generation failure.
-        throw new Error(
-          `Meeting ${meetingId} has no completed transcripts to summarize.`,
-        );
-      }
-
+    try {
       const transcriptText = completedFiles
         .map((file) => file.transcriptionText ?? '')
         .join('\n\n');
