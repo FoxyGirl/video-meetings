@@ -68,8 +68,7 @@ It owns one seeded meeting ("QA Test Meeting") to check the detail page's organi
 
 ## Active feature plans
 
-- `docs/plan-user-profile-and-edit-page.md` (PRD: `docs/prd-user-profile-and-edit-page.md`; research: `docs/research-plan-user-profile-and-edit-page.md.md`) — user profile page and profile editing. Consult the research file before implementing any phase of this plan; it maps each phase onto this repo's existing CQRS/upload/HTTP-client patterns.
-- `docs/plan-transcribe-uploaded-meeting-files-with-local-whisper.md` (PRD: `docs/prd-transcribe-uploaded-meeting-files-with-local-whisper.md`; research: `docs/research-transcribe-uploaded-meeting-files-with-local-whisper.md`) — automatic local Whisper "tiny" transcription of a meeting's uploaded recording, with status/transcript display and a "Refresh Transcription" action. Consult the research file first: it resolves the runtime choice the plan left open and flags e2e fixtures that break under this feature.
+- `docs/plan-meeting-summary-action-items-and-decisions.md` (PRD: `docs/prd-meeting-summary-action-items-and-decisions.md`; research: `docs/research-meeting-summary-action-items-and-decisions.md`) — meeting-level summary, action items, and decisions generated via an external LLM once all of a meeting's files finish transcribing, with status display and a "Refresh Summary" action. Consult the research file first: it recommends reusing the already-installed `@anthropic-ai/claude-agent-sdk` (`outputFormat: { type: 'json_schema' }`) and mirrors the existing per-file transcription trigger/compare-and-set pattern at the meeting level.
 
 ## Keeping documentation in sync
 
