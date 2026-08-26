@@ -41,6 +41,44 @@ const REAL_GEMINI_API_KEY = readRealGeminiApiKey();
 // no "needs additional money" reason to skip it by default.
 const describeIfApiKeyPresent = REAL_GEMINI_API_KEY ? describe : describe.skip;
 
+// Transient, not a real problem — Google's own error carries a
+// retryDelay for both of these, i.e. it expects well-behaved clients to
+// retry. Observed twice in one afternoon of local testing (a 503
+// "experiencing high demand" and, separately, a 429 immediately after a
+// prior real call). Anything else (404 model-not-found, 401/403 auth,
+// PERMISSION_DENIED) is exactly the kind of persistent failure this test
+// exists to catch, and fails immediately rather than burning the retry
+// budget masking it.
+const RETRYABLE_STATUSES = new Set([429, 503]);
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 5000;
+
+async function pingGeminiWithRetries(
+  ai: GoogleGenAI,
+): Promise<string | undefined> {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: 'Reply with exactly: pong',
+      });
+      return response.text;
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      if (
+        attempt === MAX_ATTEMPTS ||
+        !status ||
+        !RETRYABLE_STATUSES.has(status)
+      ) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+  }
+  // Unreachable — the loop above always either returns or throws.
+  throw new Error('unreachable');
+}
+
 describeIfApiKeyPresent('Gemini API (e2e)', () => {
   // Deliberately calls the SDK directly against GEMINI_MODEL rather than
   // through generateMeetingSummary() (already covered, with the LLM call
@@ -55,11 +93,8 @@ describeIfApiKeyPresent('Gemini API (e2e)', () => {
   it('gets a real response back from the configured Gemini model', async () => {
     const ai = new GoogleGenAI({ apiKey: REAL_GEMINI_API_KEY! });
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: 'Reply with exactly: pong',
-    });
+    const text = await pingGeminiWithRetries(ai);
 
-    expect(response.text?.toLowerCase()).toContain('pong');
-  }, 30000);
+    expect(text?.toLowerCase()).toContain('pong');
+  }, 60000);
 });
