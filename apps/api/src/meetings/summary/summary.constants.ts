@@ -19,11 +19,16 @@ export function getGeminiApiKey(): string {
   return apiKey;
 }
 
-// A current free-tier Flash-class model — more than capable of a
-// single-shot summarize-and-extract task like this one (see
-// docs/research-meeting-summary-action-items-and-decisions.md).
-// gemini-2.5-flash was retired for new users (confirmed 2026-08-26: every
-// real call returned a 404 "no longer available to new users" from the
-// Gemini API itself, which is why every generation attempt was silently
-// ending in FAILED) — Google's own error pointed at this replacement.
-export const GEMINI_MODEL = 'gemini-3.6-flash';
+// gemini-2.5-flash (the originally chosen model) was retired for new users
+// (confirmed 2026-08-26: every real call returned a 404 "no longer
+// available to new users" from the Gemini API itself, which is why every
+// generation attempt was silently ending in FAILED). Its suggested
+// replacement, a dated gemini-3.6-flash, turned out to have a much
+// stricter free-tier quota (20 requests/day) that this app's own testing
+// exhausted within a single afternoon. Pinned to the "-latest" alias
+// instead — Google maintains this to always resolve to its current
+// recommended Flash-class model, so a future retirement rolls forward
+// automatically instead of silently breaking every generation again the
+// same way. See gemini-api.e2e-spec.ts, the real (non-mocked) e2e test
+// that would have caught both of the above immediately.
+export const GEMINI_MODEL = 'gemini-flash-latest';
