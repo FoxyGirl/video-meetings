@@ -15,6 +15,13 @@ enum TranscriptionStatus {
   FAILED
 }
 
+enum SummaryStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id               String    @id @default(uuid())
   email            String    @unique
@@ -29,15 +36,21 @@ model User {
 }
 
 model Meeting {
-  id           String        @id @default(uuid())
-  title        String
-  date         DateTime
-  participants String[]
-  organizerId  String
-  organizer    User          @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @default(now()) @updatedAt
-  files        MeetingFile[]
+  id               String         @id @default(uuid())
+  title            String
+  date             DateTime
+  participants     String[]
+  organizerId      String
+  organizer        User           @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  files            MeetingFile[]
+  summaryStatus    SummaryStatus?
+  summaryText      String?
+  summaryIsPartial Boolean?
+  summaryUpdatedAt DateTime?
+  actionItems      ActionItem[]
+  decisions        Decision[]
 
   @@index([organizerId])
 }
@@ -56,6 +69,29 @@ model MeetingFile {
   transcriptionUpdatedAt DateTime?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @default(now()) @updatedAt
+
+  @@index([meetingId])
+}
+
+model ActionItem {
+  id          String   @id @default(uuid())
+  meetingId   String
+  meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description String
+  assignee    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([meetingId])
+}
+
+model Decision {
+  id          String   @id @default(uuid())
+  meetingId   String
+  meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   @@index([meetingId])
 }
