@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
 import { DeleteMeetingFileCommand } from './commands/delete-meeting-file.command';
+import { RefreshMeetingSummaryCommand } from './commands/refresh-meeting-summary.command';
 import { RefreshTranscriptionCommand } from './commands/refresh-transcription.command';
 import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
@@ -134,6 +135,17 @@ export class MeetingsController {
   ) {
     return this.commandBus.execute(
       new RefreshTranscriptionCommand(id, fileId, request.user.userId),
+    );
+  }
+
+  @Post(':id/summary/refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshSummary(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commandBus.execute(
+      new RefreshMeetingSummaryCommand(id, request.user.userId),
     );
   }
 }
