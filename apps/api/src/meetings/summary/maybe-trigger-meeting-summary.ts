@@ -34,6 +34,21 @@ export async function maybeTriggerMeetingSummary(
     return;
   }
 
+  // Written synchronously so a client polling right after this fires can
+  // observe an intermediate "Pending" state, same as UploadMeetingFileHandler
+  // writes transcriptionStatus: 'PENDING' before dispatching
+  // TranscribeMeetingFileCommand. Guarded the same null-safe way
+  // GenerateMeetingSummaryHandler's own PROCESSING claim is (Prisma's `not`
+  // filter never matches NULL) so this never disturbs a run that already
+  // claimed PROCESSING.
+  await prisma.meeting.updateMany({
+    where: {
+      id: meetingId,
+      OR: [{ summaryStatus: null }, { summaryStatus: { not: 'PROCESSING' } }],
+    },
+    data: { summaryStatus: 'PENDING' },
+  });
+
   commandBus
     .execute(new GenerateMeetingSummaryCommand(meetingId))
     .catch((error: unknown) => {
