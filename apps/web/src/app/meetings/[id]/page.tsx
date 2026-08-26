@@ -7,6 +7,7 @@ import { Alert, Card, Spinner } from '@heroui/react';
 import { FileQuestion } from 'lucide-react';
 import { MeetingFileDisplay } from '@/components/meeting-file-display';
 import { MeetingFileUpload } from '@/components/meeting-file-upload';
+import { MeetingSummary } from '@/components/meeting-summary';
 import { MeetingTranscription } from '@/components/meeting-transcription';
 import {
   ApiError,
@@ -193,6 +194,19 @@ export default function MeetingDetailPage() {
 
         {meeting && !isFilesLoading ? (
           <>
+            <MeetingSummary
+              actionItems={meeting.actionItems}
+              decisions={meeting.decisions}
+              files={files}
+              isOrganizer={isOrganizer}
+              meetingId={meeting.id}
+              summaryIsPartial={meeting.summaryIsPartial}
+              summaryStatus={meeting.summaryStatus}
+              summaryText={meeting.summaryText}
+              onRefreshed={setMeeting}
+              onSessionExpired={handleSessionExpired}
+            />
+
             {files.map((file) => (
               <div
                 key={file.id}
