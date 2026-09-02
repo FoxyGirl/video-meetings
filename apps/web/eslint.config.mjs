@@ -46,10 +46,9 @@ const eslintConfig = defineConfig([
     'playwright-report/**',
   ]),
   // Covers all of src/** so nothing new can slip in unchecked. "unknown"
-  // imports (anything not under a recognized FSD layer — legacy
-  // src/components, src/lib, npm packages) are left alone by
-  // `default: 'allow'`; only imports between two *known* FSD elements are
-  // restricted.
+  // imports (anything not under a recognized FSD layer — e.g. npm
+  // packages) are left alone by `default: 'allow'`; only imports between
+  // two *known* FSD elements are restricted.
   {
     files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },

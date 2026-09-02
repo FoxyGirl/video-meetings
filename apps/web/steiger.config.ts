@@ -7,13 +7,6 @@ import fsd from '@feature-sliced/steiger-plugin';
 export default defineConfig([
   ...fsd.configs.recommended,
   {
-    // src/lib (and src/components) are pre-FSD legacy code that hasn't
-    // been migrated into a layer — ESLint's boundaries rule already
-    // leaves them unclassified/unchecked (eslint.config.mjs), so exclude
-    // them here too rather than have "lib" misread as a typo'd layer name.
-    ignores: ['src/lib/**', 'src/components/**'],
-  },
-  {
     // Off project-wide, not scoped to individual slices: at this app's
     // current size, the large majority of features/widgets are — by
     // design — used by exactly one consumer (a "feature" is a single,
