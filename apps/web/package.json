@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "fsd:lint": "steiger ./src",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "tailwind-variants": "^3.2.2"
   },
   "devDependencies": {
+    "@feature-sliced/steiger-plugin": "^0.7.0",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -31,7 +33,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-boundaries": "^7.2.0",
     "pg": "^8.22.0",
+    "steiger": "^0.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
