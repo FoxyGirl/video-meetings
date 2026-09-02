@@ -1,4 +1,4 @@
-import { validateFileAgainstTypes } from './file-types';
+import { validateFileAgainstTypes } from '@/shared/lib';
 
 // Mirrors the server's default (apps/api's MAX_AVATAR_FILE_SIZE_BYTES) —
 // this client-side copy is a fixed UX fast-fail, not the authority; the

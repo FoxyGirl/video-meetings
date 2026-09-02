@@ -10,17 +10,14 @@ import {
   toast,
 } from '@heroui/react';
 import { CheckCircle2, Upload, XCircle } from 'lucide-react';
-import {
-  ApiError,
-  uploadMeetingFiles,
-  type MeetingFileMetadata,
-  type UploadBatchResult,
-} from '@/lib/api';
+import { ApiError } from '@/shared/api';
 import {
   ACCEPTED_FILE_TYPES,
   MAX_FILES_PER_MEETING,
   validateFile,
-} from '@/lib/file-types';
+  type MeetingFileMetadata,
+} from '@/entities/meeting-file';
+import { uploadMeetingFiles, type UploadBatchResult } from '../api';
 
 interface StagedFile {
   file: File;

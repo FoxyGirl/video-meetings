@@ -10,13 +10,12 @@ import {
   Spinner,
   type ChipVariants,
 } from '@heroui/react';
-import { RefreshCw } from 'lucide-react';
+import { ApiError } from '@/shared/api';
 import {
-  ApiError,
   listMeetingFiles,
-  refreshTranscription,
   type TranscriptionStatus,
-} from '@/lib/api';
+} from '@/entities/meeting-file';
+import { RefreshTranscriptionButton } from '@/features/refresh-transcription';
 
 const STATUS_LABEL: Record<TranscriptionStatus, string> = {
   PENDING: 'Pending',
@@ -39,7 +38,7 @@ const POLL_INTERVAL_MS = 3000;
 // real outage shouldn't stay silent forever.
 const POLL_FAILURE_WARNING_THRESHOLD = 3;
 
-interface MeetingTranscriptionProps {
+interface MeetingTranscriptionCardProps {
   meetingId: string;
   fileId: string;
   status: TranscriptionStatus | null;
@@ -48,68 +47,48 @@ interface MeetingTranscriptionProps {
   onSessionExpired: () => void;
 }
 
-// Renders next to MeetingFileDisplay whenever the meeting has a file,
-// seeded from the file metadata the page already fetched (no duplicate
-// fetch on mount). status/text are only ever used as the *initial* state
-// here — once mounted, this component owns them via its own polling, so a
-// parent re-render with the same seed props never resets in-flight
-// progress.
-export function MeetingTranscription({
+// Renders next to the file's MeetingFileCard, seeded from the file metadata
+// the page already fetched (no duplicate fetch on mount). status/text are
+// only ever used as the *initial* state here — once mounted, this component
+// owns them via its own polling, so a parent re-render with the same seed
+// props never resets in-flight progress.
+export function MeetingTranscriptionCard({
   meetingId,
   fileId,
   status: initialStatus,
   text: initialText,
   isOrganizer,
   onSessionExpired,
-}: MeetingTranscriptionProps) {
+}: MeetingTranscriptionCardProps) {
   const [status, setStatus] = useState(initialStatus);
   const [text, setText] = useState(initialText);
   const [consecutivePollFailures, setConsecutivePollFailures] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   // Collapsed by default whenever a transcript exists — local to this one
   // instance, so expanding one file's transcript never affects another
-  // file's MeetingTranscription (each is its own component instance).
+  // file's MeetingTranscriptionCard (each is its own component instance).
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    setRefreshError(null);
-    try {
-      const result = await refreshTranscription(meetingId, fileId);
-      // Reflected locally from the response rather than assumed/waiting
-      // for the next poll tick — the status/text useState pair is
-      // otherwise only ever updated by the polling effect below, which
-      // this also re-arms whenever the result actually is PENDING/
-      // PROCESSING (its effect depends on `status`). Using the response's
-      // real value (not a hardcoded 'PENDING') matters because the
-      // refresh can legitimately no-op server-side (e.g. a concurrent
-      // delete/replace already moved the meeting off the file this
-      // refresh was scoped to) — trusting a fabricated PENDING in that
-      // case would strand the UI showing "Transcribing…" forever, since
-      // polling would just see the file gone and stop without ever
-      // correcting it.
-      setText(result.transcriptionText);
-      setStatus(result.transcriptionStatus);
-      // A stale failure count from a previous, already-settled polling run
-      // shouldn't make this fresh run look like it's already struggling.
-      setConsecutivePollFailures(0);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        onSessionExpired();
-        return;
-      }
-      // The refresh request itself failed (network/auth) — the displayed
-      // status/text are left exactly as they were, since nothing on the
-      // server actually changed.
-      setRefreshError(
-        error instanceof ApiError
-          ? error.message
-          : 'Failed to refresh transcription. Please try again.',
-      );
-    } finally {
-      setIsRefreshing(false);
-    }
+  const handleRefreshed = (result: {
+    transcriptionStatus: TranscriptionStatus | null;
+    transcriptionText: string | null;
+  }) => {
+    // Reflected locally from the response rather than assumed/waiting for
+    // the next poll tick — the status/text useState pair is otherwise only
+    // ever updated by the polling effect below, which this also re-arms
+    // whenever the result actually is PENDING/PROCESSING (its effect
+    // depends on `status`). Using the response's real value (not a
+    // hardcoded 'PENDING') matters because the refresh can legitimately
+    // no-op server-side (e.g. a concurrent delete/replace already moved the
+    // meeting off the file this refresh was scoped to) — trusting a
+    // fabricated PENDING in that case would strand the UI showing
+    // "Transcribing…" forever, since polling would just see the file gone
+    // and stop without ever correcting it.
+    setText(result.transcriptionText);
+    setStatus(result.transcriptionStatus);
+    // A stale failure count from a previous, already-settled polling run
+    // shouldn't make this fresh run look like it's already struggling.
+    setConsecutivePollFailures(0);
   };
 
   // Bounded to while a transcription job is actually in flight — stops
@@ -128,9 +107,9 @@ export function MeetingTranscription({
           if (cancelled) {
             return;
           }
-          // A meeting can hold up to 10 files now, so this has to find its
-          // own fileId in the list rather than assume files[0] — otherwise
-          // a meeting with more than one file would silently poll (and
+          // A meeting can hold up to 10 files, so this has to find its own
+          // fileId in the list rather than assume files[0] — otherwise a
+          // meeting with more than one file would silently poll (and
           // display) some other file's status. A missing result (this file
           // deleted mid-poll) just stops polling — the page's own delete
           // flow already handles un-rendering this component when it's the
@@ -167,13 +146,13 @@ export function MeetingTranscription({
   }, [status, meetingId, fileId, onSessionExpired]);
 
   // A null status means "no transcription run has ever started for this
-  // file yet" (e.g. transcription was disabled server-side at upload
-  // time, or this file predates the transcription migration) — not "no
-  // file exists" (the parent page never mounts this component in that
-  // case). The organizer still needs the Refresh button reachable here,
-  // since it's the only UI path to trigger a first run without
-  // re-uploading the file; a non-organizer has nothing to do with a
-  // status-less file, so they see nothing, same as before.
+  // file yet" (e.g. transcription was disabled server-side at upload time,
+  // or this file predates the transcription migration) — not "no file
+  // exists" (the parent widget never mounts this component in that case).
+  // The organizer still needs the Refresh button reachable here, since it's
+  // the only UI path to trigger a first run without re-uploading the file;
+  // a non-organizer has nothing to do with a status-less file, so they see
+  // nothing, same as before.
   if (status === null && !isOrganizer) {
     return null;
   }
@@ -185,19 +164,14 @@ export function MeetingTranscription({
       <Card.Header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Card.Title>Transcript</Card.Title>
         {isOrganizer ? (
-          <Button
+          <RefreshTranscriptionButton
+            fileId={fileId}
             isDisabled={isInProgress}
-            isPending={isRefreshing}
-            variant="secondary"
-            onPress={handleRefresh}
-          >
-            {isRefreshing ? (
-              <Spinner color="current" size="sm" />
-            ) : (
-              <RefreshCw size={16} />
-            )}
-            Refresh Transcription
-          </Button>
+            meetingId={meetingId}
+            onError={setRefreshError}
+            onRefreshed={handleRefreshed}
+            onSessionExpired={onSessionExpired}
+          />
         ) : null}
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">
