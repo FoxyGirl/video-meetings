@@ -200,6 +200,23 @@ export async function changePassword(
   }
 }
 
+// Mirrors the api's Prisma SummaryStatus enum — a distinct type from
+// TranscriptionStatus even though the four values are identical, since the
+// two are independent state machines (a meeting's summary vs. one file's
+// transcription).
+export type SummaryStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface ActionItemMetadata {
+  id: string;
+  description: string;
+  assignee: string | null;
+}
+
+export interface DecisionMetadata {
+  id: string;
+  description: string;
+}
+
 export interface Meeting {
   id: string;
   title: string;
@@ -207,6 +224,15 @@ export interface Meeting {
   participants: string[];
   organizerId: string;
   createdAt: string;
+  // null means "not yet applicable" — no generation has ever been
+  // triggered for this meeting (files still transcribing, or none
+  // completed). See MeetingSummary (components/meeting-summary.tsx) for how
+  // that's distinguished from an in-progress/failed/completed run.
+  summaryStatus: SummaryStatus | null;
+  summaryText: string | null;
+  summaryIsPartial: boolean | null;
+  actionItems: ActionItemMetadata[];
+  decisions: DecisionMetadata[];
 }
 
 export interface CreateMeetingPayload {
@@ -381,6 +407,30 @@ export async function refreshTranscription(
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
       404: 'This meeting no longer exists, has no recording, or you are not its organizer.',
+    });
+  }
+}
+
+// Discards the meeting's current summary/action items/decisions and
+// re-checks whether generation should run again, same
+// RefreshMeetingSummaryHandler behavior refreshTranscription's own doc
+// comment describes for its file-scoped equivalent. The response is a full,
+// freshly-read Meeting (GetMeetingHandler's own response shape, not a
+// locally-constructed one) — whether generation actually restarted depends
+// on the meeting's current file states, so the caller has to read the real
+// resulting summaryStatus off this response rather than assume PENDING.
+export async function refreshMeetingSummary(
+  meetingId: string,
+): Promise<Meeting> {
+  try {
+    const res = await http.post<Meeting>(
+      `/meetings/${meetingId}/summary/refresh`,
+    );
+    return res.data;
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer exists or you are not its organizer.',
     });
   }
 }
