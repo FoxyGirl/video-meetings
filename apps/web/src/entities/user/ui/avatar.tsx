@@ -4,8 +4,7 @@ import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { ApiError } from '@/shared/api';
-import { getAvatarBlob } from '@/lib/api';
-import type { UserProfile } from '../api';
+import { getAvatarBlob, type UserProfile } from '../api';
 import { useUser } from './user-provider';
 
 interface UserAvatarProps {
