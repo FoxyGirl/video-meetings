@@ -17,7 +17,7 @@ import {
 import { AvatarUpload } from '@/components/avatar-upload';
 import { PasswordVisibilityToggle } from '@/components/password-visibility-toggle';
 import { ApiError, changePassword, updateUsername } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useSession } from '@/entities/session';
 import { CurrentUserAvatar, useProfile } from '@/entities/user';
 
 // Hand-mirrored from apps/api/src/user/dto/update-username.dto.ts's @MaxLength(50) — keep in sync.
@@ -35,7 +35,7 @@ const SAME_AS_CURRENT_PASSWORD_MESSAGE =
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { login, logout } = useAuth();
+  const { login, logout } = useSession();
   const { profile, setProfile, profileError, isLoading } = useProfile();
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);

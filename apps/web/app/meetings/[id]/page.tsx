@@ -16,13 +16,13 @@ import {
   type Meeting,
   type MeetingFileMetadata,
 } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useSession } from '@/entities/session';
 import { MAX_FILES_PER_MEETING } from '@/lib/file-types';
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { auth, userId, isLoading, logout } = useAuth();
+  const { auth, userId, isLoading, logout } = useSession();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [meetingError, setMeetingError] = useState<string | null>(null);
   const [files, setFiles] = useState<MeetingFileMetadata[]>([]);

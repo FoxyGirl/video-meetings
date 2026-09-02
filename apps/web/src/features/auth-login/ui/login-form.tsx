@@ -16,13 +16,13 @@ import {
 } from '@heroui/react';
 import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError } from '@/shared/api';
-import { useAuth } from '@/lib/auth-context';
+import { useSession } from '@/entities/session';
 import { EMAIL_PATTERN } from '@/lib/email';
 import { loginUser } from '../api';
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login } = useSession();
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
 

@@ -16,14 +16,14 @@ import {
 } from '@heroui/react';
 import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError, registerUser } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useSession } from '@/entities/session';
 import { EMAIL_PATTERN } from '@/lib/email';
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login } = useSession();
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
 
