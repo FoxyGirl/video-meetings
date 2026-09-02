@@ -8,7 +8,7 @@ import {
   Label,
   TextField,
 } from '@heroui/react';
-import { PasswordVisibilityToggle } from '@/components/password-visibility-toggle';
+import { PasswordVisibilityToggle } from './password-visibility-toggle';
 
 interface PasswordConfirmFieldProps {
   value: string;

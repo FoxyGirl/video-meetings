@@ -3,8 +3,10 @@
 import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
-import { ApiError, getAvatarBlob, type UserProfile } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { ApiError } from '@/shared/api';
+import { getAvatarBlob } from '@/lib/api';
+import type { UserProfile } from '../api';
+import { useUser } from './user-provider';
 
 interface UserAvatarProps {
   username?: string | null;
@@ -43,36 +45,37 @@ interface CurrentUserAvatarProps {
 }
 
 // Renders the logged-in user's own avatar — the only avatar this app can
-// currently fetch. Reads identity from auth-context itself rather than
-// taking it as props, so every call site (profile page, edit page, main
-// page) automatically shows the current user and can't be pointed at
+// currently fetch. Reads identity from UserProvider's context itself rather
+// than taking it as props, so every call site (profile page, edit page,
+// main page) automatically shows the current user and can't be pointed at
 // someone else's data by mistake.
 export function CurrentUserAvatar({ size, className }: CurrentUserAvatarProps) {
-  const { auth, profile, profileError, logout } = useAuth();
+  const { hasSession, email, profile, profileError, logout } = useUser();
   const avatarUrl = useAvatarImageUrl(
     profile?.avatarMimeType,
     profile?.avatarUploadedAt,
     logout,
   );
 
-  if (!auth) {
+  if (!hasSession) {
     return null;
   }
 
   // Profile fetch still in flight: render a neutral, empty circle rather
-  // than initials derived from `auth.email` — those can be a third state
-  // that's wrong in both directions (not the eventual username-derived
-  // initials, and not the avatar image either), flashing before the real
-  // one paints a moment later. `profileError` still counts as "settled",
-  // so a failed fetch falls through to the email-derived initials below
-  // rather than getting stuck on the empty placeholder forever.
+  // than initials derived from the session's own email — those can be a
+  // third state that's wrong in both directions (not the eventual
+  // username-derived initials, and not the avatar image either), flashing
+  // before the real one paints a moment later. `profileError` still counts
+  // as "settled", so a failed fetch falls through to the email-derived
+  // initials below rather than getting stuck on the empty placeholder
+  // forever.
   if (!profile && !profileError) {
     return <HeroAvatar size={size} className={className} />;
   }
 
   return (
     <UserAvatar
-      email={profile?.email ?? auth.email}
+      email={profile?.email ?? email ?? ''}
       username={profile?.username}
       imageUrl={avatarUrl}
       size={size}

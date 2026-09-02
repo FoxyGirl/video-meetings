@@ -5,68 +5,65 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { ApiError, getProfile, type UserProfile } from './api';
-import {
-  getAuthSnapshot,
-  getServerAuthSnapshot,
-  getUserId,
-  setAuthState,
-  subscribeAuth,
-  type AuthState,
-} from '@/entities/session';
+import { ApiError } from '@/shared/api';
+import { getProfile, type UserProfile } from '../api';
 
-interface AuthContextValue {
-  auth: AuthState | null;
+interface UserProviderProps {
+  // Session data, passed in rather than read via entities/session directly:
+  // entities/user and entities/session are sibling slices on the same
+  // (entities) layer, and the PRD's own rule for a genuine same-layer
+  // dependency is to lift composition to a higher layer instead of a direct
+  // cross-slice import — src/_app/providers.tsx is what actually calls
+  // entities/session's useSession() and feeds its output in here as props.
+  hasSession: boolean;
   userId: string | null;
+  // The session's own email, used only as CurrentUserAvatar's initials
+  // fallback for the brief window (or outright failure) where the fetched
+  // profile isn't available yet — not read by this provider's own fetch
+  // effect below, which keys everything off userId instead.
+  email: string | null;
+  isLoading: boolean;
+  logout: () => void;
+  children: ReactNode;
+}
+
+interface UserContextValue {
+  hasSession: boolean;
+  email: string | null;
   isLoading: boolean;
   profile: UserProfile | null;
   profileError: string | null;
   setProfile: (profile: UserProfile) => void;
-  login: (auth: AuthState) => void;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const UserContext = createContext<UserContextValue | null>(null);
 
-function subscribeMounted() {
-  return () => {};
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const auth = useSyncExternalStore(
-    subscribeAuth,
-    getAuthSnapshot,
-    getServerAuthSnapshot,
-  );
-  const isLoading = useSyncExternalStore(
-    subscribeMounted,
-    () => false,
-    () => true,
-  );
-
-  const login = useCallback((next: AuthState) => setAuthState(next), []);
-  const logout = useCallback(() => setAuthState(null), []);
-  const userId = useMemo(
-    () => (auth ? getUserId(auth.accessToken) : null),
-    [auth],
-  );
-
+// Profile-fetch orchestration half of the old auth-context.tsx's
+// AuthProvider — see entities/session's SessionProvider for the session-only
+// half this was split from.
+export function UserProvider({
+  hasSession,
+  userId,
+  email,
+  isLoading,
+  logout,
+  children,
+}: UserProviderProps) {
   // Both tagged with the id of the user they were produced for (profile also
   // via the public setProfile below) so a new session doesn't need a
   // synchronous reset of the previous one's leftover state — `profile` and
   // `profileError` just derive to null once `userId` no longer matches, same
-  // "only valid while the key still matches" technique avatar.tsx's
-  // useAvatarImageUrl already uses for its fetched object URL. Keyed on
-  // `userId` rather than the raw access token: it's not a secret (unlike the
-  // token, which this would otherwise be copying into React state — and
-  // from there into DevTools/error boundaries/session-replay tooling), and
-  // re-login as the *same* user (e.g. a token refresh) keeps the cached
-  // profile instead of needlessly discarding it.
+  // "only valid while the key still matches" technique entities/user's own
+  // avatar.tsx uses for its fetched object URL. Keyed on `userId` rather
+  // than the raw access token: it's not a secret (unlike the token, which
+  // this would otherwise be copying into React state — and from there into
+  // DevTools/error boundaries/session-replay tooling), and re-login as the
+  // *same* user (e.g. a token refresh) keeps the cached profile instead of
+  // needlessly discarding it.
   const [fetchedProfile, setFetchedProfile] = useState<{
     userId: string;
     profile: UserProfile;
@@ -89,11 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetches the profile (username/avatar — not carried by the JWT payload,
   // see entities/session's getUserId) as soon as a session exists, so it's
   // available app-wide via context instead of every page that needs it
-  // re-fetching its own copy. Keyed on `auth` alone: it re-fires right after
-  // login, and again for a session restored from localStorage on a fresh
-  // page load, but not on every render.
+  // re-fetching its own copy. Keyed on `hasSession` alone: it re-fires right
+  // after login, and again for a session restored from localStorage on a
+  // fresh page load, but not on every render.
   useEffect(() => {
-    if (!auth) {
+    if (!hasSession) {
       return;
     }
 
@@ -115,7 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (error instanceof ApiError && error.status === 401) {
           // Session is no longer valid — clear it. Any page whose own
-          // auth-gating effect is watching `auth` will redirect to /login.
+          // auth-gating effect is watching the session will redirect to
+          // /login.
           logout();
           return;
         }
@@ -133,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [auth, userId, logout]);
+  }, [hasSession, userId, logout]);
 
   // `userId &&` guards against a null userId (undecodable token) matching a
   // stale null-keyed entry — a null key must never be treated as valid.
@@ -145,27 +143,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       : null;
 
   return (
-    <AuthContext.Provider
+    <UserContext.Provider
       value={{
-        auth,
-        userId,
+        hasSession,
+        email,
         isLoading,
         profile,
         profileError,
         setProfile,
-        login,
         logout,
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </UserContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export function useUser() {
+  const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useUser must be used within a UserProvider');
   }
   return context;
 }

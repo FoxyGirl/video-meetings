@@ -1,12 +1,11 @@
 import { http, toApiError } from '@/shared/api';
+import type { AuthResult } from '@/entities/session';
+
+export type { AuthResult };
 
 export interface LoginPayload {
   email: string;
   password: string;
-}
-
-export interface AuthResult {
-  accessToken: string;
 }
 
 export async function loginUser(payload: LoginPayload): Promise<AuthResult> {

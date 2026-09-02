@@ -10,12 +10,13 @@ import {
   toast,
 } from '@heroui/react';
 import { Upload } from 'lucide-react';
-import { ApiError, uploadAvatar, type UserProfile } from '@/lib/api';
-import { cacheAvatarPreview } from '@/components/avatar';
+import { ApiError } from '@/shared/api';
+import { cacheAvatarPreview, type UserProfile } from '@/entities/user';
 import {
   ACCEPTED_AVATAR_TYPES,
   validateAvatarFile,
 } from '@/lib/avatar-file-types';
+import { uploadAvatar } from '../api';
 
 interface AvatarUploadProps {
   onUploaded: (profile: UserProfile) => void;

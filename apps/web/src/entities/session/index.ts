@@ -2,6 +2,7 @@ import { setAuthTokenProvider } from '@/shared/api';
 import { getAuthSnapshot } from './model';
 
 export {
+  type AuthResult,
   type AuthState,
   getAuthSnapshot,
   getServerAuthSnapshot,
@@ -9,6 +10,7 @@ export {
   setAuthState,
   subscribeAuth,
 } from './model';
+export { SessionProvider, useSession } from './ui/session-provider';
 
 // Registers this entity as shared/api's token source — shared can't import
 // entities/session directly (an upward import), so session hands its token

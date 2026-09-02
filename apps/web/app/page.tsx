@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
-import { CurrentUserAvatar } from '@/components/avatar';
+import { CurrentUserAvatar, useUser } from '@/entities/user';
+import { useSession } from '@/entities/session';
 import { ApiError, getMeetings, type Meeting } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
 
 export default function HomePage() {
   const router = useRouter();
-  const { auth, isLoading, logout, profile } = useAuth();
+  const { auth, isLoading, logout } = useSession();
+  const { profile } = useUser();
   const [meetings, setMeetings] = useState<Meeting[] | null>(null);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
   const isMeetingsLoading = meetings === null && meetingsError === null;

@@ -1,94 +1,7 @@
 import axios from 'axios';
 import { API_URL, http, ApiError, toApiError } from '@/shared/api';
-import type { AuthResult } from '@/features/auth-login';
 
-export { API_URL, ApiError, type AuthResult };
-
-export interface RegisterPayload {
-  email: string;
-  password: string;
-}
-
-export async function registerUser(
-  payload: RegisterPayload,
-): Promise<AuthResult> {
-  try {
-    const res = await http.post<AuthResult>('/auth/register', payload);
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      409: 'An account with this email already exists.',
-    });
-  }
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  username: string | null;
-  avatarMimeType: string | null;
-  avatarUploadedAt: string | null;
-}
-
-export async function getProfile(): Promise<UserProfile> {
-  try {
-    const res = await http.get<UserProfile>('/users/me');
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-export async function updateUsername(
-  username: string | null,
-): Promise<UserProfile> {
-  try {
-    const res = await http.patch<UserProfile>('/users/me/username', {
-      username,
-    });
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-export async function uploadAvatar(
-  file: File,
-  onProgress?: (percent: number) => void,
-): Promise<UserProfile> {
-  const form = new FormData();
-  // Field name must match the server's FileInterceptor('file', ...).
-  form.append('file', file);
-
-  try {
-    const res = await http.post<UserProfile>('/users/me/avatar', form, {
-      onUploadProgress: (event) => {
-        // event.total can be undefined if content length can't be
-        // computed — same guard raw XHR's lengthComputable would need.
-        if (event.total) {
-          onProgress?.(Math.round((event.loaded / event.total) * 100));
-        }
-      },
-    });
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-      // Deliberately not size-specific: avatar-file-types.ts's client-side
-      // max is only a mirrored guess at the server's real (env-configurable)
-      // limit, and client-side validation already rejects anything over
-      // that guess before a request is sent — so this path only fires when
-      // the server's actual limit is *lower* than the client's, which is
-      // exactly the case where citing the client's number would state a
-      // wrong one.
-      413: 'File is too large. Please try a smaller image.',
-    });
-  }
-}
+export { API_URL, ApiError };
 
 // Fetches the current user's avatar image via a Bearer-authenticated GET,
 // same reasoning as downloadMeetingFile: the browser won't attach custom
@@ -106,30 +19,6 @@ export async function getAvatarBlob(): Promise<Blob | null> {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       return null;
     }
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-export interface ChangePasswordPayload {
-  currentPassword: string;
-  newPassword: string;
-}
-
-// A wrong current password is a 403 here (ChangePasswordHandler), not a 401
-// — see apps/api/src/user/commands/handlers/change-password.handler.ts. That
-// keeps this call's 401 meaning exactly what it means everywhere else in
-// this file (JwtAuthGuard rejecting a missing/expired token), so this can
-// use the same blanket "session expired" override as every other call site
-// instead of string-matching the response body to tell the two apart.
-export async function changePassword(
-  payload: ChangePasswordPayload,
-): Promise<AuthResult> {
-  try {
-    const res = await http.patch<AuthResult>('/users/me/password', payload);
-    return res.data;
-  } catch (error) {
     throw toApiError(error, {
       401: 'Your session has expired. Please sign in again.',
     });

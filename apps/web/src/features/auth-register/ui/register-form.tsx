@@ -18,9 +18,11 @@ import { ApiError } from '@/shared/api';
 import { PasswordConfirmField } from '@/shared/ui';
 import { useSession } from '@/entities/session';
 import { EMAIL_PATTERN } from '@/lib/email';
-import { loginUser } from '../api';
+import { registerUser } from '../api';
 
-export function LoginForm() {
+const MIN_PASSWORD_LENGTH = 8;
+
+export function RegisterForm() {
   const router = useRouter();
   const { login } = useSession();
   const [password, setPassword] = useState('');
@@ -35,12 +37,12 @@ export function LoginForm() {
 
     setIsPending(true);
     try {
-      const { accessToken } = await loginUser({
+      const { accessToken } = await registerUser({
         email,
         password: passwordValue,
       });
       login({ accessToken, email });
-      toast.success('Signed in', {
+      toast.success('Account created', {
         description: 'Redirecting you to your meetings…',
       });
       router.push('/');
@@ -58,9 +60,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <Card.Header>
-        <Card.Title>Sign in</Card.Title>
+        <Card.Title>Create your account</Card.Title>
         <Card.Description>
-          Enter your credentials to access your meetings.
+          Sign up to start scheduling and joining meetings.
         </Card.Description>
       </Card.Header>
 
@@ -84,9 +86,11 @@ export function LoginForm() {
           </TextField>
 
           <PasswordConfirmField
-            withConfirmField={false}
+            description={`Must be at least ${MIN_PASSWORD_LENGTH} characters.`}
             onValidate={(value) =>
-              value.length === 0 ? 'Enter your password.' : null
+              value.length < MIN_PASSWORD_LENGTH
+                ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+                : null
             }
             value={password}
             onChangeValue={setPassword}
@@ -99,16 +103,16 @@ export function LoginForm() {
             type="submit"
           >
             {isPending ? <Spinner color="current" size="sm" /> : null}
-            {isPending ? 'Signing in…' : 'Sign in'}
+            {isPending ? 'Creating account…' : 'Create account'}
           </Button>
 
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Don&apos;t have an account?{' '}
+            Already have an account?{' '}
             <Link
               className="font-medium text-foreground underline underline-offset-2"
-              href="/register"
+              href="/login"
             >
-              Create one
+              Sign in
             </Link>
           </p>
         </Form>

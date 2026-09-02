@@ -15,7 +15,7 @@ import {
   TextField,
 } from '@heroui/react';
 import { ApiError, createMeeting } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useSession } from '@/entities/session';
 import { EMAIL_PATTERN } from '@/lib/email';
 
 function parseParticipants(value: string): string[] {
@@ -27,7 +27,7 @@ function parseParticipants(value: string): string[] {
 
 export default function NewMeetingPage() {
   const router = useRouter();
-  const { auth, isLoading, logout } = useAuth();
+  const { auth, isLoading, logout } = useSession();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [dateError, setDateError] = useState<string | null>(null);
