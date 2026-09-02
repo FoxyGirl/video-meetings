@@ -1,5 +1,5 @@
 import { http, toApiError } from '@/shared/api';
-import { formatBytes, validateFileAgainstTypes } from '@/shared/lib';
+import { validateFileAgainstTypes } from '@/shared/lib';
 
 // Mirrors the api's Prisma TranscriptionStatus enum.
 export type TranscriptionStatus =
