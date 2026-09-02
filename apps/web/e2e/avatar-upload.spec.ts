@@ -13,7 +13,7 @@ const REAL_IMAGE_FIXTURE = path.join(
   'fixtures',
   'valid-avatar-image.png',
 );
-// Mirrors apps/web/src/lib/avatar-file-types.ts's MAX_AVATAR_FILE_SIZE_BYTES
+// Mirrors apps/web/src/entities/user/lib/avatar-file-types.ts's MAX_AVATAR_FILE_SIZE_BYTES
 // (itself mirrored from the server's default) — no committed fixture file,
 // an in-memory buffer one byte over the limit is enough to trigger client
 // validation without bloating the repo with a 5 MB binary.
