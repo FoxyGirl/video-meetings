@@ -13,8 +13,8 @@ import {
   TextField,
   toast,
 } from '@heroui/react';
-import { PasswordVisibilityToggle } from '@/components/password-visibility-toggle';
 import { ApiError } from '@/shared/api';
+import { PasswordVisibilityToggle } from '@/shared/ui';
 import { useSession } from '@/entities/session';
 import type { UserProfile } from '@/entities/user';
 import { changePassword } from '../api';

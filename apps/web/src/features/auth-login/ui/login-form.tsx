@@ -14,8 +14,8 @@ import {
   TextField,
   toast,
 } from '@heroui/react';
-import { PasswordConfirmField } from '@/components/password-confirm-field';
 import { ApiError } from '@/shared/api';
+import { PasswordConfirmField } from '@/shared/ui';
 import { useSession } from '@/entities/session';
 import { EMAIL_PATTERN } from '@/lib/email';
 import { loginUser } from '../api';
