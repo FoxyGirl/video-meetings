@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
-import { CurrentUserAvatar } from '@/components/avatar';
+import { CurrentUserAvatar } from '@/entities/user';
 import { ApiError, getMeetings, type Meeting } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 

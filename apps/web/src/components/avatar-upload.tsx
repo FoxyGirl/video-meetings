@@ -11,7 +11,7 @@ import {
 } from '@heroui/react';
 import { Upload } from 'lucide-react';
 import { ApiError, uploadAvatar, type UserProfile } from '@/lib/api';
-import { cacheAvatarPreview } from '@/components/avatar';
+import { cacheAvatarPreview } from '@/entities/user';
 import {
   ACCEPTED_AVATAR_TYPES,
   validateAvatarFile,

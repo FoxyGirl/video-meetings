@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { API_URL, http, ApiError, toApiError } from '@/shared/api';
 import type { AuthResult } from '@/features/auth-login';
+import { type UserProfile, getProfile } from '@/entities/user';
 
 export { API_URL, ApiError, type AuthResult };
+export { type UserProfile, getProfile };
 
 export interface RegisterPayload {
   email: string;
@@ -18,25 +20,6 @@ export async function registerUser(
   } catch (error) {
     throw toApiError(error, {
       409: 'An account with this email already exists.',
-    });
-  }
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  username: string | null;
-  avatarMimeType: string | null;
-  avatarUploadedAt: string | null;
-}
-
-export async function getProfile(): Promise<UserProfile> {
-  try {
-    const res = await http.get<UserProfile>('/users/me');
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
     });
   }
 }

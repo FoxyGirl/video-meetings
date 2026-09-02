@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { Alert, Card, Spinner } from '@heroui/react';
-import { CurrentUserAvatar } from '@/components/avatar';
-import { useProfile } from '@/lib/use-profile';
+import { CurrentUserAvatar, useProfile } from '@/entities/user';
 
 export default function ProfilePage() {
   const { profile, profileError, isLoading } = useProfile();

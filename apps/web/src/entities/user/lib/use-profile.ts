@@ -29,7 +29,6 @@ export function useProfile() {
   }, [isAuthLoading, auth, router]);
 
   return {
-    auth,
     profile,
     setProfile,
     profileError,

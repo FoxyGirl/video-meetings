@@ -3,8 +3,10 @@
 import { Avatar as HeroAvatar } from '@heroui/react';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
-import { ApiError, getAvatarBlob, type UserProfile } from '@/lib/api';
+import { ApiError } from '@/shared/api';
+import { getAvatarBlob } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import type { UserProfile } from '../api';
 
 interface UserAvatarProps {
   username?: string | null;

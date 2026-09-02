@@ -14,12 +14,11 @@ import {
   TextField,
   toast,
 } from '@heroui/react';
-import { CurrentUserAvatar } from '@/components/avatar';
 import { AvatarUpload } from '@/components/avatar-upload';
 import { PasswordVisibilityToggle } from '@/components/password-visibility-toggle';
 import { ApiError, changePassword, updateUsername } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { useProfile } from '@/lib/use-profile';
+import { CurrentUserAvatar, useProfile } from '@/entities/user';
 
 // Hand-mirrored from apps/api/src/user/dto/update-username.dto.ts's @MaxLength(50) — keep in sync.
 const MAX_USERNAME_LENGTH = 50;
