@@ -18,7 +18,7 @@ import {
   setAuthState,
   subscribeAuth,
   type AuthState,
-} from './auth-store';
+} from '@/entities/session';
 
 interface AuthContextValue {
   auth: AuthState | null;
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   // Fetches the profile (username/avatar — not carried by the JWT payload,
-  // see auth-store's getUserId) as soon as a session exists, so it's
+  // see entities/session's getUserId) as soon as a session exists, so it's
   // available app-wide via context instead of every page that needs it
   // re-fetching its own copy. Keyed on `auth` alone: it re-fires right after
   // login, and again for a session restored from localStorage on a fresh
