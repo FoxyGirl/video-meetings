@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && npm run fsd:lint",
     "typecheck": "tsc --noEmit",
     "fsd:lint": "steiger ./src",
     "test:e2e": "playwright test"
