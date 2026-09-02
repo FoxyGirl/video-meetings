@@ -28,14 +28,22 @@ function isIssueClosed(issueNumber) {
 }
 
 async function main() {
+  if (!fs.existsSync('.claude/ralph.config.json')) {
+    // No Ralph loop configured for this session — nothing to do.
+    process.exit(0);
+  }
+
   const config = JSON.parse(
     fs.readFileSync('.claude/ralph.config.json', 'utf8'),
   );
-  console.log(`⏹️ Stopping Ralph. Config: ${JSON.stringify(config, null, 2)}`);
 
   if (!config.active) {
+    // Ralph isn't currently running — exit before any logging so a plain
+    // session's Stop event stays silent instead of printing Ralph's state.
     process.exit(0);
   }
+
+  console.log(`⏹️ Stopping Ralph. Config: ${JSON.stringify(config, null, 2)}`);
 
   let counter = { count: 0, phaseIndex: 0 };
   console.log(
