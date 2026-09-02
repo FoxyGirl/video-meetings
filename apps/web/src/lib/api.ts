@@ -1,13 +1,7 @@
 import axios from 'axios';
 import { API_URL, http, ApiError, toApiError } from '@/shared/api';
-// Re-exported solely so the now-fully-unreferenced lib/auth-context.tsx
-// still compiles until issue #221 deletes it — nothing else imports these
-// from here anymore (update-username/upload-avatar/change-password each
-// import UserProfile from @/entities/user directly).
-import { type UserProfile, getProfile } from '@/entities/user';
 
 export { API_URL, ApiError };
-export { type UserProfile, getProfile };
 
 // Fetches the current user's avatar image via a Bearer-authenticated GET,
 // same reasoning as downloadMeetingFile: the browser won't attach custom
