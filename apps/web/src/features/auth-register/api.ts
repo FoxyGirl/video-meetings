@@ -1,12 +1,11 @@
 import { http, toApiError } from '@/shared/api';
+import type { AuthResult } from '@/entities/session';
+
+export type { AuthResult };
 
 export interface RegisterPayload {
   email: string;
   password: string;
-}
-
-export interface AuthResult {
-  accessToken: string;
 }
 
 export async function registerUser(

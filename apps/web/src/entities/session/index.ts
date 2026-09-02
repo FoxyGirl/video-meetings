@@ -2,6 +2,7 @@ import { setAuthTokenProvider } from '@/shared/api';
 import { getAuthSnapshot } from './model';
 
 export {
+  type AuthResult,
   type AuthState,
   getAuthSnapshot,
   getServerAuthSnapshot,

@@ -5,6 +5,16 @@ export interface AuthState {
   email: string;
 }
 
+// The shape every token-issuing endpoint (login, register, change-password)
+// returns — owned here rather than by whichever feature happens to call one
+// of those endpoints first, since every caller only ever uses it to build
+// the AuthState it hands to login() below. Centralizing it avoids three
+// separate {accessToken: string} copies drifting if this shape ever changes
+// (e.g. gains a refreshToken).
+export interface AuthResult {
+  accessToken: string;
+}
+
 export function getUserId(accessToken: string): string | null {
   try {
     const [, payload] = accessToken.split('.');

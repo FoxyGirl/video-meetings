@@ -1,12 +1,11 @@
 import { http, toApiError } from '@/shared/api';
+import type { AuthResult } from '@/entities/session';
+
+export type { AuthResult };
 
 export interface ChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
-}
-
-export interface AuthResult {
-  accessToken: string;
 }
 
 // A wrong current password is a 403 here (ChangePasswordHandler), not a 401
