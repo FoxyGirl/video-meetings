@@ -1,7 +1,23 @@
 import axios from 'axios';
 import { API_URL, http, ApiError, toApiError } from '@/shared/api';
+import type { Meeting } from '@/entities/meeting';
 
 export { API_URL, ApiError };
+
+// Re-exported for the meeting-file components and the meeting detail route,
+// which still reach into this file until Phase 4 of the FSD v2.1 refactor
+// (docs/plan-fsd-v2-1-architecture-refactor-for-next-js-web-app.md) migrates
+// them — the canonical definitions now live in entities/meeting.
+export {
+  type SummaryStatus,
+  type ActionItemMetadata,
+  type DecisionMetadata,
+  type Meeting,
+  type CreateMeetingPayload,
+  createMeeting,
+  getMeetings,
+  getMeeting,
+} from '@/entities/meeting';
 
 // Fetches the current user's avatar image via a Bearer-authenticated GET,
 // same reasoning as downloadMeetingFile: the browser won't attach custom
@@ -20,83 +36,6 @@ export async function getAvatarBlob(): Promise<Blob | null> {
       return null;
     }
     throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-// Mirrors the api's Prisma SummaryStatus enum — a distinct type from
-// TranscriptionStatus even though the four values are identical, since the
-// two are independent state machines (a meeting's summary vs. one file's
-// transcription).
-export type SummaryStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-
-export interface ActionItemMetadata {
-  id: string;
-  description: string;
-  assignee: string | null;
-}
-
-export interface DecisionMetadata {
-  id: string;
-  description: string;
-}
-
-export interface Meeting {
-  id: string;
-  title: string;
-  date: string;
-  participants: string[];
-  organizerId: string;
-  createdAt: string;
-  // null means "not yet applicable" — no generation has ever been
-  // triggered for this meeting (files still transcribing, or none
-  // completed). See MeetingSummary (components/meeting-summary.tsx) for how
-  // that's distinguished from an in-progress/failed/completed run.
-  summaryStatus: SummaryStatus | null;
-  summaryText: string | null;
-  summaryIsPartial: boolean | null;
-  actionItems: ActionItemMetadata[];
-  decisions: DecisionMetadata[];
-}
-
-export interface CreateMeetingPayload {
-  title: string;
-  date: string;
-  participants: string[];
-}
-
-export async function createMeeting(
-  payload: CreateMeetingPayload,
-): Promise<Meeting> {
-  try {
-    const res = await http.post<Meeting>('/meetings', payload);
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-export async function getMeetings(): Promise<Meeting[]> {
-  try {
-    const res = await http.get<Meeting[]>('/meetings');
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      401: 'Your session has expired. Please sign in again.',
-    });
-  }
-}
-
-export async function getMeeting(id: string): Promise<Meeting> {
-  try {
-    const res = await http.get<Meeting>(`/meetings/${id}`);
-    return res.data;
-  } catch (error) {
-    throw toApiError(error, {
-      404: 'This meeting doesn’t exist or has been deleted.',
       401: 'Your session has expired. Please sign in again.',
     });
   }
