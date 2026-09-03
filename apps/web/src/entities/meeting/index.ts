@@ -17,4 +17,5 @@ export {
   createMeeting,
   getMeetings,
   getMeeting,
+  deleteMeeting,
 } from './api';
