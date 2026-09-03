@@ -74,7 +74,8 @@ export class MeetingsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMeeting(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.commandBus.execute(
       new DeleteMeetingCommand(id, request.user.userId),
     );

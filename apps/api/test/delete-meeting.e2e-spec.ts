@@ -139,7 +139,7 @@ describe('DELETE /meetings/:id (e2e)', () => {
     await request(app.getHttpServer())
       .delete(`/meetings/${meetingId}`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
+      .expect(204);
 
     await request(app.getHttpServer())
       .get(`/meetings/${meetingId}`)
