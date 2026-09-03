@@ -81,4 +81,25 @@ test.describe('main page logged-in-user area', () => {
 
     await expect(page).toHaveURL('/profile');
   });
+
+  test('New meeting appears before Logout in the top header', async ({
+    page,
+  }) => {
+    await loginAsFreshUser(page);
+
+    const newMeetingLink = page.getByRole('link', { name: 'New meeting' });
+    const logoutButton = page.getByRole('button', { name: 'Logout' });
+
+    await expect(newMeetingLink).toBeVisible();
+    await expect(logoutButton).toBeVisible();
+
+    // A comma-separated CSS selector returns matches in document order,
+    // so this asserts New meeting precedes Logout in the DOM.
+    const headerControls = page.locator(
+      'a:has-text("New meeting"), button:has-text("Logout")',
+    );
+    await expect(headerControls).toHaveCount(2);
+    const texts = await headerControls.allTextContents();
+    expect(texts).toEqual(['New meeting', 'Logout']);
+  });
 });
