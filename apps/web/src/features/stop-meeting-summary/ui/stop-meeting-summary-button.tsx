@@ -2,66 +2,62 @@
 
 import { useState } from 'react';
 import { Button, Spinner } from '@heroui/react';
-import { RefreshCw } from 'lucide-react';
+import { CircleStop } from 'lucide-react';
 import { ApiError } from '@/shared/api';
 import type { Meeting } from '@/entities/meeting';
-import { refreshMeetingSummary } from '../api';
+import { stopMeetingSummary } from '../api';
 
-interface RefreshMeetingSummaryButtonProps {
+interface StopMeetingSummaryButtonProps {
   meetingId: string;
-  onRefreshed: (meeting: Meeting) => void;
+  onStopped: (meeting: Meeting) => void;
   // The button lives in the summary card's header, while its error (like
   // every other alert on that card) renders in the content below — so the
   // error is reported up rather than rendered by this component itself,
-  // keeping this a pure header control.
+  // same convention RefreshMeetingSummaryButton follows.
   onError: (message: string | null) => void;
   onSessionExpired: () => void;
 }
 
-export function RefreshMeetingSummaryButton({
+export function StopMeetingSummaryButton({
   meetingId,
-  onRefreshed,
+  onStopped,
   onError,
   onSessionExpired,
-}: RefreshMeetingSummaryButtonProps) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+}: StopMeetingSummaryButtonProps) {
+  const [isStopping, setIsStopping] = useState(false);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
+  const handleStop = async () => {
+    setIsStopping(true);
     onError(null);
     try {
-      const meeting = await refreshMeetingSummary(meetingId);
-      onRefreshed(meeting);
+      const meeting = await stopMeetingSummary(meetingId);
+      onStopped(meeting);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         onSessionExpired();
         return;
       }
-      // The refresh request itself failed (network/auth) — leave the
+      // The stop request itself failed (network/auth) — leave the
       // displayed summary exactly as it was, since nothing on the server
       // actually changed.
       onError(
         error instanceof ApiError
           ? error.message
-          : 'Failed to refresh the summary. Please try again.',
+          : 'Failed to stop the summary. Please try again.',
       );
     } finally {
-      setIsRefreshing(false);
+      setIsStopping(false);
     }
   };
 
   return (
-    <Button
-      isPending={isRefreshing}
-      variant="secondary"
-      onPress={handleRefresh}
-    >
-      {isRefreshing ? (
+    <Button isPending={isStopping} variant="secondary" onPress={handleStop}>
+      {isStopping ? (
         <Spinner color="current" size="sm" />
       ) : (
-        <RefreshCw size={16} />
+        <CircleStop size={16} />
       )}
-      Refresh Summary
+      Stop
     </Button>
   );
 }
