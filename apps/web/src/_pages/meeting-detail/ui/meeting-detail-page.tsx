@@ -16,6 +16,7 @@ import { useSession } from '@/entities/session';
 import { MeetingFileList } from '@/widgets/meeting-files';
 import { MeetingSummaryCard } from '@/widgets/meeting-summary';
 import { MeetingFileUpload } from '@/features/upload-meeting-files';
+import { DeleteMeetingButton } from '@/features/delete-meeting';
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -116,6 +117,10 @@ export default function MeetingDetailPage() {
     setFiles((prev) => prev.filter((file) => file.id !== fileId));
   };
 
+  const handleMeetingDeleted = () => {
+    router.replace('/');
+  };
+
   const handleFilesUploaded = (uploaded: MeetingFileMetadata[]) => {
     setFiles((prev) => [...prev, ...uploaded]);
   };
@@ -184,6 +189,16 @@ export default function MeetingDetailPage() {
                       </p>
                     )}
                   </div>
+                  {isOrganizer ? (
+                    <div>
+                      <DeleteMeetingButton
+                        meetingId={meeting.id}
+                        meetingTitle={meeting.title}
+                        onDeleted={handleMeetingDeleted}
+                        onSessionExpired={handleSessionExpired}
+                      />
+                    </div>
+                  ) : null}
                 </Card.Content>
               </Card>
             )
