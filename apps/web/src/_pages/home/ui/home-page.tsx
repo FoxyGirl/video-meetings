@@ -9,10 +9,11 @@ import { ApiError } from '@/shared/api';
 import { getMeetings, type Meeting } from '@/entities/meeting';
 import { CurrentUserAvatar, useUser } from '@/entities/user';
 import { useSession } from '@/entities/session';
+import { DeleteMeetingButton } from '@/features/delete-meeting';
 
 export default function HomePage() {
   const router = useRouter();
-  const { auth, isLoading, logout } = useSession();
+  const { auth, userId, isLoading, logout } = useSession();
   const { profile } = useUser();
   const [meetings, setMeetings] = useState<Meeting[] | null>(null);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
@@ -69,6 +70,17 @@ export default function HomePage() {
   const handleLogout = () => {
     logout();
     router.replace('/login');
+  };
+
+  const handleSessionExpired = () => {
+    logout();
+    router.replace('/login');
+  };
+
+  const handleMeetingDeleted = (meetingId: string) => {
+    setMeetings((prev) =>
+      prev ? prev.filter((meeting) => meeting.id !== meetingId) : prev,
+    );
   };
 
   const recentMeetings = meetings
@@ -133,7 +145,13 @@ export default function HomePage() {
                 </h2>
                 <div className="flex flex-col gap-3">
                   {recentMeetings.map((meeting) => (
-                    <MeetingCard key={meeting.id} meeting={meeting} />
+                    <MeetingCard
+                      key={meeting.id}
+                      isOrganizer={meeting.organizerId === userId}
+                      meeting={meeting}
+                      onDeleted={() => handleMeetingDeleted(meeting.id)}
+                      onSessionExpired={handleSessionExpired}
+                    />
                   ))}
                 </div>
               </section>
@@ -146,7 +164,13 @@ export default function HomePage() {
               {meetings && meetings.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {meetings.map((meeting) => (
-                    <MeetingCard key={meeting.id} meeting={meeting} />
+                    <MeetingCard
+                      key={meeting.id}
+                      isOrganizer={meeting.organizerId === userId}
+                      meeting={meeting}
+                      onDeleted={() => handleMeetingDeleted(meeting.id)}
+                      onSessionExpired={handleSessionExpired}
+                    />
                   ))}
                 </div>
               ) : (
@@ -162,13 +186,28 @@ export default function HomePage() {
   );
 }
 
-function MeetingCard({ meeting }: { meeting: Meeting }) {
+interface MeetingCardProps {
+  meeting: Meeting;
+  isOrganizer: boolean;
+  onDeleted: () => void;
+  onSessionExpired: () => void;
+}
+
+// Only the header/participants block is wrapped in the navigation Link — the
+// organizer-only delete button below it sits outside that Link so clicking
+// it (and its confirmation dialog) never also triggers a navigation.
+function MeetingCard({
+  meeting,
+  isOrganizer,
+  onDeleted,
+  onSessionExpired,
+}: MeetingCardProps) {
   return (
-    <Link
-      className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-      href={`/meetings/${meeting.id}`}
-    >
-      <Card className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+    <Card className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+      <Link
+        className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        href={`/meetings/${meeting.id}`}
+      >
         <Card.Header>
           <Card.Title>{meeting.title}</Card.Title>
           <Card.Description>
@@ -182,7 +221,17 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             </p>
           </Card.Content>
         ) : null}
-      </Card>
-    </Link>
+      </Link>
+      {isOrganizer ? (
+        <Card.Content>
+          <DeleteMeetingButton
+            meetingId={meeting.id}
+            meetingTitle={meeting.title}
+            onDeleted={onDeleted}
+            onSessionExpired={onSessionExpired}
+          />
+        </Card.Content>
+      ) : null}
+    </Card>
   );
 }
