@@ -203,35 +203,37 @@ function MeetingCard({
   onSessionExpired,
 }: MeetingCardProps) {
   return (
-    <Card className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
-      <Link
-        className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-        href={`/meetings/${meeting.id}`}
-      >
-        <Card.Header>
-          <Card.Title>{meeting.title}</Card.Title>
-          <Card.Description>
-            {new Date(meeting.date).toLocaleString()}
-          </Card.Description>
-        </Card.Header>
-        {meeting.participants.length > 0 ? (
+    <div data-testid={`meeting-card-${meeting.id}`}>
+      <Card className="transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+        <Link
+          className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          href={`/meetings/${meeting.id}`}
+        >
+          <Card.Header>
+            <Card.Title>{meeting.title}</Card.Title>
+            <Card.Description>
+              {new Date(meeting.date).toLocaleString()}
+            </Card.Description>
+          </Card.Header>
+          {meeting.participants.length > 0 ? (
+            <Card.Content>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Participants: {meeting.participants.join(', ')}
+              </p>
+            </Card.Content>
+          ) : null}
+        </Link>
+        {isOrganizer ? (
           <Card.Content>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Participants: {meeting.participants.join(', ')}
-            </p>
+            <DeleteMeetingButton
+              meetingId={meeting.id}
+              meetingTitle={meeting.title}
+              onDeleted={onDeleted}
+              onSessionExpired={onSessionExpired}
+            />
           </Card.Content>
         ) : null}
-      </Link>
-      {isOrganizer ? (
-        <Card.Content>
-          <DeleteMeetingButton
-            meetingId={meeting.id}
-            meetingTitle={meeting.title}
-            onDeleted={onDeleted}
-            onSessionExpired={onSessionExpired}
-          />
-        </Card.Content>
-      ) : null}
-    </Card>
+      </Card>
+    </div>
   );
 }

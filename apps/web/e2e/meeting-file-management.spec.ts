@@ -128,7 +128,13 @@ test.describe('meeting file metadata, download, and delete', () => {
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('test-recording.mp3');
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+    // Scoped to the file entry — the meeting detail page also has its own
+    // organizer-only "Delete" action for the whole meeting, so an unscoped
+    // lookup would be ambiguous.
+    await page
+      .locator('[data-testid^="meeting-file-"]')
+      .getByRole('button', { name: 'Delete' })
+      .click();
     await page
       .getByRole('alertdialog')
       .getByRole('button', { name: 'Delete' })
