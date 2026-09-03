@@ -8,6 +8,8 @@ import {
   deleteUserByEmail,
   loginUserViaApi,
   registerUserViaApi,
+  seedMeetingFile,
+  seedMeetingSummary,
 } from './api-helpers';
 import { loginViaUi } from './ui-helpers';
 
@@ -229,5 +231,93 @@ test.describe('meeting file metadata, download, and delete', () => {
     await expect(
       page.getByRole('button', { name: 'Choose File' }),
     ).not.toBeVisible();
+  });
+});
+
+test.describe('disabling file actions while the meeting summary is processing', () => {
+  const meetingIds: string[] = [];
+
+  test.beforeAll(async ({ request }) => {
+    await registerUserViaApi(request, TEST_USER_EMAIL, {
+      ignoreConflict: true,
+    });
+  });
+
+  test.afterEach(async () => {
+    await Promise.all(meetingIds.splice(0).map(deleteMeetingById));
+  });
+
+  test('disables "Refresh Transcription" and "Delete" for every file while the meeting summary is processing', async ({
+    page,
+    request,
+  }) => {
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
+    const { id } = await createMeetingOnly(request, accessToken);
+    meetingIds.push(id);
+    // COMPLETED so both buttons would normally be enabled on their own
+    // per-file merits — only the summary's PROCESSING status should be
+    // holding them disabled here.
+    await seedMeetingFile(id, 'COMPLETED');
+    await seedMeetingSummary(id, { status: 'PROCESSING' });
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+    await expect(
+      fileCard.getByRole('button', { name: 'Refresh Transcription' }),
+    ).toBeDisabled();
+    await expect(
+      fileCard.getByRole('button', { name: 'Delete' }),
+    ).toBeDisabled();
+  });
+
+  test('re-enables "Refresh Transcription" and "Delete" once the summary settles', async ({
+    page,
+    request,
+  }) => {
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
+    const { id } = await createMeetingOnly(request, accessToken);
+    meetingIds.push(id);
+    await seedMeetingFile(id, 'COMPLETED');
+    // A FAILED summary run is as settled as COMPLETED — both leave
+    // PROCESSING and should re-enable the file actions.
+    await seedMeetingSummary(id, { status: 'FAILED' });
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+    await expect(
+      fileCard.getByRole('button', { name: 'Refresh Transcription' }),
+    ).toBeEnabled();
+    await expect(
+      fileCard.getByRole('button', { name: 'Delete' }),
+    ).toBeEnabled();
+  });
+
+  test('keeps "Refresh Transcription" disabled by its own per-file rule after the summary settles, while "Delete" re-enables', async ({
+    page,
+    request,
+  }) => {
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
+    const { id } = await createMeetingOnly(request, accessToken);
+    meetingIds.push(id);
+    // The file's own transcription is still in progress — that per-file
+    // rule (unrelated to summary generation) must keep Refresh disabled
+    // even once the summary itself is no longer PROCESSING.
+    await seedMeetingFile(id, 'PROCESSING');
+    await seedMeetingSummary(id, { status: 'COMPLETED' });
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+    await expect(
+      fileCard.getByRole('button', { name: 'Refresh Transcription' }),
+    ).toBeDisabled();
+    await expect(
+      fileCard.getByRole('button', { name: 'Delete' }),
+    ).toBeEnabled();
   });
 });
