@@ -135,6 +135,7 @@ export default function MeetingDetailPage() {
 
   const isOrganizer = meeting !== null && meeting.organizerId === userId;
   const isBelowFileCap = files.length < MAX_FILES_PER_MEETING;
+  const isSummaryProcessing = meeting?.summaryStatus === 'PROCESSING';
 
   return (
     <div className="flex flex-1 flex-col bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
