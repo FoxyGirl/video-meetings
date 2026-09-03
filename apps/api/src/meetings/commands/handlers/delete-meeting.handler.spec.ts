@@ -31,7 +31,7 @@ function buildFile(id: string, filePath: string) {
 describe('DeleteMeetingHandler', () => {
   let queryRaw: jest.Mock<() => Promise<{ id: string }[]>>;
   let findMany: jest.Mock<() => Promise<ReturnType<typeof buildFile>[]>>;
-  let deleteMock: jest.Mock<() => Promise<void>>;
+  let deleteMock: jest.Mock<(args: { where: { id: string } }) => Promise<void>>;
   let handler: DeleteMeetingHandler;
 
   function setLockedMeeting(found: boolean) {
