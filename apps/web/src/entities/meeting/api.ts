@@ -76,3 +76,14 @@ export async function getMeeting(id: string): Promise<Meeting> {
     });
   }
 }
+
+export async function deleteMeeting(id: string): Promise<void> {
+  try {
+    await http.delete(`/meetings/${id}`);
+  } catch (error) {
+    throw toApiError(error, {
+      401: 'Your session has expired. Please sign in again.',
+      404: 'This meeting no longer exists or you are not its organizer.',
+    });
+  }
+}
