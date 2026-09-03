@@ -12,6 +12,7 @@ import {
 interface DeleteMeetingFileButtonProps {
   meetingId: string;
   file: MeetingFileMetadata;
+  isDisabled: boolean;
   onDeleted: () => void;
   onSessionExpired: () => void;
 }
@@ -19,6 +20,7 @@ interface DeleteMeetingFileButtonProps {
 export function DeleteMeetingFileButton({
   meetingId,
   file,
+  isDisabled,
   onDeleted,
   onSessionExpired,
 }: DeleteMeetingFileButtonProps) {
@@ -60,7 +62,7 @@ export function DeleteMeetingFileButton({
 
   return (
     <AlertDialog isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Button variant="danger">
+      <Button isDisabled={isDisabled} variant="danger">
         <Trash2 size={16} />
         Delete
       </Button>

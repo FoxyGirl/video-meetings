@@ -46,6 +46,7 @@ export function MeetingFileList({
                 {isOrganizer ? (
                   <DeleteMeetingFileButton
                     file={file}
+                    isDisabled={isSummaryProcessing}
                     meetingId={meetingId}
                     onDeleted={() => onFileDeleted(file.id)}
                     onSessionExpired={onSessionExpired}
