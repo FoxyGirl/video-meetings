@@ -3,18 +3,6 @@
   "children": [
     {
       "type": "frame",
-      "id": "bi8Au",
-      "x": -31,
-      "y": 90,
-      "name": "Frame",
-      "clip": true,
-      "width": 800,
-      "height": 600,
-      "fill": "#FFFFFF",
-      "layout": "none"
-    },
-    {
-      "type": "frame",
       "id": "EJnxc",
       "x": 920,
       "y": 0,
@@ -67,7 +55,7 @@
                       "name": "Initials",
                       "fill": "$ink",
                       "content": "TF",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 14,
                       "fontWeight": "700",
                       "letterSpacing": 0.2
@@ -88,7 +76,7 @@
                       "fill": "$ink",
                       "content": "Video Meetings",
                       "lineHeight": 1.1,
-                      "fontFamily": "$display",
+                      "fontFamily": "$primary-font",
                       "fontSize": 28,
                       "fontWeight": "normal"
                     },
@@ -98,7 +86,7 @@
                       "name": "User",
                       "fill": "$ink-3",
                       "content": "Test FirstUser",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 13,
                       "fontWeight": "normal"
                     }
@@ -167,7 +155,7 @@
                       "name": "Label",
                       "fill": "#FFFFFF",
                       "content": "New meeting",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 13,
                       "fontWeight": "600"
                     }
@@ -191,7 +179,7 @@
                       "name": "Label",
                       "fill": "$ink-2",
                       "content": "Logout",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 13,
                       "fontWeight": "500"
                     }
@@ -242,7 +230,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "LAST THREE MEETINGS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -261,7 +249,7 @@
                       "name": "Count",
                       "fill": "$ink-3",
                       "content": "3 most recent",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -317,7 +305,7 @@
                                   "name": "Date",
                                   "fill": "$ink-3",
                                   "content": "8/27/2026",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -336,7 +324,7 @@
                                   "name": "Clock",
                                   "fill": "$ink-3",
                                   "content": "10:22 PM",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -352,7 +340,7 @@
                               "width": "fill_container",
                               "content": "My test meeting",
                               "lineHeight": 1.12,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 26,
                               "fontWeight": "normal"
                             },
@@ -370,7 +358,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "PARTICIPANTS",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 9.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 1.2
@@ -383,7 +371,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "alice@example.com",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
                                 }
@@ -438,7 +426,7 @@
                                   "name": "Label",
                                   "fill": "#B0442B",
                                   "content": "Delete",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12,
                                   "fontWeight": "600"
                                 }
@@ -490,7 +478,7 @@
                                   "name": "Date",
                                   "fill": "$ink-3",
                                   "content": "8/27/2026",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -509,7 +497,7 @@
                                   "name": "Clock",
                                   "fill": "$ink-3",
                                   "content": "12:11 PM",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -525,7 +513,7 @@
                               "width": "fill_container",
                               "content": "Test 1",
                               "lineHeight": 1.12,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 26,
                               "fontWeight": "normal"
                             },
@@ -543,7 +531,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "PARTICIPANTS",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 9.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 1.2
@@ -556,7 +544,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "bob@example.com",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
                                 }
@@ -611,7 +599,7 @@
                                   "name": "Label",
                                   "fill": "#B0442B",
                                   "content": "Delete",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12,
                                   "fontWeight": "600"
                                 }
@@ -663,7 +651,7 @@
                                   "name": "Date",
                                   "fill": "$ink-3",
                                   "content": "8/26/2026",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -682,7 +670,7 @@
                                   "name": "Clock",
                                   "fill": "$ink-3",
                                   "content": "10:30 PM",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -698,7 +686,7 @@
                               "width": "fill_container",
                               "content": "Claude code meeting",
                               "lineHeight": 1.12,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 26,
                               "fontWeight": "normal"
                             },
@@ -716,7 +704,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "PARTICIPANTS",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 9.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 1.2
@@ -729,7 +717,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "bob@example.com",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
                                 },
@@ -741,7 +729,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "alex@example.com",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
                                 }
@@ -796,7 +784,7 @@
                                   "name": "Label",
                                   "fill": "#B0442B",
                                   "content": "Delete",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12,
                                   "fontWeight": "600"
                                 }
@@ -838,7 +826,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "YOUR MEETINGS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -857,7 +845,7 @@
                       "name": "Count",
                       "fill": "$ink-3",
                       "content": "4 meetings",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -902,7 +890,7 @@
                               "name": "Date",
                               "fill": "$ink",
                               "content": "8/24/2026",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -912,7 +900,7 @@
                               "name": "Clock",
                               "fill": "$ink-3",
                               "content": "2:16 AM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "normal"
                             }
@@ -932,7 +920,7 @@
                               "name": "Title",
                               "fill": "$ink",
                               "content": "Test",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 15,
                               "fontWeight": "600",
                               "letterSpacing": -0.2
@@ -945,7 +933,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Participants: bob@example.com",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "normal"
                             }
@@ -982,7 +970,7 @@
                               "name": "Label",
                               "fill": "#B0442B",
                               "content": "Delete",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -1020,7 +1008,7 @@
                               "name": "Date",
                               "fill": "$ink",
                               "content": "8/27/2026",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -1030,7 +1018,7 @@
                               "name": "Clock",
                               "fill": "$ink-3",
                               "content": "12:11 PM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "normal"
                             }
@@ -1050,7 +1038,7 @@
                               "name": "Title",
                               "fill": "$ink",
                               "content": "Test 1",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 15,
                               "fontWeight": "600",
                               "letterSpacing": -0.2
@@ -1063,7 +1051,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Participants: bob@example.com",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "normal"
                             }
@@ -1100,7 +1088,7 @@
                               "name": "Label",
                               "fill": "#B0442B",
                               "content": "Delete",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -1138,7 +1126,7 @@
                               "name": "Date",
                               "fill": "$ink",
                               "content": "8/26/2026",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -1148,7 +1136,7 @@
                               "name": "Clock",
                               "fill": "$ink-3",
                               "content": "10:30 PM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "normal"
                             }
@@ -1168,7 +1156,7 @@
                               "name": "Title",
                               "fill": "$ink",
                               "content": "Claude code meeting",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 15,
                               "fontWeight": "600",
                               "letterSpacing": -0.2
@@ -1181,7 +1169,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Participants: bob@example.com, alex@example.com",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "normal"
                             }
@@ -1218,7 +1206,7 @@
                               "name": "Label",
                               "fill": "#B0442B",
                               "content": "Delete",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -1256,7 +1244,7 @@
                               "name": "Date",
                               "fill": "$ink",
                               "content": "8/27/2026",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -1266,7 +1254,7 @@
                               "name": "Clock",
                               "fill": "$ink-3",
                               "content": "10:22 PM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "normal"
                             }
@@ -1286,7 +1274,7 @@
                               "name": "Title",
                               "fill": "$ink",
                               "content": "My test meeting",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 15,
                               "fontWeight": "600",
                               "letterSpacing": -0.2
@@ -1299,7 +1287,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Participants: alice@example.com",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "normal"
                             }
@@ -1336,7 +1324,7 @@
                               "name": "Label",
                               "fill": "#B0442B",
                               "content": "Delete",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -1413,7 +1401,7 @@
                   "name": "Label",
                   "fill": "$ink-2",
                   "content": "Back to meetings",
-                  "fontFamily": "$font",
+                  "fontFamily": "$text-font",
                   "fontSize": 12.5,
                   "fontWeight": "500"
                 }
@@ -1499,7 +1487,7 @@
                               "name": "Date",
                               "fill": "#FFFFFF80",
                               "content": "8/27/2026 · 12:11:00 PM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "600",
                               "letterSpacing": 1
@@ -1513,7 +1501,7 @@
                               "width": "fill_container",
                               "content": "Test 1",
                               "lineHeight": 1.05,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 42,
                               "fontWeight": "normal"
                             },
@@ -1546,7 +1534,7 @@
                                   "name": "Label",
                                   "fill": "$lime",
                                   "content": "You are the organizer of this meeting",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11.5,
                                   "fontWeight": "500"
                                 }
@@ -1583,7 +1571,7 @@
                               "name": "Label",
                               "fill": "#FF9B85",
                               "content": "Delete",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -1615,7 +1603,7 @@
                           "name": "Label",
                           "fill": "#FFFFFF80",
                           "content": "PARTICIPANTS",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -1626,7 +1614,7 @@
                           "name": "bob@example.com",
                           "fill": "#FFFFFF",
                           "content": "bob@example.com",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 14,
                           "fontWeight": "normal"
                         }
@@ -1670,7 +1658,7 @@
                           "name": "Title",
                           "fill": "$ink-2",
                           "content": "MEETING SUMMARY",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -1706,7 +1694,7 @@
                               "name": "Label",
                               "fill": "$accent",
                               "content": "Refresh Summary",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "600"
                             }
@@ -1736,7 +1724,7 @@
                               "name": "Label",
                               "fill": "$ink-3",
                               "content": "Status",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "normal"
                             },
@@ -1767,7 +1755,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "COMPLETED",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 10.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.6
@@ -1785,7 +1773,7 @@
                           "width": "fill_container",
                           "content": "The meeting served as a continuation of a previous discussion regarding the upcoming course, focusing on determining its duration and the number of topics to cover.",
                           "lineHeight": 1.6,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 16,
                           "fontWeight": "normal"
                         },
@@ -1813,7 +1801,7 @@
                               "name": "Label",
                               "fill": "$ink-3",
                               "content": "ACTION ITEMS",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 9.5,
                               "fontWeight": "600",
                               "letterSpacing": 1.2
@@ -1850,7 +1838,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "Prepare the first list of the scope of tasks to show and highlight in the new course",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13.5,
                                   "fontWeight": "normal"
                                 },
@@ -1871,7 +1859,7 @@
                                       "name": "Label",
                                       "fill": "$ink",
                                       "content": "Jane",
-                                      "fontFamily": "$font",
+                                      "fontFamily": "$text-font",
                                       "fontSize": 11,
                                       "fontWeight": "600"
                                     }
@@ -1905,7 +1893,7 @@
                               "name": "Label",
                               "fill": "$ink-3",
                               "content": "DECISIONS",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 9.5,
                               "fontWeight": "600",
                               "letterSpacing": 1.2
@@ -1916,7 +1904,7 @@
                               "name": "Empty",
                               "fill": "$ink-3",
                               "content": "No decisions found.",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 13,
                               "fontWeight": "normal",
                               "fontStyle": "italic"
@@ -1963,7 +1951,7 @@
                           "name": "Title",
                           "fill": "$ink-2",
                           "content": "TRANSCRIPT",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -1999,7 +1987,7 @@
                               "name": "Label",
                               "fill": "$accent",
                               "content": "Refresh Transcription",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "600"
                             }
@@ -2030,7 +2018,7 @@
                               "name": "Label",
                               "fill": "$ink-3",
                               "content": "Status",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "normal"
                             },
@@ -2061,7 +2049,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "COMPLETED",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 10.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.6
@@ -2090,7 +2078,7 @@
                               "name": "Label",
                               "fill": "$ink",
                               "content": "Show transcript",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -2156,7 +2144,7 @@
                           "name": "Title",
                           "fill": "$ink-2",
                           "content": "RECORDING",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -2211,7 +2199,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "meeting_04_Pro.mp4",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 13.5,
                               "fontWeight": "600"
                             }
@@ -2240,7 +2228,7 @@
                               "name": "K",
                               "fill": "$ink-3",
                               "content": "Size",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "normal"
                             },
@@ -2250,7 +2238,7 @@
                               "name": "V",
                               "fill": "$ink",
                               "content": "43 MB",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -2279,7 +2267,7 @@
                               "name": "K",
                               "fill": "$ink-3",
                               "content": "Uploaded",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "normal"
                             },
@@ -2289,7 +2277,7 @@
                               "name": "V",
                               "fill": "$ink",
                               "content": "8/27/2026, 12:12:23 PM",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600"
                             }
@@ -2333,7 +2321,7 @@
                                   "name": "Label",
                                   "fill": "#FFFFFF",
                                   "content": "Download",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12.5,
                                   "fontWeight": "600"
                                 }
@@ -2368,7 +2356,7 @@
                                   "name": "Label",
                                   "fill": "#B0442B",
                                   "content": "Delete",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12.5,
                                   "fontWeight": "600"
                                 }
@@ -2416,7 +2404,7 @@
                           "name": "Title",
                           "fill": "$ink-2",
                           "content": "UPLOAD A RECORDING",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -2441,7 +2429,7 @@
                           "width": "fill_container",
                           "content": "Upload one or more meeting recordings.",
                           "lineHeight": 1.5,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12.5,
                           "fontWeight": "normal"
                         },
@@ -2491,7 +2479,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "Choose Files",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12.5,
                                   "fontWeight": "600"
                                 }
@@ -2503,7 +2491,7 @@
                               "name": "Hint",
                               "fill": "$ink-3",
                               "content": "or drag and drop one or more files here",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11.5,
                               "fontWeight": "normal"
                             }
@@ -2515,7 +2503,7 @@
                           "name": "No file chosen",
                           "fill": "$ink-3",
                           "content": "No file chosen",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "normal"
                         },
@@ -2550,7 +2538,7 @@
                               "name": "Label",
                               "fill": "#FFFFFF",
                               "content": "Upload",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             }
@@ -2569,7 +2557,7 @@
     {
       "type": "frame",
       "id": "Q84AW",
-      "x": 2320,
+      "x": -505,
       "y": 0,
       "name": "Design System",
       "clip": true,
@@ -2600,7 +2588,7 @@
               "name": "Eyebrow",
               "fill": "$ink-3",
               "content": "DESIGN SYSTEM",
-              "fontFamily": "$font",
+              "fontFamily": "$text-font",
               "fontSize": 12,
               "fontWeight": "600",
               "letterSpacing": 1.3
@@ -2612,7 +2600,7 @@
               "fill": "$ink",
               "content": "Video Meetings",
               "lineHeight": 1.05,
-              "fontFamily": "$display",
+              "fontFamily": "$primary-font",
               "fontSize": 40,
               "fontWeight": "normal"
             },
@@ -2624,7 +2612,7 @@
               "textGrowth": "fixed-width",
               "width": "fill_container",
               "content": "Foundations, components and patterns shared across every screen.",
-              "fontFamily": "$font",
+              "fontFamily": "$text-font",
               "fontSize": 14,
               "fontWeight": "normal"
             }
@@ -2672,7 +2660,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "COLOR TOKENS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -2691,7 +2679,7 @@
                       "name": "Note",
                       "fill": "$ink-3",
                       "content": "10 variables",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -2742,7 +2730,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$bg",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -2752,7 +2740,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#F4F3F0",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -2765,7 +2753,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Canvas",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -2811,7 +2799,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$surface",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -2821,7 +2809,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#FFFFFF",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -2834,7 +2822,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Cards, header",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -2880,7 +2868,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$ink",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -2890,7 +2878,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#16150F",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -2903,7 +2891,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Primary text",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -2949,7 +2937,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$ink-2",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -2959,7 +2947,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#5B584D",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -2972,7 +2960,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Secondary text",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3018,7 +3006,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$ink-3",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3028,7 +3016,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#8F8B7E",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3041,7 +3029,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Muted / labels",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3096,7 +3084,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$line",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3106,7 +3094,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#E2DFD7",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3119,7 +3107,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Borders",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3165,7 +3153,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$accent",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3175,7 +3163,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#2F3BE0",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3188,7 +3176,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Links, actions",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3234,7 +3222,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$accent-soft",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3244,7 +3232,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#E7E8FF",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3257,7 +3245,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Accent surface",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3303,7 +3291,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$lime",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3313,7 +3301,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#D6F25B",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3326,7 +3314,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Highlight",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3372,7 +3360,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "$danger",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3382,7 +3370,7 @@
                               "name": "Hex",
                               "fill": "$ink-3",
                               "content": "#B0442B",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal",
                               "letterSpacing": 0.4
@@ -3395,7 +3383,7 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Destructive",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3435,7 +3423,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "TYPOGRAPHY",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -3454,7 +3442,7 @@
                       "name": "Note",
                       "fill": "$ink-3",
                       "content": "Instrument Serif · Inter",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -3499,7 +3487,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Display / Hero",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3509,7 +3497,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "42/1.05 · 400",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3524,7 +3512,7 @@
                           "width": "fill_container",
                           "content": "Test 1",
                           "lineHeight": 1.05,
-                          "fontFamily": "$display",
+                          "fontFamily": "$primary-font",
                           "fontSize": 42,
                           "fontWeight": "normal"
                         }
@@ -3560,7 +3548,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Display / Title",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3570,7 +3558,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "28/1.1 · 400",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3585,7 +3573,7 @@
                           "width": "fill_container",
                           "content": "Video Meetings",
                           "lineHeight": 1.1,
-                          "fontFamily": "$display",
+                          "fontFamily": "$primary-font",
                           "fontSize": 28,
                           "fontWeight": "normal"
                         }
@@ -3621,7 +3609,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Display / Card",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3631,7 +3619,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "26/1.12 · 400",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3646,7 +3634,7 @@
                           "width": "fill_container",
                           "content": "My test meeting",
                           "lineHeight": 1.12,
-                          "fontFamily": "$display",
+                          "fontFamily": "$primary-font",
                           "fontSize": 26,
                           "fontWeight": "normal"
                         }
@@ -3682,7 +3670,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Body / Large",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3692,7 +3680,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "16/1.6 · 400",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3707,7 +3695,7 @@
                           "width": "fill_container",
                           "content": "The meeting served as a continuation.",
                           "lineHeight": 1.6,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 16,
                           "fontWeight": "normal"
                         }
@@ -3743,7 +3731,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Body / Row title",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3753,7 +3741,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "15/1.3 · 600 · -0.2",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3768,7 +3756,7 @@
                           "width": "fill_container",
                           "content": "Claude code meeting",
                           "lineHeight": 1.3,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 15,
                           "fontWeight": "600",
                           "letterSpacing": -0.2
@@ -3805,7 +3793,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Body / Base",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3815,7 +3803,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "13/1.5 · 400",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3830,7 +3818,7 @@
                           "width": "fill_container",
                           "content": "Participants: bob@example.com",
                           "lineHeight": 1.5,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 13,
                           "fontWeight": "normal"
                         }
@@ -3866,7 +3854,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Label / Button",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3876,7 +3864,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "13/1.2 · 600",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3891,7 +3879,7 @@
                           "width": "fill_container",
                           "content": "New meeting",
                           "lineHeight": 1.2,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 13,
                           "fontWeight": "600"
                         }
@@ -3927,7 +3915,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Label / Section",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3937,7 +3925,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "12/1.2 · 600 · 1.3",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -3952,7 +3940,7 @@
                           "width": "fill_container",
                           "content": "YOUR MEETINGS",
                           "lineHeight": 1.2,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600",
                           "letterSpacing": 1.3
@@ -3989,7 +3977,7 @@
                               "name": "Name",
                               "fill": "$ink",
                               "content": "Label / Micro",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12.5,
                               "fontWeight": "600"
                             },
@@ -3999,7 +3987,7 @@
                               "name": "Spec",
                               "fill": "$ink-3",
                               "content": "9.5/1.2 · 600 · 1.2",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
                             }
@@ -4014,7 +4002,7 @@
                           "width": "fill_container",
                           "content": "PARTICIPANTS",
                           "lineHeight": 1.2,
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4053,7 +4041,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "RADIUS, SPACING & ICONS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -4072,7 +4060,7 @@
                       "name": "Note",
                       "fill": "$ink-3",
                       "content": "Lucide 13–22px",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -4104,7 +4092,7 @@
                           "name": "Label",
                           "fill": "$ink-3",
                           "content": "CORNER RADIUS",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4143,7 +4131,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "8 · chip",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4175,7 +4163,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "9 · button",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4207,7 +4195,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "12 · inset",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4239,7 +4227,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "16 · card",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4271,7 +4259,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "22 · pill",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4300,7 +4288,7 @@
                           "name": "Label",
                           "fill": "$ink-3",
                           "content": "SPACING SCALE",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4336,7 +4324,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "6",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4365,7 +4353,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "10",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4394,7 +4382,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "16",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4423,7 +4411,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "22",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4452,7 +4440,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "28",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4481,7 +4469,7 @@
                                   "name": "Val",
                                   "fill": "$ink-3",
                                   "content": "48",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
                                 }
@@ -4510,7 +4498,7 @@
                           "name": "Label",
                           "fill": "$ink-3",
                           "content": "ICON SET",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4660,7 +4648,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "BUTTONS & BADGES",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -4679,7 +4667,7 @@
                       "name": "Note",
                       "fill": "$ink-3",
                       "content": "reusable components",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -4711,7 +4699,7 @@
                           "name": "Label",
                           "fill": "$ink-3",
                           "content": "BUTTONS",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4756,7 +4744,7 @@
                                   "name": "Label",
                                   "fill": "#FFFFFF",
                                   "content": "New meeting",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "600"
                                 }
@@ -4784,7 +4772,7 @@
                                   "name": "Label",
                                   "fill": "$ink-2",
                                   "content": "Logout",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "600"
                                 }
@@ -4812,7 +4800,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "Choose Files",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "600"
                                 }
@@ -4850,7 +4838,7 @@
                                   "name": "Label",
                                   "fill": "$danger",
                                   "content": "Delete",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "600"
                                 }
@@ -4905,7 +4893,7 @@
                           "name": "Label",
                           "fill": "$ink-3",
                           "content": "BADGES",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 9.5,
                           "fontWeight": "600",
                           "letterSpacing": 1.2
@@ -4946,7 +4934,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "Ready",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11.5,
                                   "fontWeight": "600"
                                 }
@@ -4982,7 +4970,7 @@
                                   "name": "Label",
                                   "fill": "$lime",
                                   "content": "Organizer",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11.5,
                                   "fontWeight": "500"
                                 }
@@ -5009,7 +4997,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "Processing",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11.5,
                                   "fontWeight": "600"
                                 }
@@ -5033,7 +5021,7 @@
                                   "name": "Initials",
                                   "fill": "$ink",
                                   "content": "TF",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "700",
                                   "letterSpacing": 0.2
@@ -5076,7 +5064,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "COMPONENTS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -5095,7 +5083,7 @@
                       "name": "Note",
                       "fill": "$ink-3",
                       "content": "cards, panels, rows",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -5149,7 +5137,7 @@
                                   "name": "Date",
                                   "fill": "$ink-3",
                                   "content": "8/27/2026",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -5168,7 +5156,7 @@
                                   "name": "Clock",
                                   "fill": "$ink-3",
                                   "content": "10:22 PM",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11,
                                   "fontWeight": "600",
                                   "letterSpacing": 0.8
@@ -5184,7 +5172,7 @@
                               "width": "fill_container",
                               "content": "My test meeting",
                               "lineHeight": 1.12,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 26,
                               "fontWeight": "normal"
                             },
@@ -5202,7 +5190,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "PARTICIPANTS",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 9.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 1.2
@@ -5215,7 +5203,7 @@
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
                                   "content": "alice@example.com",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 13,
                                   "fontWeight": "normal"
                                 }
@@ -5286,7 +5274,7 @@
                               "name": "Title",
                               "fill": "$ink-2",
                               "content": "MEETING SUMMARY",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 12,
                               "fontWeight": "600",
                               "letterSpacing": 1.2
@@ -5322,7 +5310,7 @@
                                   "name": "Label",
                                   "fill": "$accent",
                                   "content": "Refresh",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 11.5,
                                   "fontWeight": "600"
                                 }
@@ -5352,7 +5340,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "Status",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 12,
                                   "fontWeight": "normal"
                                 },
@@ -5373,7 +5361,7 @@
                               "width": "fill_container",
                               "content": "Panel body content. Use for summary, transcript, recordings and upload blocks.",
                               "lineHeight": 1.6,
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 16,
                               "fontWeight": "normal"
                             },
@@ -5401,7 +5389,7 @@
                                   "name": "Label",
                                   "fill": "$ink-3",
                                   "content": "ACTION ITEMS",
-                                  "fontFamily": "$font",
+                                  "fontFamily": "$text-font",
                                   "fontSize": 9.5,
                                   "fontWeight": "600",
                                   "letterSpacing": 1.2
@@ -5438,7 +5426,7 @@
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
                                       "content": "Decide the course duration",
-                                      "fontFamily": "$font",
+                                      "fontFamily": "$text-font",
                                       "fontSize": 13,
                                       "fontWeight": "normal"
                                     }
@@ -5483,7 +5471,7 @@
                           "name": "Date",
                           "fill": "$ink",
                           "content": "8/24/2026",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12.5,
                           "fontWeight": "600"
                         },
@@ -5493,7 +5481,7 @@
                           "name": "Clock",
                           "fill": "$ink-3",
                           "content": "2:16 AM",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 11.5,
                           "fontWeight": "normal"
                         }
@@ -5513,7 +5501,7 @@
                           "name": "Title",
                           "fill": "$ink",
                           "content": "Test",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 15,
                           "fontWeight": "600",
                           "letterSpacing": -0.2
@@ -5526,7 +5514,7 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "Participants: bob@example.com",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12.5,
                           "fontWeight": "normal"
                         }
@@ -5563,7 +5551,7 @@
                           "name": "Label",
                           "fill": "$danger",
                           "content": "Delete",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 12,
                           "fontWeight": "600"
                         }
@@ -5618,7 +5606,7 @@
                           "name": "Hint",
                           "fill": "$ink-3",
                           "content": "or drag and drop one or more files here",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 11.5,
                           "fontWeight": "normal"
                         }
@@ -5658,7 +5646,7 @@
                           "name": "Text",
                           "fill": "$ink-3",
                           "content": "No decisions found.",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 13,
                           "fontWeight": "normal",
                           "fontStyle": "italic"
@@ -5683,7 +5671,7 @@
                           "name": "Date",
                           "fill": "#FFFFFF80",
                           "content": "8/27/2026 · 12:11 PM",
-                          "fontFamily": "$font",
+                          "fontFamily": "$text-font",
                           "fontSize": 11,
                           "fontWeight": "600",
                           "letterSpacing": 1
@@ -5697,7 +5685,7 @@
                           "width": "fill_container",
                           "content": "Test 1",
                           "lineHeight": 1.05,
-                          "fontFamily": "$display",
+                          "fontFamily": "$primary-font",
                           "fontSize": 34,
                           "fontWeight": "normal"
                         },
@@ -5756,7 +5744,7 @@
                               "fill": "$ink",
                               "content": "Video Meetings",
                               "lineHeight": 1.1,
-                              "fontFamily": "$display",
+                              "fontFamily": "$primary-font",
                               "fontSize": 28,
                               "fontWeight": "normal"
                             },
@@ -5766,7 +5754,7 @@
                               "name": "User",
                               "fill": "$ink-3",
                               "content": "Test FirstUser",
-                              "fontFamily": "$font",
+                              "fontFamily": "$text-font",
                               "fontSize": 13,
                               "fontWeight": "normal"
                             }
@@ -5822,7 +5810,7 @@
                       "name": "Title",
                       "fill": "$ink-2",
                       "content": "YOUR MEETINGS",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "600",
                       "letterSpacing": 1.3
@@ -5841,7 +5829,7 @@
                       "name": "Count",
                       "fill": "$ink-3",
                       "content": "4 meetings",
-                      "fontFamily": "$font",
+                      "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
                     }
@@ -5891,14 +5879,6 @@
       "type": "color",
       "value": "#D6F25B"
     },
-    "font": {
-      "type": "string",
-      "value": "Inter"
-    },
-    "display": {
-      "type": "string",
-      "value": "Instrument Serif"
-    },
     "danger": {
       "type": "color",
       "value": "#B0442B"
@@ -5910,6 +5890,14 @@
     "surface-2": {
       "type": "color",
       "value": "#FAF9F6"
+    },
+    "primary-font": {
+      "type": "string",
+      "value": "Space Grotesk"
+    },
+    "text-font": {
+      "type": "string",
+      "value": "Inter"
     }
   },
   "fileToken": "ef18b90a-d12a-440f-9cf7-940c1843f995"
