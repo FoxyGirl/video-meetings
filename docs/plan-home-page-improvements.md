@@ -62,18 +62,21 @@
 
 ### Phase 4-home-page: Disable file actions while summary is generating
 
-**Goal:** "Refresh Transcription" and "Delete" (file) are disabled for every file on a meeting while that meeting's summary is generating, and re-enable once generation finishes.
+**Goal:** "Refresh Transcription" and "Delete" (file) are disabled for every file on a meeting while that meeting's summary is generating (`PENDING` or `PROCESSING`), re-enabling once generation finishes; the organizer can abandon an in-progress run via a new "Stop" action.
 
-**Affects:** frontend
+**Affects:** frontend, backend
 
 **Tasks:**
 
-- [ ] Wherever the meeting detail page/widget already holds the fetched `Meeting` (including `summaryStatus`), derive `isSummaryProcessing = summaryStatus === 'PROCESSING'`.
-- [ ] Pass `isSummaryProcessing` down to `MeetingTranscriptionCard` and combine it (OR) with the existing per-file `isDisabled` logic already passed to `RefreshTranscriptionButton`.
-- [ ] Add an `isDisabled` prop to `delete-meeting-file-button.tsx` (it currently has none) and wire it from the parent using `isSummaryProcessing`, following the same organizer-gating flow already in `meeting-file-list.tsx`.
-- [ ] Playwright e2e: with a meeting whose `summaryStatus` is `PROCESSING`, both "Refresh Transcription" and "Delete" render disabled for its files; once status moves to `COMPLETED`/`FAILED`, both re-enable (still respecting existing per-file transcription-status rules).
+- [ ] Wherever the meeting detail page/widget already holds the fetched `Meeting` (including `summaryStatus`), derive `isSummaryInProgress = summaryStatus === 'PENDING' || summaryStatus === 'PROCESSING'`.
+- [ ] Pass `isSummaryInProgress` down to `MeetingTranscriptionCard` and combine it (OR) with the existing per-file `isDisabled` logic already passed to `RefreshTranscriptionButton`.
+- [ ] Add an `isDisabled` prop to `delete-meeting-file-button.tsx` (it currently has none) and wire it from the parent using `isSummaryInProgress`, following the same organizer-gating flow already in `meeting-file-list.tsx`.
+- [ ] Backend: add `POST /meetings/:id/summary/stop`, organizer-scoped (`SELECT ... FOR UPDATE`, 404 not 403), mirroring `refresh-meeting-summary.handler.ts`'s lock/ownership shape. If the locked row's `summaryStatus` is `PENDING`/`PROCESSING`, call the shared `clearMeetingSummary()` helper (same one `RefreshMeetingSummaryHandler` uses) — this nulls `summaryGenerationToken` too, so an already-in-flight `generateMeetingSummary()` call's eventual result fails its own compare-and-set and is silently discarded. Otherwise no-op. Unlike refresh, never calls `MeetingSummaryTriggerService.maybeTrigger()` afterward — stopping must not immediately restart the same run.
+- [ ] Frontend: add a `stop-meeting-summary` feature slice (`api.ts` + `ui/stop-meeting-summary-button.tsx`), mirroring `refresh-meeting-summary`'s own shape. In `MeetingSummaryCard`, render it instead of `RefreshMeetingSummaryButton` whenever `isSummaryInProgress`, organizer-only.
+- [ ] Playwright e2e: with a meeting whose `summaryStatus` is `PENDING` or `PROCESSING`, both "Refresh Transcription" and "Delete" render disabled for its files, and "Stop" (not "Refresh Summary") renders for the organizer; once status moves to `COMPLETED`/`FAILED`, both file actions re-enable (still respecting existing per-file transcription-status rules) and "Refresh Summary" returns.
+- [ ] API unit/e2e tests for the stop endpoint: stops an in-flight run and discards its eventual result; no-ops when the summary is already `COMPLETED`/`FAILED`/`null`; 404 for a non-organizer or nonexistent meeting.
 
-**When ready:** e2e suite passes; manually driving a meeting through summary generation shows both buttons disabled during `PROCESSING` and enabled again after; PRD acceptance criteria for button disabling are met.
+**When ready:** e2e suite passes; manually driving a meeting through summary generation shows both file-action buttons disabled and "Stop" available during `PENDING`/`PROCESSING`, all reverting after generation settles or is stopped; PRD acceptance criteria for button disabling and the Stop action are met.
 
 ---
 
