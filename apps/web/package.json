@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && npm run fsd:lint",
+    "lint": "eslint && npm run fsd:lint && npm run fsd:orphans",
     "typecheck": "tsc --noEmit",
     "fsd:lint": "steiger ./src",
+    "fsd:orphans": "node scripts/find-orphaned-slices.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
