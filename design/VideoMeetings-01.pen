@@ -5033,6 +5033,182 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dzkOb",
+                  "name": "Status Badges",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 16,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "O4dzbI",
+                      "name": "Label",
+                      "fill": "$ink-3",
+                      "content": "STATUS BADGES",
+                      "fontFamily": "$text-font",
+                      "fontSize": 9.5,
+                      "fontWeight": "600",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WO3pV",
+                      "name": "Items",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "N9LRV0",
+                          "name": "Badge / Pending",
+                          "reusable": true,
+                          "fill": "$surface-2",
+                          "cornerRadius": 20,
+                          "gap": 6,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "TNqOV",
+                              "name": "Dot",
+                              "fill": "$ink-3",
+                              "width": 6,
+                              "height": 6
+                            },
+                            {
+                              "type": "text",
+                              "id": "b7WAg",
+                              "name": "Label",
+                              "fill": "$ink-3",
+                              "content": "PENDING",
+                              "fontFamily": "$text-font",
+                              "fontSize": 10.5,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.6
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "q3WtC",
+                          "name": "Badge / Processing",
+                          "reusable": true,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 20,
+                          "gap": 6,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "K4tfOC",
+                              "name": "Dot",
+                              "fill": "$accent",
+                              "width": 6,
+                              "height": 6
+                            },
+                            {
+                              "type": "text",
+                              "id": "OwGfw",
+                              "name": "Label",
+                              "fill": "$accent",
+                              "content": "PROCESSING",
+                              "fontFamily": "$text-font",
+                              "fontSize": 10.5,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.6
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MLyjP",
+                          "name": "Badge / Completed",
+                          "reusable": true,
+                          "fill": "$success-soft",
+                          "cornerRadius": 20,
+                          "gap": 6,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "lEaDH",
+                              "name": "Dot",
+                              "fill": "$success",
+                              "width": 6,
+                              "height": 6
+                            },
+                            {
+                              "type": "text",
+                              "id": "rJH8a",
+                              "name": "Label",
+                              "fill": "$success",
+                              "content": "COMPLETED",
+                              "fontFamily": "$text-font",
+                              "fontSize": 10.5,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.6
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vYCHw",
+                          "name": "Badge / Failed",
+                          "reusable": true,
+                          "fill": "$danger-soft",
+                          "cornerRadius": 20,
+                          "gap": 6,
+                          "padding": [
+                            4,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "jN3bI",
+                              "name": "Dot",
+                              "fill": "$danger",
+                              "width": 6,
+                              "height": 6
+                            },
+                            {
+                              "type": "text",
+                              "id": "A4ezPq",
+                              "name": "Label",
+                              "fill": "$danger",
+                              "content": "FAILED",
+                              "fontFamily": "$text-font",
+                              "fontSize": 10.5,
+                              "fontWeight": "600",
+                              "letterSpacing": 0.6
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             },
@@ -5898,6 +6074,14 @@
     "text-font": {
       "type": "string",
       "value": "Inter"
+    },
+    "success": {
+      "type": "color",
+      "value": "#1F8A55"
+    },
+    "success-soft": {
+      "type": "color",
+      "value": "#E4F5EC"
     }
   },
   "fileToken": "ef18b90a-d12a-440f-9cf7-940c1843f995"
