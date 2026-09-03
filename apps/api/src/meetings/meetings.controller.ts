@@ -26,6 +26,7 @@ import { DeleteMeetingCommand } from './commands/delete-meeting.command';
 import { DeleteMeetingFileCommand } from './commands/delete-meeting-file.command';
 import { RefreshMeetingSummaryCommand } from './commands/refresh-meeting-summary.command';
 import { RefreshTranscriptionCommand } from './commands/refresh-transcription.command';
+import { StopMeetingSummaryCommand } from './commands/stop-meeting-summary.command';
 import { UploadMeetingFileCommand } from './commands/upload-meeting-file.command';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import {
@@ -155,6 +156,14 @@ export class MeetingsController {
   ) {
     return this.commandBus.execute(
       new RefreshMeetingSummaryCommand(id, request.user.userId),
+    );
+  }
+
+  @Post(':id/summary/stop')
+  @HttpCode(HttpStatus.OK)
+  stopSummary(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.commandBus.execute(
+      new StopMeetingSummaryCommand(id, request.user.userId),
     );
   }
 }

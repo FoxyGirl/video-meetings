@@ -9,6 +9,7 @@ import { DeleteMeetingFileHandler } from './commands/handlers/delete-meeting-fil
 import { GenerateMeetingSummaryHandler } from './commands/handlers/generate-meeting-summary.handler';
 import { RefreshMeetingSummaryHandler } from './commands/handlers/refresh-meeting-summary.handler';
 import { RefreshTranscriptionHandler } from './commands/handlers/refresh-transcription.handler';
+import { StopMeetingSummaryHandler } from './commands/handlers/stop-meeting-summary.handler';
 import { TranscribeMeetingFileHandler } from './commands/handlers/transcribe-meeting-file.handler';
 import { UploadMeetingFileHandler } from './commands/handlers/upload-meeting-file.handler';
 import { GetMeetingFileHandler } from './queries/handlers/get-meeting-file.handler';
@@ -27,6 +28,7 @@ const CommandHandlers = [
   RefreshTranscriptionHandler,
   GenerateMeetingSummaryHandler,
   RefreshMeetingSummaryHandler,
+  StopMeetingSummaryHandler,
 ];
 const QueryHandlers = [
   GetMeetingsHandler,

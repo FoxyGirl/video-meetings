@@ -267,4 +267,71 @@ test.describe('meeting summary, action items, and decisions', () => {
       await viewerContext.close();
     }
   });
+
+  test('shows "Stop" instead of "Refresh Summary" while the summary is processing, and clicking it discards the in-progress run', async ({
+    page,
+    request,
+    browser,
+  }) => {
+    const { id } = await createMeeting(request);
+    meetingIds.push(id);
+
+    await seedMeetingFile(id, 'COMPLETED');
+    await seedMeetingSummary(id, {
+      status: 'PROCESSING',
+      text: 'This summary should be discarded by Stop below.',
+      actionItems: [{ description: 'A stale action item' }],
+      decisions: [{ description: 'A stale decision' }],
+    });
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const summary = page.getByTestId('meeting-summary');
+    await expect(
+      summary.getByText('Processing', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      summary.getByRole('button', { name: 'Refresh Summary' }),
+    ).toHaveCount(0);
+
+    const stopButton = summary.getByRole('button', { name: 'Stop' });
+    await expect(stopButton).toBeVisible();
+    await stopButton.click();
+
+    await expect(summary.getByText('Summary not yet available.')).toBeVisible();
+    await expect(
+      summary.getByRole('button', { name: 'Refresh Summary' }),
+    ).toBeVisible();
+    await expect(summary.getByRole('button', { name: 'Stop' })).toHaveCount(0);
+    await expect(summary.getByText('A stale action item')).not.toBeVisible();
+    await expect(summary.getByText('A stale decision')).not.toBeVisible();
+
+    const viewerEmail = `e2e-summary-stop-viewer-${Date.now()}@video-meetings.local`;
+    createdEmails.push(viewerEmail);
+    await registerUserViaApi(request, viewerEmail);
+
+    // Seed a second, still-processing meeting to confirm a non-organizer
+    // viewer never sees "Stop" either — the same organizer-only gate
+    // "Refresh Summary" already has.
+    const { id: viewerMeetingId } = await createMeeting(request);
+    meetingIds.push(viewerMeetingId);
+    await seedMeetingFile(viewerMeetingId, 'COMPLETED');
+    await seedMeetingSummary(viewerMeetingId, { status: 'PROCESSING' });
+
+    const viewerContext = await browser.newContext();
+    try {
+      const viewerPage = await viewerContext.newPage();
+      await loginViaUi(viewerPage, viewerEmail);
+      await viewerPage.goto(`/meetings/${viewerMeetingId}`);
+
+      await expect(
+        viewerPage
+          .getByTestId('meeting-summary')
+          .getByRole('button', { name: 'Stop' }),
+      ).toHaveCount(0);
+    } finally {
+      await viewerContext.close();
+    }
+  });
 });

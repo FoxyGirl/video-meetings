@@ -15,6 +15,7 @@ import {
   type MeetingFileMetadata,
 } from '@/entities/meeting-file';
 import { RefreshMeetingSummaryButton } from '@/features/refresh-meeting-summary';
+import { StopMeetingSummaryButton } from '@/features/stop-meeting-summary';
 import { computeFilesReadiness } from '../lib/compute-files-readiness';
 
 const STATUS_LABEL: Record<SummaryStatus, string> = {
@@ -155,13 +156,21 @@ export function MeetingSummaryCard({
       <Card.Header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Card.Title>Meeting Summary</Card.Title>
         {isOrganizer ? (
-          <RefreshMeetingSummaryButton
-            isDisabled={isSummaryInProgress}
-            meetingId={meetingId}
-            onError={setRefreshError}
-            onRefreshed={handleRefreshed}
-            onSessionExpired={onSessionExpired}
-          />
+          isSummaryInProgress ? (
+            <StopMeetingSummaryButton
+              meetingId={meetingId}
+              onError={setRefreshError}
+              onSessionExpired={onSessionExpired}
+              onStopped={handleRefreshed}
+            />
+          ) : (
+            <RefreshMeetingSummaryButton
+              meetingId={meetingId}
+              onError={setRefreshError}
+              onRefreshed={handleRefreshed}
+              onSessionExpired={onSessionExpired}
+            />
+          )
         ) : null}
       </Card.Header>
       <Card.Content className="flex flex-col gap-4">

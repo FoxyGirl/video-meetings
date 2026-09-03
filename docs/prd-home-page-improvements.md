@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Fix three usability gaps on the home page and meeting detail flow: the primary "New meeting" action is buried below the fold next to a list header instead of near the top-level page actions; meeting organizers have no way to remove a meeting they created; and file actions (refresh transcription, delete file) remain clickable while a meeting summary is generating, which can race the in-progress generation.
+Fix three usability gaps on the home page and meeting detail flow: the primary "New meeting" action is buried below the fold next to a list header instead of near the top-level page actions; meeting organizers have no way to remove a meeting they created; and file actions (refresh transcription, delete file) remain clickable while a meeting summary is generating, which can race the in-progress generation — with no way to abandon a summary run the organizer no longer wants to wait for.
 
 ## User Scenarios
 
@@ -14,8 +14,10 @@ Fix three usability gaps on the home page and meeting detail flow: the primary "
 - Organizer clicks "Delete meeting" and confirms -> the meeting, its files (including on-disk files), transcriptions, action items, decisions, and summary are removed, and the meeting disappears from "Last three meetings" and "Your meetings".
 - Organizer clicks "Delete meeting" and cancels the confirmation -> nothing is deleted.
 - Participant who is not the organizer views a meeting they don't own -> no "Delete meeting" action is shown to them, and a direct API delete attempt is rejected as if the meeting didn't exist (404).
-- User opens a meeting detail page while its summary is generating (`summaryStatus = PROCESSING`) -> "Refresh Transcription" and "Delete" are disabled for every file on that meeting.
+- User opens a meeting detail page while its summary is generating (`summaryStatus = PENDING` or `PROCESSING`) -> "Refresh Transcription" and "Delete" are disabled for every file on that meeting.
 - Summary generation finishes (`summaryStatus` becomes `COMPLETED` or `FAILED`) -> both buttons return to their normal enabled state for each file (still subject to existing per-file transcription-status disabling).
+- Organizer opens a meeting whose summary is generating (`summaryStatus = PENDING` or `PROCESSING`) -> sees a "Stop" action in place of "Refresh Summary".
+- Organizer clicks "Stop" -> the in-progress run is abandoned, `summaryStatus` returns to `null` ("not yet available"), and any result the abandoned run produces afterward is discarded rather than displayed.
 
 ## In scope
 
@@ -24,8 +26,10 @@ Fix three usability gaps on the home page and meeting detail flow: the primary "
 - Require an explicit confirmation step before a meeting delete request is sent.
 - Add a `DELETE /meetings/:id` API endpoint, organizer-scoped, that removes the meeting and its dependent data (files on disk included).
 - Update the home page's meeting lists ("Last three meetings", "Your meetings") to no longer show a deleted meeting.
-- Disable the "Refresh Transcription" button for every file on a meeting whenever that meeting's `summaryStatus` is `PROCESSING`.
-- Disable the "Delete" (file) button for every file on a meeting whenever that meeting's `summaryStatus` is `PROCESSING`.
+- Disable the "Refresh Transcription" button for every file on a meeting whenever that meeting's `summaryStatus` is `PENDING` or `PROCESSING`.
+- Disable the "Delete" (file) button for every file on a meeting whenever that meeting's `summaryStatus` is `PENDING` or `PROCESSING`.
+- Add a `POST /meetings/:id/summary/stop` API endpoint, organizer-scoped, that abandons an in-progress summary run (`PENDING` or `PROCESSING`) and returns the meeting to its pre-generation state (`summaryStatus = null`).
+- Add a "Stop" action to the meeting summary card, visible to the organizer in place of "Refresh Summary" whenever `summaryStatus` is `PENDING` or `PROCESSING`.
 
 ## Out of scope
 
@@ -43,6 +47,8 @@ Fix three usability gaps on the home page and meeting detail flow: the primary "
 - The current "New meeting" trigger is a plain `<Link>` styled with raw CSS classes (`button button--primary button--md`), unlike the HeroUI `<Button>` used for "Logout" in the same header. Moving it into the header should not leave two visually inconsistent button styles side by side.
 - `delete-meeting-file-button.tsx` currently has no `isDisabled` prop at all; one must be added and threaded down from the parent (mirroring how `RefreshTranscriptionButton` already receives `isDisabled`).
 - The disabled state for both file-action buttons depends on the meeting's `summaryStatus` being available wherever the meeting detail page renders/refetches meeting data; this PRD assumes the existing fetch/poll mechanism for meeting status is reused as-is.
+- "Stop" cannot actually abort the outbound call to the LLM provider (no cancellation hook exists in the current generation code path) — it only discards whatever result that call eventually returns. This reuses the same compare-and-set (`summaryGenerationToken`) protection a superseding "Refresh Summary" already relies on to keep a stale in-flight run from clobbering newer state, so no schema change is needed: stopping is functionally "discard now, and don't auto-restart," the same effect `clearMeetingSummary()` already produces for a refresh, just without immediately re-triggering generation afterward.
+- Stopping a summary that isn't actually `PENDING`/`PROCESSING` (e.g. a duplicate click racing the run's own completion) must be a no-op, not an accidental discard of a just-finished `COMPLETED`/`FAILED` result.
 
 ## Acceptance Criteria
 
@@ -54,6 +60,10 @@ Fix three usability gaps on the home page and meeting detail flow: the primary "
 - [ ] Deleting a meeting requires confirming an explicit prompt before the request is sent; canceling leaves the meeting untouched.
 - [ ] After confirmed deletion, the meeting and all its files (on disk and in the DB), transcriptions, action items, decisions, and summary are removed.
 - [ ] A deleted meeting no longer appears in "Last three meetings" or "Your meetings".
-- [ ] While a meeting's `summaryStatus` is `PROCESSING`, "Refresh Transcription" is disabled for every file in that meeting.
-- [ ] While a meeting's `summaryStatus` is `PROCESSING`, "Delete" is disabled for every file in that meeting.
-- [ ] Once `summaryStatus` leaves `PROCESSING`, both buttons return to their normal enabled state (still respecting existing per-file transcription-status rules).
+- [ ] While a meeting's `summaryStatus` is `PENDING` or `PROCESSING`, "Refresh Transcription" is disabled for every file in that meeting.
+- [ ] While a meeting's `summaryStatus` is `PENDING` or `PROCESSING`, "Delete" is disabled for every file in that meeting.
+- [ ] Once `summaryStatus` leaves `PENDING`/`PROCESSING`, both buttons return to their normal enabled state (still respecting existing per-file transcription-status rules).
+- [ ] While a meeting's `summaryStatus` is `PENDING` or `PROCESSING`, the organizer sees a "Stop" action in place of "Refresh Summary".
+- [ ] Clicking "Stop" returns `summaryStatus` to `null` and clears any action items/decisions from the abandoned run.
+- [ ] A direct `POST /meetings/:id/summary/stop` request for a meeting the caller doesn't organize (or that doesn't exist) returns 404.
+- [ ] Calling "Stop" while `summaryStatus` is `COMPLETED`, `FAILED`, or `null` is a no-op — no existing summary is discarded.
