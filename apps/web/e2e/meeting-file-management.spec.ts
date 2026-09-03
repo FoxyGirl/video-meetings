@@ -272,6 +272,28 @@ test.describe('disabling file actions while the meeting summary is processing', 
     ).toBeDisabled();
   });
 
+  test('disables "Refresh Transcription" and "Delete" for every file while the meeting summary is pending (not yet processing)', async ({
+    page,
+    request,
+  }) => {
+    const accessToken = await loginUserViaApi(request, TEST_USER_EMAIL);
+    const { id } = await createMeetingOnly(request, accessToken);
+    meetingIds.push(id);
+    await seedMeetingFile(id, 'COMPLETED');
+    await seedMeetingSummary(id, { status: 'PENDING' });
+
+    await loginViaUi(page, TEST_USER_EMAIL);
+    await page.goto(`/meetings/${id}`);
+
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+    await expect(
+      fileCard.getByRole('button', { name: 'Refresh Transcription' }),
+    ).toBeDisabled();
+    await expect(
+      fileCard.getByRole('button', { name: 'Delete' }),
+    ).toBeDisabled();
+  });
+
   test('re-enables "Refresh Transcription" and "Delete" once the summary settles', async ({
     page,
     request,
