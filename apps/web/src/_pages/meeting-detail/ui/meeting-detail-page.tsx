@@ -226,6 +226,7 @@ export default function MeetingDetailPage() {
             <MeetingFileList
               files={files}
               isOrganizer={isOrganizer}
+              isSummaryProcessing={isSummaryProcessing}
               meetingId={meeting.id}
               onFileDeleted={handleFileDeleted}
               onSessionExpired={handleSessionExpired}

@@ -10,6 +10,7 @@ interface MeetingFileListProps {
   meetingId: string;
   files: MeetingFileMetadata[];
   isOrganizer: boolean;
+  isSummaryProcessing: boolean;
   onFileDeleted: (fileId: string) => void;
   onSessionExpired: () => void;
 }
@@ -21,6 +22,7 @@ export function MeetingFileList({
   meetingId,
   files,
   isOrganizer,
+  isSummaryProcessing,
   onFileDeleted,
   onSessionExpired,
 }: MeetingFileListProps) {
@@ -55,6 +57,7 @@ export function MeetingFileList({
           <MeetingTranscriptionCard
             fileId={file.id}
             isOrganizer={isOrganizer}
+            isSummaryProcessing={isSummaryProcessing}
             meetingId={meetingId}
             status={file.transcriptionStatus}
             text={file.transcriptionText}

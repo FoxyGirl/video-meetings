@@ -44,6 +44,7 @@ interface MeetingTranscriptionCardProps {
   status: TranscriptionStatus | null;
   text: string | null;
   isOrganizer: boolean;
+  isSummaryProcessing: boolean;
   onSessionExpired: () => void;
 }
 
@@ -58,6 +59,7 @@ export function MeetingTranscriptionCard({
   status: initialStatus,
   text: initialText,
   isOrganizer,
+  isSummaryProcessing,
   onSessionExpired,
 }: MeetingTranscriptionCardProps) {
   const [status, setStatus] = useState(initialStatus);
@@ -166,7 +168,7 @@ export function MeetingTranscriptionCard({
         {isOrganizer ? (
           <RefreshTranscriptionButton
             fileId={fileId}
-            isDisabled={isInProgress}
+            isDisabled={isInProgress || isSummaryProcessing}
             meetingId={meetingId}
             onError={setRefreshError}
             onRefreshed={handleRefreshed}
