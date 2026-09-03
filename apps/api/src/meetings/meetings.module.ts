@@ -4,6 +4,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { AuthModule } from '../auth/auth.module';
 import { MeetingsController } from './meetings.controller';
 import { CreateMeetingHandler } from './commands/handlers/create-meeting.handler';
+import { DeleteMeetingHandler } from './commands/handlers/delete-meeting.handler';
 import { DeleteMeetingFileHandler } from './commands/handlers/delete-meeting-file.handler';
 import { GenerateMeetingSummaryHandler } from './commands/handlers/generate-meeting-summary.handler';
 import { RefreshMeetingSummaryHandler } from './commands/handlers/refresh-meeting-summary.handler';
@@ -20,6 +21,7 @@ import { getUploadDir } from './upload/file-upload.constants';
 const CommandHandlers = [
   CreateMeetingHandler,
   UploadMeetingFileHandler,
+  DeleteMeetingHandler,
   DeleteMeetingFileHandler,
   TranscribeMeetingFileHandler,
   RefreshTranscriptionHandler,
