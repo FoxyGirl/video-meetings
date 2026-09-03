@@ -22,6 +22,7 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 import { CreateMeetingCommand } from './commands/create-meeting.command';
+import { DeleteMeetingCommand } from './commands/delete-meeting.command';
 import { DeleteMeetingFileCommand } from './commands/delete-meeting-file.command';
 import { RefreshMeetingSummaryCommand } from './commands/refresh-meeting-summary.command';
 import { RefreshTranscriptionCommand } from './commands/refresh-transcription.command';
@@ -70,6 +71,14 @@ export class MeetingsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.queryBus.execute(new GetMeetingQuery(id));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMeeting(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.commandBus.execute(
+      new DeleteMeetingCommand(id, request.user.userId),
+    );
   }
 
   @Post(':id/files')
