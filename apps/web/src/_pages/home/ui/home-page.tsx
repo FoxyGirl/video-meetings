@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, Button, Card, Spinner } from '@heroui/react';
+import { buttonVariants } from '@heroui/styles';
 import { ApiError } from '@/shared/api';
 import { getMeetings, type Meeting } from '@/entities/meeting';
 import { CurrentUserAvatar, useUser } from '@/entities/user';
@@ -79,7 +80,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-1 flex-col bg-gradient-to-br from-indigo-50 via-white to-cyan-50 px-4 py-16 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/profile"
@@ -97,9 +98,17 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <Button variant="secondary" onPress={handleLogout}>
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link
+              className={buttonVariants({ variant: 'primary', size: 'md' })}
+              href="/meetings/new"
+            >
+              New meeting
+            </Link>
+            <Button variant="secondary" onPress={handleLogout}>
+              Logout
+            </Button>
+          </div>
         </div>
 
         {meetingsError ? (
@@ -131,17 +140,9 @@ export default function HomePage() {
             ) : null}
 
             <section className="flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-lg font-medium text-foreground">
-                  Your meetings
-                </h2>
-                <Link
-                  className="button button--primary button--md"
-                  href="/meetings/new"
-                >
-                  New meeting
-                </Link>
-              </div>
+              <h2 className="text-lg font-medium text-foreground">
+                Your meetings
+              </h2>
               {meetings && meetings.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {meetings.map((meeting) => (
