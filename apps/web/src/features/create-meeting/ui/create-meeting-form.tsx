@@ -15,8 +15,8 @@ import {
   TextField,
 } from '@heroui/react';
 import { ApiError } from '@/shared/api';
+import { EMAIL_PATTERN } from '@/shared/lib';
 import { createMeeting } from '@/entities/meeting';
-import { EMAIL_PATTERN } from '@/lib/email';
 
 function parseParticipants(value: string): string[] {
   return value

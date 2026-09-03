@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ToastProvider } from '@heroui/react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle } from '@/shared/ui';
 import { Providers } from '@/_app/providers';
 import '@/_app/globals.css';
 

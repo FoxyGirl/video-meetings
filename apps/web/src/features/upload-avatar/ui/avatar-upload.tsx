@@ -11,11 +11,12 @@ import {
 } from '@heroui/react';
 import { Upload } from 'lucide-react';
 import { ApiError } from '@/shared/api';
-import { cacheAvatarPreview, type UserProfile } from '@/entities/user';
 import {
   ACCEPTED_AVATAR_TYPES,
+  cacheAvatarPreview,
   validateAvatarFile,
-} from '@/lib/avatar-file-types';
+  type UserProfile,
+} from '@/entities/user';
 import { uploadAvatar } from '../api';
 
 interface AvatarUploadProps {

@@ -82,15 +82,23 @@ test.describe('meeting transcription status and transcript', () => {
     await page.getByRole('button', { name: 'Upload' }).click();
     await expect(page.getByText('Recording uploaded')).toBeVisible();
 
+    // Scoped to the file's own card, not the whole page: once this file
+    // reaches Completed, widgets/meeting-summary's card can independently
+    // reach its own Completed status too (this dev environment has a real
+    // GEMINI_API_KEY, see apps/web/CLAUDE.md's "Meeting summary widget"
+    // section) and renders the identical "Completed" chip text — an
+    // unscoped getByText would then match two elements.
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+
     // Seeded straight from the upload response (PENDING), before this
     // component's own polling has had a chance to run even once — this is
     // a deterministic first paint, not a race against real transcription
     // timing.
-    await expect(page.getByText('Pending', { exact: true })).toBeVisible();
+    await expect(fileCard.getByText('Pending', { exact: true })).toBeVisible();
 
     // Polls GET /meetings/:id/file (no page reload) until the real local
     // Whisper "tiny" engine finishes.
-    await expect(page.getByText('Completed', { exact: true })).toBeVisible({
+    await expect(fileCard.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
     // The transcript starts collapsed behind a toggle (see
@@ -109,8 +117,11 @@ test.describe('meeting transcription status and transcript', () => {
       await loginViaUi(viewerPage, viewerEmail);
       await viewerPage.goto(`/meetings/${id}`);
 
+      const viewerFileCard = viewerPage.locator(
+        '[data-testid^="meeting-file-"]',
+      );
       await expect(
-        viewerPage.getByText('Completed', { exact: true }),
+        viewerFileCard.getByText('Completed', { exact: true }),
       ).toBeVisible();
       // A separate MeetingTranscription instance (this viewer's own page),
       // so it starts collapsed too regardless of the organizer's toggle
@@ -143,7 +154,12 @@ test.describe('meeting transcription status and transcript', () => {
     await page.getByRole('button', { name: 'Upload' }).click();
     await expect(page.getByText('Recording uploaded')).toBeVisible();
 
-    await expect(page.getByText('Completed', { exact: true })).toBeVisible({
+    // Scoped to the file's own card, not the whole page — see the previous
+    // test's own comment on why: widgets/meeting-summary's card can reach
+    // an identically-labeled Completed/Pending status independently.
+    const fileCard = page.locator('[data-testid^="meeting-file-"]');
+
+    await expect(fileCard.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
     // Expand once — the toggle state is local to this MeetingTranscription
@@ -163,10 +179,10 @@ test.describe('meeting transcription status and transcript', () => {
     // had a chance to run even once — a deterministic first paint, not a
     // race against real transcription timing (same reasoning as the
     // upload-side "Pending" assertion above).
-    await expect(page.getByText('Pending', { exact: true })).toBeVisible();
+    await expect(fileCard.getByText('Pending', { exact: true })).toBeVisible();
     await expect(refreshButton).toBeDisabled();
 
-    await expect(page.getByText('Completed', { exact: true })).toBeVisible({
+    await expect(fileCard.getByText('Completed', { exact: true })).toBeVisible({
       timeout: TRANSCRIPTION_TIMEOUT_MS,
     });
     await expect(page.getByText(/fellow Americans/i)).toBeVisible();
@@ -182,8 +198,11 @@ test.describe('meeting transcription status and transcript', () => {
       await loginViaUi(viewerPage, viewerEmail);
       await viewerPage.goto(`/meetings/${id}`);
 
+      const viewerFileCard = viewerPage.locator(
+        '[data-testid^="meeting-file-"]',
+      );
       await expect(
-        viewerPage.getByText('Completed', { exact: true }),
+        viewerFileCard.getByText('Completed', { exact: true }),
       ).toBeVisible();
       await expect(
         viewerPage.getByRole('button', { name: 'Refresh Transcription' }),
@@ -274,7 +293,15 @@ test.describe('meeting transcription status and transcript', () => {
     await page.getByRole('button', { name: 'Upload' }).click();
     await expect(page.getByText('2 recordings uploaded')).toBeVisible();
 
-    await expect(page.getByText('Completed', { exact: true })).toHaveCount(2, {
+    // Scoped to the file cards, not the whole page — once both files are
+    // Completed, widgets/meeting-summary's card can independently reach its
+    // own Completed status too and render a third, identically-labeled
+    // chip, which an unscoped locator would count.
+    await expect(
+      page
+        .locator('[data-testid^="meeting-file-"]')
+        .getByText('Completed', { exact: true }),
+    ).toHaveCount(2, {
       timeout: TRANSCRIPTION_TIMEOUT_MS * 2,
     });
 

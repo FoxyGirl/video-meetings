@@ -45,14 +45,12 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     'playwright-report/**',
   ]),
-  // Scoped to the new FSD layers only (src/components and src/lib aren't
-  // migrated yet, so they're deliberately left unclassified/unchecked here
-  // — Phase 5-fsd-v2 widens this once they're gone). "unknown" imports
-  // (anything not under one of these layers — components, lib, npm
+  // Covers all of src/** so nothing new can slip in unchecked. "unknown"
+  // imports (anything not under a recognized FSD layer — e.g. npm
   // packages) are left alone by `default: 'allow'`; only imports between
   // two *known* FSD elements are restricted.
   {
-    files: ['src/{_app,_pages,widgets,features,entities,shared}/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },
     settings: {
       'boundaries/elements': [

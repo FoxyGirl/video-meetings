@@ -15,9 +15,9 @@ import {
   toast,
 } from '@heroui/react';
 import { ApiError } from '@/shared/api';
+import { EMAIL_PATTERN } from '@/shared/lib';
 import { PasswordConfirmField } from '@/shared/ui';
 import { useSession } from '@/entities/session';
-import { EMAIL_PATTERN } from '@/lib/email';
 import { loginUser } from '../api';
 
 export function LoginForm() {

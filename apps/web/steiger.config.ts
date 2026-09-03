@@ -1,10 +1,38 @@
 import { defineConfig } from 'steiger';
 import fsd from '@feature-sliced/steiger-plugin';
 
-// Advisory only for now (Phase 1-fsd-v2): src/components and src/lib still
-// exist alongside the FSD layers and will fail this until every domain is
-// migrated (Phase 5-fsd-v2 wires this into npm run lint / pre-push once
-// they're gone). _app/_pages are recognized natively as the underscore-
-// prefixed variants of FSD's app/pages layers by @feature-sliced/filesystem
-// — no renaming config needed here.
-export default defineConfig([...fsd.configs.recommended]);
+// _app/_pages are recognized natively as the underscore-prefixed variants
+// of FSD's app/pages layers by @feature-sliced/filesystem — no renaming
+// config needed for that part.
+export default defineConfig([
+  ...fsd.configs.recommended,
+  {
+    // Off project-wide, not scoped to individual slices: at this app's
+    // current size, the large majority of features/widgets are — by
+    // design — used by exactly one consumer (a "feature" is a single,
+    // isolated user action; a "widget" composes exactly one page's
+    // section), so this heuristic flags the norm here, not the exception.
+    // (Scoping the override to just those files was tried first, but
+    // steiger's insignificant-slice check builds its reference graph only
+    // from files the rule is enabled for — excluding a slice's own
+    // consumers from that glob makes the *entity* they import look
+    // falsely single-referenced too, e.g. entities/meeting-file dropping
+    // from 7 real importers to 1 once its feature-slice importers were
+    // excluded. A blanket off avoids that graph distortion.)
+    rules: { 'fsd/insignificant-slice': 'off' },
+  },
+  {
+    // providers.tsx is the app layer's global provider composition (theme,
+    // auth, query client, etc.) — it doesn't map to any of FSD's canonical
+    // segment names (ui/api/model/lib/config), so this rule doesn't apply.
+    files: ['src/_app/providers.tsx'],
+    rules: { 'fsd/segments-by-purpose': 'off' },
+  },
+  {
+    // _app/_pages are deliberately underscore-prefixed to dodge Next.js's
+    // reserved app/pages folder names (see eslint.config.mjs's comment on
+    // layerSequence) — not a typo of the real FSD layer names.
+    files: ['src/_app/**', 'src/_pages/**'],
+    rules: { 'fsd/typo-in-layer-name': 'off' },
+  },
+]);
