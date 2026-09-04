@@ -9122,6 +9122,1145 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "xCi6H",
+      "x": 2907,
+      "y": 3636,
+      "name": "Profile",
+      "clip": true,
+      "width": 1280,
+      "height": 860,
+      "fill": "$bg",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "id": "NeCSf",
+          "type": "ref",
+          "ref": "D9DHv",
+          "name": "Theme Toggle",
+          "layoutPosition": "absolute",
+          "x": 1210,
+          "y": 32
+        },
+        {
+          "type": "frame",
+          "id": "hA9Do",
+          "name": "Card",
+          "width": 460,
+          "fill": "$surface",
+          "cornerRadius": 16,
+          "stroke": "$line",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 36,
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "GMXsf",
+              "type": "ref",
+              "ref": "w0KtU",
+              "name": "Avatar",
+              "width": 64,
+              "height": 64,
+              "cornerRadius": 32,
+              "descendants": {
+                "VyI83": {
+                  "fontSize": 20
+                }
+              }
+            },
+            {
+              "type": "text",
+              "id": "J5ZgFW",
+              "name": "Name",
+              "fill": "$ink",
+              "content": "Test FirstUser",
+              "fontFamily": "$primary-font",
+              "fontSize": 26,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "xiNTp",
+              "name": "Email",
+              "fill": "$ink-3",
+              "content": "test-1@example.com",
+              "fontFamily": "$text-font",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "YyCmQ",
+              "name": "Actions",
+              "width": "fill_container",
+              "gap": 10,
+              "padding": [
+                10,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "QFCsa",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Edit Profile Button",
+                  "descendants": {
+                    "ubUgz": {
+                      "icon": "pencil",
+                      "width": 14,
+                      "height": 14
+                    },
+                    "afQPv": {
+                      "content": "Edit profile"
+                    }
+                  }
+                },
+                {
+                  "id": "rVgVM",
+                  "type": "ref",
+                  "ref": "sjR6i",
+                  "name": "Logout Button"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bEruz",
+          "type": "ref",
+          "ref": "e17JH",
+          "name": "Back Button",
+          "layoutPosition": "absolute",
+          "x": 32,
+          "y": 32,
+          "fill": "$surface"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vpTwd",
+      "x": 2907,
+      "y": 4703,
+      "name": "Profile Edit",
+      "clip": true,
+      "width": 1280,
+      "height": 920,
+      "fill": "$bg",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "id": "iua6t",
+          "type": "ref",
+          "ref": "D9DHv",
+          "name": "Theme Toggle",
+          "layoutPosition": "absolute",
+          "x": 1210,
+          "y": 32
+        },
+        {
+          "type": "frame",
+          "id": "HFe3S",
+          "name": "Column",
+          "width": 560,
+          "layout": "vertical",
+          "gap": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "alUxv",
+              "name": "Identity Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "gap": 16,
+              "padding": [
+                18,
+                24
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "uuOmL",
+                  "type": "ref",
+                  "ref": "w0KtU",
+                  "name": "Avatar",
+                  "width": 44,
+                  "height": 44,
+                  "cornerRadius": 22,
+                  "descendants": {
+                    "VyI83": {
+                      "fontSize": 15
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "Q28bR2",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 1,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "G7b6w5",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Edit profile",
+                      "fontFamily": "$primary-font",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yIpEU",
+                      "name": "Name",
+                      "fill": "$ink-3",
+                      "content": "Test FirstUser · test-1@example.com",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BG4CI",
+              "name": "Avatar Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                20,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "D9pi9G",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jT8dC",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Avatar",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "al3uY",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Upload a photo to display instead of your initials.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "nq4jk",
+                  "type": "ref",
+                  "ref": "MtW6q",
+                  "name": "Avatar Dropzone",
+                  "padding": 18,
+                  "descendants": {
+                    "SbWum": {
+                      "width": 18,
+                      "height": 18
+                    },
+                    "RCyXU": {
+                      "content": "or drag and drop a PNG or JPG, up to 5 MB"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "AZNnm",
+                  "name": "Upload Row",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Ojn5c",
+                      "name": "File Name",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "No file chosen",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "fNhaB",
+                      "type": "ref",
+                      "ref": "loFJ4",
+                      "name": "Upload Button",
+                      "width": "fit_content",
+                      "justifyContent": "center",
+                      "padding": [
+                        9,
+                        16
+                      ],
+                      "descendants": {
+                        "ubUgz": {
+                          "icon": "upload",
+                          "width": 14,
+                          "height": 14
+                        },
+                        "afQPv": {
+                          "content": "Upload"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Cae4n",
+              "name": "Username Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                20,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "b5WVp",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "o0ryaL",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Username",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "f4YDL5",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Shown instead of your email wherever your name appears.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GDYvm",
+                  "name": "Field Row",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "id": "T7Ssx",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "Username Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "Username"
+                        },
+                        "MA9Ug": {
+                          "enabled": false
+                        },
+                        "ORGRW": {
+                          "content": "Test FirstUser",
+                          "fill": "$ink"
+                        },
+                        "bDEIL": {
+                          "enabled": false
+                        },
+                        "iT4Ll": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "A0110",
+                      "type": "ref",
+                      "ref": "loFJ4",
+                      "name": "Save Username",
+                      "padding": [
+                        12,
+                        18
+                      ],
+                      "descendants": {
+                        "ubUgz": {
+                          "enabled": false
+                        },
+                        "afQPv": {
+                          "content": "Save"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j8H0C",
+              "name": "Password Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                20,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Kf7BF",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qKFVY",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Password",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DBFlg",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Change the password you use to sign in.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DZkbm",
+                  "name": "Password Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "id": "g9S8e",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "Current Password Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "Current password"
+                        },
+                        "ORGRW": {
+                          "content": "••••••••",
+                          "fill": "$ink"
+                        },
+                        "iT4Ll": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "qRtsU",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "New Password Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "New password"
+                        },
+                        "ORGRW": {
+                          "content": "••••••••",
+                          "fill": "$ink"
+                        },
+                        "iT4Ll": {
+                          "content": "At least 8 characters.",
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "Wud50",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Save Password",
+                  "padding": [
+                    12,
+                    18
+                  ],
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Save"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "CTWZl",
+          "type": "ref",
+          "ref": "e17JH",
+          "name": "Back Button",
+          "layoutPosition": "absolute",
+          "x": 32,
+          "y": 32,
+          "fill": "$surface",
+          "descendants": {
+            "aHfDv": {
+              "content": "Back to profile"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "xIkS0",
+      "x": 4294,
+      "y": 3644,
+      "name": "Profile — Mobile",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": 20,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "id": "p8XTv",
+          "type": "ref",
+          "ref": "D9DHv",
+          "name": "Theme Toggle",
+          "layoutPosition": "absolute",
+          "x": 332,
+          "y": 20
+        },
+        {
+          "type": "frame",
+          "id": "k4zIdp",
+          "name": "Card",
+          "width": "fill_container",
+          "fill": "$surface",
+          "cornerRadius": 16,
+          "stroke": "$line",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 28,
+          "alignItems": "center",
+          "children": [
+            {
+              "id": "K3aBn",
+              "type": "ref",
+              "ref": "w0KtU",
+              "name": "Avatar",
+              "width": 64,
+              "height": 64,
+              "cornerRadius": 32,
+              "descendants": {
+                "VyI83": {
+                  "fontSize": 20
+                }
+              }
+            },
+            {
+              "type": "text",
+              "id": "SYZQj",
+              "name": "Name",
+              "fill": "$ink",
+              "content": "Test FirstUser",
+              "fontFamily": "$primary-font",
+              "fontSize": 22,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "A3gRFO",
+              "name": "Email",
+              "fill": "$ink-3",
+              "content": "test-1@example.com",
+              "fontFamily": "$text-font",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "eSta7",
+              "name": "Actions",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "padding": [
+                10,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "oae1G",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Edit Profile Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "ubUgz": {
+                      "icon": "pencil",
+                      "width": 14,
+                      "height": 14
+                    },
+                    "afQPv": {
+                      "content": "Edit profile"
+                    }
+                  }
+                },
+                {
+                  "id": "eha2w",
+                  "type": "ref",
+                  "ref": "sjR6i",
+                  "name": "Logout Button",
+                  "width": "fill_container",
+                  "justifyContent": "center"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "Pxe84",
+          "type": "ref",
+          "ref": "e17JH",
+          "name": "Back Button",
+          "layoutPosition": "absolute",
+          "x": 20,
+          "y": 20,
+          "fill": "$surface"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AZZzc",
+      "x": 4294,
+      "y": 4703,
+      "name": "Profile Edit — Mobile",
+      "clip": true,
+      "width": 390,
+      "height": 1010,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": [
+        72,
+        20,
+        24,
+        20
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "id": "l4EVJ",
+          "type": "ref",
+          "ref": "D9DHv",
+          "name": "Theme Toggle",
+          "layoutPosition": "absolute",
+          "x": 332,
+          "y": 20
+        },
+        {
+          "type": "frame",
+          "id": "T0D8L",
+          "name": "Column",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "vTmXN",
+              "name": "Identity Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "gap": 12,
+              "padding": [
+                16,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "zmHCZ",
+                  "type": "ref",
+                  "ref": "w0KtU",
+                  "name": "Avatar",
+                  "width": 44,
+                  "height": 44,
+                  "cornerRadius": 22,
+                  "descendants": {
+                    "VyI83": {
+                      "fontSize": 15
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "n9bqUl",
+                  "name": "Identity Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 1,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZenE7",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Edit profile",
+                      "fontFamily": "$primary-font",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "vJHxA",
+                      "name": "Name",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Test FirstUser\ntest-1@example.com",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "v6RpU",
+              "name": "Avatar Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 18,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "GAgSt",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "X0vZd",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Avatar",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "H16dnw",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Upload a photo to display instead of your initials.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "l0dsB",
+                  "type": "ref",
+                  "ref": "MtW6q",
+                  "name": "Avatar Dropzone",
+                  "padding": [
+                    16,
+                    14
+                  ],
+                  "descendants": {
+                    "SbWum": {
+                      "width": 18,
+                      "height": 18
+                    },
+                    "RCyXU": {
+                      "content": "or drag and drop a PNG or JPG, up to 5 MB"
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "V8OG5j",
+                  "name": "Upload Row",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "C2znqs",
+                      "name": "File Name",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "No file chosen",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "ybidn",
+                      "type": "ref",
+                      "ref": "loFJ4",
+                      "name": "Upload Button",
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "padding": [
+                        9,
+                        16
+                      ],
+                      "descendants": {
+                        "ubUgz": {
+                          "icon": "upload",
+                          "width": 14,
+                          "height": 14
+                        },
+                        "afQPv": {
+                          "content": "Upload"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f0PfPk",
+              "name": "Username Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 18,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "LAJ4s",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "N2rGw",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Username",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wcPCA",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Shown instead of your email wherever your name appears.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "oEbbS",
+                  "name": "Field Row",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "id": "Hi908",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "Username Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "Username"
+                        },
+                        "MA9Ug": {
+                          "enabled": false
+                        },
+                        "ORGRW": {
+                          "content": "Test FirstUser",
+                          "fill": "$ink"
+                        },
+                        "bDEIL": {
+                          "enabled": false
+                        },
+                        "iT4Ll": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "Y4eN9b",
+                      "type": "ref",
+                      "ref": "loFJ4",
+                      "name": "Save Username",
+                      "padding": [
+                        12,
+                        18
+                      ],
+                      "width": "fill_container",
+                      "justifyContent": "center",
+                      "descendants": {
+                        "ubUgz": {
+                          "enabled": false
+                        },
+                        "afQPv": {
+                          "content": "Save"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SqVhZ",
+              "name": "Password Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 18,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rYSpv",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "a5iWOp",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Password",
+                      "fontFamily": "$text-font",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KydUo",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Change the password you use to sign in.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eEGh2",
+                  "name": "Password Row",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "id": "cD1aS",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "Current Password Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "Current password"
+                        },
+                        "ORGRW": {
+                          "content": "••••••••",
+                          "fill": "$ink"
+                        },
+                        "iT4Ll": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "q5tTV",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "New Password Field",
+                      "descendants": {
+                        "akblg": {
+                          "content": "New password"
+                        },
+                        "ORGRW": {
+                          "content": "••••••••",
+                          "fill": "$ink"
+                        },
+                        "iT4Ll": {
+                          "content": "At least 8 characters.",
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "eRrOx",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Save Password",
+                  "padding": [
+                    12,
+                    18
+                  ],
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Save"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "C6SCe2",
+          "type": "ref",
+          "ref": "e17JH",
+          "name": "Back Button",
+          "layoutPosition": "absolute",
+          "x": 20,
+          "y": 20,
+          "fill": "$surface",
+          "descendants": {
+            "aHfDv": {
+              "content": "Back to profile"
+            }
+          }
+        }
+      ]
     }
   ],
   "variables": {
