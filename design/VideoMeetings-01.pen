@@ -4,8 +4,8 @@
     {
       "type": "frame",
       "id": "EJnxc",
-      "x": 920,
-      "y": 0,
+      "x": 942,
+      "y": 22,
       "name": "Video Meetings — List",
       "clip": true,
       "width": 1280,
@@ -130,7 +130,7 @@
                   "type": "frame",
                   "id": "PCXiS",
                   "name": "New Meeting",
-                  "fill": "$ink",
+                  "fill": "$primary",
                   "cornerRadius": 9,
                   "gap": 7,
                   "padding": [
@@ -2295,7 +2295,7 @@
                               "id": "V2sUc",
                               "name": "Download",
                               "width": "fill_container",
-                              "fill": "$ink",
+                              "fill": "$primary",
                               "cornerRadius": 9,
                               "gap": 7,
                               "padding": [
@@ -2512,7 +2512,7 @@
                           "id": "xl5IO",
                           "name": "Upload",
                           "width": "fill_container",
-                          "fill": "$ink",
+                          "fill": "$primary",
                           "cornerRadius": 9,
                           "gap": 7,
                           "padding": [
@@ -2678,7 +2678,7 @@
                       "id": "k8cR4Z",
                       "name": "Note",
                       "fill": "$ink-3",
-                      "content": "10 variables",
+                      "content": "11 variables",
                       "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
@@ -3383,6 +3383,75 @@
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
                               "content": "Destructive",
+                              "fontFamily": "$text-font",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GQ5GS",
+                      "name": "primary",
+                      "width": "fill_container",
+                      "fill": "$surface",
+                      "cornerRadius": 12,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "SRfC4",
+                          "name": "Chip",
+                          "width": "fill_container",
+                          "height": 56,
+                          "fill": "#5B6BFF",
+                          "cornerRadius": 8,
+                          "stroke": "$line",
+                          "strokeWidth": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uCgcR",
+                          "name": "Meta",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "u9S08",
+                              "name": "Name",
+                              "fill": "$ink",
+                              "content": "$primary",
+                              "fontFamily": "$text-font",
+                              "fontSize": 12.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TNPN8",
+                              "name": "Hex",
+                              "fill": "$ink-3",
+                              "content": "#5B6BFF",
+                              "fontFamily": "$text-font",
+                              "fontSize": 11,
+                              "fontWeight": "normal",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "lUOzT",
+                              "name": "Use",
+                              "fill": "$ink-3",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Primary buttons",
                               "fontFamily": "$text-font",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -4717,7 +4786,7 @@
                               "id": "loFJ4",
                               "name": "Button / Primary",
                               "reusable": true,
-                              "fill": "$ink",
+                              "fill": "$primary",
                               "cornerRadius": 9,
                               "stroke": "#00000000",
                               "strokeWidth": 1,
@@ -6008,6 +6077,123 @@
                       "fontFamily": "$text-font",
                       "fontSize": 12,
                       "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Hw9o5",
+                  "name": "Row 3",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "EJluO",
+                      "name": "Form Field",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 7,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Pr3Nb",
+                          "name": "Label Row",
+                          "gap": 3,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "akblg",
+                              "name": "Label",
+                              "fill": "$ink",
+                              "content": "Label",
+                              "fontFamily": "$text-font",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "MA9Ug",
+                              "name": "Required",
+                              "fill": "$danger",
+                              "content": "*",
+                              "fontFamily": "$text-font",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "K00HX",
+                          "name": "Input",
+                          "width": "fill_container",
+                          "fill": "$surface-2",
+                          "cornerRadius": 10,
+                          "stroke": "$line",
+                          "strokeWidth": 1,
+                          "gap": 12,
+                          "padding": [
+                            13,
+                            16
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ORGRW",
+                              "name": "Value",
+                              "fill": "$ink-3",
+                              "content": "Placeholder text",
+                              "fontFamily": "$text-font",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "bDEIL",
+                              "name": "Trailing Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "eye",
+                              "library": "lucide",
+                              "fill": "$ink-3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "iT4Ll",
+                          "name": "Hint",
+                          "fill": "$ink-3",
+                          "content": "Helper text",
+                          "fontFamily": "$text-font",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "Iiyg5",
+                      "type": "ref",
+                      "ref": "EJluO",
+                      "name": "Form Field / Password",
+                      "width": "fill_container",
+                      "descendants": {
+                        "akblg": {
+                          "content": "Password"
+                        },
+                        "ORGRW": {
+                          "content": "••••••••",
+                          "fill": "$ink"
+                        },
+                        "iT4Ll": {
+                          "enabled": false
+                        }
+                      }
                     }
                   ]
                 }
@@ -7926,7 +8112,7 @@
                           "id": "lspbZ",
                           "name": "Download",
                           "width": "fill_container",
-                          "fill": "$ink",
+                          "fill": "$primary",
                           "cornerRadius": 9,
                           "gap": 7,
                           "padding": [
@@ -8143,7 +8329,7 @@
                       "id": "Sw2k6",
                       "name": "Upload",
                       "width": "fill_container",
-                      "fill": "$ink",
+                      "fill": "$primary",
                       "cornerRadius": 9,
                       "gap": 7,
                       "padding": [
@@ -8182,6 +8368,907 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "pDBvT",
+      "x": 920,
+      "y": 3636,
+      "name": "Sign In",
+      "clip": true,
+      "width": 1280,
+      "height": 860,
+      "fill": "$bg",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "wkzc4",
+          "name": "Center Column",
+          "layout": "vertical",
+          "gap": 28,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "KZ5r6",
+              "name": "Wordmark",
+              "fill": "$ink",
+              "content": "Video Meetings",
+              "fontFamily": "$primary-font",
+              "fontSize": 32,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Lspki",
+              "name": "Card",
+              "width": 460,
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DQzZu",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 5,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LH0qF",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Sign in",
+                      "fontFamily": "$text-font",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "a3EeL",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Enter your credentials to access your meetings.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "PTgCM",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Email Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Email"
+                    },
+                    "ORGRW": {
+                      "content": "you@example.com"
+                    },
+                    "bDEIL": {
+                      "enabled": false
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "UYW6w",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "my8nY",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Sign In Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "fill": "$primary",
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Sign in",
+                      "fontSize": 14
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "kfbvo",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "gap": 5,
+                  "padding": [
+                    2,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "a18wIs",
+                      "name": "Prompt",
+                      "fill": "$ink-2",
+                      "content": "Don't have an account?",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YPzuM",
+                      "name": "Link",
+                      "fill": "#5B6BFF",
+                      "content": "Create one",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "T3tn38",
+      "x": 920,
+      "y": 4828,
+      "name": "Create Account",
+      "clip": true,
+      "width": 1280,
+      "height": 860,
+      "fill": "$bg",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "JnWCZ",
+          "name": "Center Column",
+          "layout": "vertical",
+          "gap": 28,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "F62GWg",
+              "name": "Wordmark",
+              "fill": "$ink",
+              "content": "Video Meetings",
+              "fontFamily": "$primary-font",
+              "fontSize": 32,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "OEsJf",
+              "name": "Card",
+              "width": 460,
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "EtYbd",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 5,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "k22PYV",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Create your account",
+                      "fontFamily": "$text-font",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QzzHm",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Sign up to start scheduling and joining meetings.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "hOIiS",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Email Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Email"
+                    },
+                    "ORGRW": {
+                      "content": "you@example.com"
+                    },
+                    "bDEIL": {
+                      "enabled": false
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "caiEi",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "content": "Must be at least 8 characters."
+                    }
+                  }
+                },
+                {
+                  "id": "bBCRh",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Confirm Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Confirm password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "ymCAe",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Create Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "fill": "$primary",
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Create account",
+                      "fontSize": 14
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "jY7xD",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "gap": 5,
+                  "padding": [
+                    2,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "q6NmT",
+                      "name": "Prompt",
+                      "fill": "$ink-2",
+                      "content": "Already have an account?",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "buJYC",
+                      "name": "Link",
+                      "fill": "#5B6BFF",
+                      "content": "Sign in",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "nVwzZ",
+      "x": 2397,
+      "y": 4828,
+      "name": "Create Account — Mobile",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": 24,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "c2UsK",
+          "name": "Center Column",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "YdFRF",
+              "name": "Wordmark",
+              "fill": "$ink",
+              "content": "Video Meetings",
+              "fontFamily": "$primary-font",
+              "fontSize": 28,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "nY4uH",
+              "name": "Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 22,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "E4vHb",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 5,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vj1Gj",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Create your account",
+                      "fontFamily": "$text-font",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "crBRt",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Sign up to start scheduling and joining meetings.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "cdBBE",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Email Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Email"
+                    },
+                    "ORGRW": {
+                      "content": "you@example.com"
+                    },
+                    "bDEIL": {
+                      "enabled": false
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "SwuX1",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "content": "Must be at least 8 characters."
+                    }
+                  }
+                },
+                {
+                  "id": "uJuQw",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Confirm Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Confirm password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "l1D6iF",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Create Account Button",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "fill": "$primary",
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Create account",
+                      "fontSize": 14
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "cDq2O",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "gap": 5,
+                  "padding": [
+                    2,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "v53Hp",
+                      "name": "Prompt",
+                      "fill": "$ink-2",
+                      "content": "Already have an account?",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "u3KlOM",
+                      "name": "Link",
+                      "fill": "#5B6BFF",
+                      "content": "Sign in",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qxPwD",
+      "x": 2397,
+      "y": 3636,
+      "name": "Sign In — Mobile",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "vertical",
+      "padding": 24,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "i1nFH1",
+          "name": "Center Column",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "rcLNg",
+              "name": "Wordmark",
+              "fill": "$ink",
+              "content": "Video Meetings",
+              "fontFamily": "$primary-font",
+              "fontSize": 28,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "d94NOi",
+              "name": "Card",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 16,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "v7dvh",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 5,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "q0WZJT",
+                      "name": "Title",
+                      "fill": "$ink",
+                      "content": "Sign in",
+                      "fontFamily": "$text-font",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sg7Ob",
+                      "name": "Sub",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Enter your credentials to access your meetings.",
+                      "fontFamily": "$text-font",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "Kuwzi",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Email Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Email"
+                    },
+                    "ORGRW": {
+                      "content": "you@example.com"
+                    },
+                    "bDEIL": {
+                      "enabled": false
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "qUpvA",
+                  "type": "ref",
+                  "ref": "EJluO",
+                  "name": "Password Field",
+                  "width": "fill_container",
+                  "descendants": {
+                    "akblg": {
+                      "content": "Password"
+                    },
+                    "ORGRW": {
+                      "content": "••••••••",
+                      "fill": "$ink"
+                    },
+                    "iT4Ll": {
+                      "enabled": false
+                    }
+                  }
+                },
+                {
+                  "id": "B4a2WS",
+                  "type": "ref",
+                  "ref": "loFJ4",
+                  "name": "Sign In Button",
+                  "width": "fill_container",
+                  "fill": "$primary",
+                  "justifyContent": "center",
+                  "descendants": {
+                    "ubUgz": {
+                      "enabled": false
+                    },
+                    "afQPv": {
+                      "content": "Sign in",
+                      "fontSize": 14
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "X5zgVE",
+                  "name": "Footer",
+                  "width": "fill_container",
+                  "gap": 5,
+                  "padding": [
+                    2,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tZ1L2",
+                      "name": "Prompt",
+                      "fill": "$ink-2",
+                      "content": "Don't have an account?",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fLuO3",
+                      "name": "Link",
+                      "fill": "#5B6BFF",
+                      "content": "Create one",
+                      "fontFamily": "$text-font",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Z6kS2",
+      "type": "ref",
+      "ref": "bG0Gs",
+      "x": 2891,
+      "y": 0
+    },
+    {
+      "id": "s3pb3",
+      "type": "ref",
+      "ref": "w0KtU",
+      "x": 3507,
+      "y": 0
+    },
+    {
+      "id": "Q3PMO",
+      "type": "ref",
+      "ref": "w0KtU",
+      "x": 3585,
+      "y": 0
+    },
+    {
+      "id": "uRoPp",
+      "type": "ref",
+      "ref": "w0KtU",
+      "x": 3663,
+      "y": 0
+    },
+    {
+      "id": "s7hJZ",
+      "type": "ref",
+      "ref": "QdvzG",
+      "x": 3741,
+      "y": 0
+    },
+    {
+      "id": "CmMlM",
+      "type": "ref",
+      "ref": "QdvzG",
+      "x": 4909,
+      "y": 0
+    },
+    {
+      "id": "NqC9N",
+      "type": "ref",
+      "ref": "QdvzG",
+      "x": 6077,
+      "y": 0
+    },
+    {
+      "id": "Y2PPE",
+      "type": "ref",
+      "ref": "Jiz0s",
+      "x": 7245,
+      "y": 0
+    },
+    {
+      "id": "qAprQ",
+      "type": "ref",
+      "ref": "Jiz0s",
+      "x": 8453,
+      "y": 0
+    },
+    {
+      "id": "PWo64",
+      "type": "ref",
+      "ref": "Jiz0s",
+      "x": 9661,
+      "y": 0
+    },
+    {
+      "id": "e5sHuo",
+      "type": "ref",
+      "ref": "bG0Gs",
+      "x": 10869,
+      "y": 0
+    },
+    {
+      "id": "eqy7r",
+      "type": "ref",
+      "ref": "bG0Gs",
+      "x": 11485,
+      "y": 0
+    },
+    {
+      "id": "ChaaV",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 12101,
+      "y": 0
+    },
+    {
+      "id": "eJdJn",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 12713,
+      "y": 0
+    },
+    {
+      "id": "iin4f",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 13325,
+      "y": 0
+    },
+    {
+      "id": "iXKct",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 13937,
+      "y": 0
+    },
+    {
+      "id": "n5mAf8",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 14549,
+      "y": 0
+    },
+    {
+      "id": "OvqzN",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 15161,
+      "y": 0
+    },
+    {
+      "id": "TwC2n",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 15773,
+      "y": 0
+    },
+    {
+      "id": "Gv9hw",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 16385,
+      "y": 0
+    },
+    {
+      "id": "ppjB7",
+      "type": "ref",
+      "ref": "EJluO",
+      "x": 16997,
+      "y": 0
     }
   ],
   "variables": {
@@ -8248,6 +9335,10 @@
     "success-soft": {
       "type": "color",
       "value": "#E4F5EC"
+    },
+    "primary": {
+      "type": "color",
+      "value": "#5B6BFF"
     }
   },
   "fileToken": "ef18b90a-d12a-440f-9cf7-940c1843f995"
